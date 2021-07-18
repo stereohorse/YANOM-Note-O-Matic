@@ -512,6 +512,23 @@ def test_save_note_pages(notebooks, all_notes_dict, conv_setting, silent_mode):
 #             assert len(caplog.records) == 4
 
 
+@pytest.mark.parametrize(
+    'silent_mode', [True, False]
+)
+def test_store_attachments(notebooks, all_notes_dict, conv_setting, silent_mode):
+    config.yanom_globals.is_silent = silent_mode
+    pc = pandoc_converter.PandocConverter(conv_setting)
+    nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, pc)
+    nsx_fc._notebooks = notebooks
+    nsx_fc._note_pages = all_notes_dict
+    nsx_fc.add_note_pages_to_notebooks()
+    with patch('nsx_file_converter.NSXFile.fetch_attachment_file', autospec=True):
+        with patch('file_writer.store_file', spec=True) as mock_store_file:
+            nsx_fc.process_notebooks()
+
+        assert mock_store_file.call_count == 4
+
+
 def test_process_nsx_file_no_config_json(conv_setting, caplog):
     pc = pandoc_converter.PandocConverter(conv_setting)
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, pc)

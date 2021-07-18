@@ -3,7 +3,6 @@ import time
 from pathlib import Path
 
 import config
-from config import yanom_globals
 import helper_functions
 from nsx_post_processing import NoteStationPostProcessing
 from nsx_pre_processing import NoteStationPreProcessing
@@ -22,6 +21,7 @@ class NotePage:
         self._raw_content = None
         self._attachments_json = None
         self._parent_notebook_id = None
+        self._parent_notebook = None
         self._nsx_file = nsx_file
         self._pandoc_converter = nsx_file.pandoc_converter
         self._conversion_settings = nsx_file.conversion_settings
@@ -267,6 +267,14 @@ class NotePage:
     @parent_notebook_id.setter
     def parent_notebook_id(self, value):
         self._parent_notebook_id = value
+
+    @property
+    def parent_notebook(self):
+        return self._parent_notebook
+
+    @parent_notebook.setter
+    def parent_notebook(self, value):
+        self._parent_notebook = value
 
     @property
     def pre_processor(self):

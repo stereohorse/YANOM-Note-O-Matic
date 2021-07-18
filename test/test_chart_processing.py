@@ -17,6 +17,7 @@ class Note:
         self.conversion_settings = conversion_settings.ConversionSettings()
         self.image_count = 0
         self.title = 'note title'
+        self.parent_notebook = 'parent'
 
 
 @pytest.mark.parametrize(

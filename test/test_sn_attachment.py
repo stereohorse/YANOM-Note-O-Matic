@@ -1,16 +1,25 @@
 from pathlib import Path
 
+import file_writer
 import pytest
 
 import sn_attachment
 import conversion_settings
+import sn_notebook
 
 
 class NSXFile:
     nsx_file_name = 'nsx_file_name'
+    conversion_settings = 'conversion_settings'
+
     @staticmethod
-    def fetch_attachment_file(ignored, title):
+    def fetch_attachment_file(ignored, ignored2):
         return 'file name in nsx'
+
+
+class Notebook:
+    def __init__(self):
+        self.attachment_md5_file_name_dict = {'qwerty': 'not_matched'}
 
 
 class Note:
@@ -28,6 +37,8 @@ class Note:
                           }
         self.notebook_folder_name = 'notebook_folder'
         self.title = 'note_title'
+        self.parent_notebook = Notebook()
+
 
 def test_notebook_folder_name():
     note = Note()
@@ -111,6 +122,21 @@ def test_ImageNSAttachment_image_ref():
     image_attachment = sn_attachment.ImageNSAttachment(note, attachment_id)
 
     assert image_attachment.image_ref == '54321'
+
+
+def test_change_file_name_image_attachment_file_does_not_already_exist(tmp_path):
+    note = Note()
+    attachment_id = '1234'
+    image_attachment = sn_attachment.ImageNSAttachment(note, attachment_id)
+
+    image_attachment._full_path = Path(tmp_path, 'my_file.png')
+
+    image_attachment.change_file_name_if_already_exists()
+
+    assert len(str(image_attachment.full_path)) == len(
+        str(Path(tmp_path, 'my_file.png')))
+
+    assert image_attachment.full_path == Path(tmp_path, 'my_file.png')
 
 
 def test_change_file_name_image_attachment_if_already_exists(tmp_path):
@@ -199,3 +225,69 @@ def test_get_content_to_save_chart_attachment():
 
     result = chart_attachment.get_content_to_save()
     assert result == data_string
+
+
+def test_is_duplicate_file_not_a_duplicate():
+    note = Note()
+    attachment_id = '1234'
+    image_attachment = sn_attachment.FileNSAttachment(note, attachment_id)
+
+    image_attachment._name = 'my_file.pdf'
+    note.parent_notebook.attachment_md5_file_name_dict = {'abcd': "zxyz"}
+
+    assert image_attachment.is_duplicate_file() is False
+
+
+def test_is_duplicate_file_is_a_duplicate():
+    note = Note()
+    attachment_id = '1234'
+    image_attachment = sn_attachment.FileNSAttachment(note, attachment_id)
+    image_attachment._json = {'attachment':
+                                  {'1234':
+                                       {'md5': '0987', 'name': 'my_file.pdf'}
+                                   }
+                              }
+
+    note.parent_notebook.attachment_md5_file_name_dict = {'0987': "my_file.pdf"}
+
+    assert image_attachment.is_duplicate_file() is True
+
+
+def test_store_file(monkeypatch):
+    def fake_store_file(ignored, ignored2):
+        pass
+
+    note = Note()
+    attachment_id = '1234'
+    image_attachment = sn_attachment.FileNSAttachment(note, attachment_id)
+    image_attachment._json = {'attachment':
+                                  {'1234':
+                                       {'md5': 'abcd', 'name': 'not_my_file.pdf'}
+                                   }
+                              }
+
+    note.parent_notebook.attachment_md5_file_name_dict = {'0987': "my_file.pdf"}
+    monkeypatch.setattr(file_writer, 'store_file', fake_store_file)
+    image_attachment.store_file()
+
+    assert len(note.parent_notebook.attachment_md5_file_name_dict) == 2
+
+
+def test_store_file_will_not_store_as_duplicate_md5_and_name(monkeypatch):
+    def fake_store_file(ignored, ignored2):
+        pass
+
+    note = Note()
+    attachment_id = '1234'
+    image_attachment = sn_attachment.FileNSAttachment(note, attachment_id)
+    image_attachment._json = {'attachment':
+                                  {'1234':
+                                       {'md5': '0987', 'name': 'my_file.pdf'}
+                                   }
+                              }
+
+    note.parent_notebook.attachment_md5_file_name_dict = {'0987': "my_file.pdf"}
+    monkeypatch.setattr(file_writer, 'store_file', fake_store_file)
+    image_attachment.store_file()
+
+    assert len(note.parent_notebook.attachment_md5_file_name_dict) == 1

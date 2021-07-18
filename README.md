@@ -85,7 +85,8 @@ Future versions will support conversion from additional proprietary file formats
     - option to remove spaces from tag names, spaces are replaced with hyphen `-`
   - File attachments are maintained
   - Note-Station specific features
-    - Charts are recreated.  Options to place an image, data table of the chart data and, a link to a csv file on the exported page.      
+    - Charts are recreated.  Options to place an image, data table of the chart data and, a link to a csv file on the exported page.  
+    - If duplicate files are attached to different notes within a notebook only a single copy of the attachment is stored in the attachment folder and links will be to that file.
     - Links between note pages.
       - For Note-Station most of the time this will be successful.  However, there are some limitations and the [Synology Note-Station Links to Other Note Pages](https://github.com/kevindurston21/YANOM-Note-O-Matic/wiki/Synology-Note-Station-Links-to-Other-Note-Pages) wiki page has examples of the possible issues and solutions for them.
     - Note-Station audio notes - are attached as an attachment

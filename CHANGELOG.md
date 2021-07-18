@@ -26,6 +26,9 @@ and this project follows something close to [Semantic Versioning](https://semver
             - [x] another item
 ```
 
+### Added
+- For nsx files, within a single notebook now compare an attachment md5 and file name to those already written to disk and if the file is a duplicate it is not saved to disk and links will be to the existing file.
+
 ### Fixed
 - Checklist items in HTML/NSX on the same line will now be converted
 - Markdown to HTML conversions - checklist items are now enabled in the exported html.  Previously the status was set to disabled and were not clickable.

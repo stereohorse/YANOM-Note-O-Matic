@@ -23,6 +23,7 @@ class NSAttachment(ABC):
         self._notebook_folder_name = note.notebook_folder_name
         self._conversion_settings = note.conversion_settings
         self._note_title = note.title
+        self._parent_notebook = note.parent_notebook
         self._file_name = ''
         self._path_relative_to_notebook = ''
         self._full_path = ''
@@ -42,7 +43,6 @@ class NSAttachment(ABC):
         self.create_file_name()
         self.generate_relative_path_to_notebook()
         self.generate_absolute_path()
-        self.change_file_name_if_already_exists()
         self.store_file()
         self.create_html_link()
 
@@ -59,17 +59,18 @@ class NSAttachment(ABC):
                                self._notebook_folder_name,
                                self._path_relative_to_notebook)
 
-    def change_file_name_if_already_exists(self):
-        while self._full_path.is_file():
-            self._full_path = helper_functions.add_random_string_to_file_name(self._full_path, 4)
+    def is_duplicate_file(self):
+        """Compare md5 and file name to see if current attachment is a duplicate of an existing attachment"""
+        return (self._json['attachment'][self._attachment_id]['md5']
+            in self._parent_notebook.attachment_md5_file_name_dict
+            and self._json['attachment'][self._attachment_id]['name']
+                == self._parent_notebook.attachment_md5_file_name_dict[self._json['attachment'][self._attachment_id]['md5']])
 
-        self._file_name = self._full_path.name
-        self._path_relative_to_notebook = (Path(self._conversion_settings.attachment_folder_name, self._file_name))
-        self.logger.debug(f'Attachment name full path - {self._full_path}')
-        self.logger.debug(f'Attachment name relative path - {self._path_relative_to_notebook}')
+    @abstractmethod
+    def store_file(self):  # pragma: no cover
+        # file_writer.store_file(self._full_path, self.get_content_to_save())
+       pass
 
-    def store_file(self):
-        file_writer.store_file(self._full_path, self.get_content_to_save())
 
     @property
     def notebook_folder_name(self):
@@ -139,6 +140,23 @@ class FileNSAttachment(NSAttachment):
     def get_content_to_save(self):
         return self._nsx_file.fetch_attachment_file(self.filename_inside_nsx, self._note_title)
 
+    def change_file_name_if_already_exists(self):
+        new_full_path = Path(self._full_path)
+        while new_full_path.is_file():
+            new_full_path = helper_functions.add_random_string_to_file_name(self._full_path, 4)
+
+        self._full_path = new_full_path
+        self._file_name = self._full_path.name
+        self.generate_relative_path_to_notebook()
+
+    def store_file(self):
+        if not self.is_duplicate_file():  # skip exact duplicates
+            self.change_file_name_if_already_exists()
+            file_writer.store_file(self._full_path, self.get_content_to_save())
+            md5 = self._json['attachment'][self._attachment_id]['md5']
+            name = self._json['attachment'][self._attachment_id]['name']
+            self._parent_notebook.attachment_md5_file_name_dict[md5] = name
+
 
 class ImageNSAttachment(FileNSAttachment):
 
@@ -189,6 +207,9 @@ class ChartNSAttachment(NSAttachment):
     @property
     def chart_file_like_object(self):
         return self._chart_file_like_object
+
+    def store_file(self):
+        file_writer.store_file(self._full_path, self.get_content_to_save())
 
 
 class ChartImageNSAttachment(ChartNSAttachment):

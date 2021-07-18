@@ -1,6 +1,7 @@
 import logging
 
 import sn_attachment
+import zip_file_reader
 from mock import patch
 from pathlib import Path
 
@@ -9,20 +10,33 @@ import pytest
 
 import nsx_pre_processing
 import pandoc_converter
+import sn_notebook
 import sn_note_page
 
 
 @pytest.fixture
-def note_page(nsx):
+def notebook(nsx, monkeypatch):
+    def fake_json_data(ignored, ignored2):
+        return None
+
+    monkeypatch.setattr(zip_file_reader, 'read_json_data', fake_json_data)
+    # patch will cause notebook name to be "Unknown Notebook' with no json data
+    notebook = sn_notebook.Notebook(nsx, 'note_book2')
+    return notebook
+
+
+@pytest.fixture
+def note_page(nsx, notebook):
     note_jason = {'parent_id': 'note_book2', 'title': 'Page 8 title',
                   'mtime': 1619298640, 'ctime': 1619298559, 'attachment': {'test': 'test_value'}, 'content': 'content',
                   'tag': [9]}
     np = sn_note_page.NotePage(nsx, '1234', note_jason)
+    np.parent_notebook = notebook
     return np
 
 
 @pytest.fixture
-def note_page_1(nsx):
+def note_page_1(nsx, notebook):
     note_page_1_json = {
         'parent_id': 'note_book1',
         'title': 'Page 1 title',
@@ -74,6 +88,7 @@ def note_page_1(nsx):
     note_page_1.notebook_folder_name = 'note_book1'
     note_page_1._file_name = 'page-1-title.md'
     note_page_1._raw_content = """<div>Below is a hyperlink to the internet</div><div><a href=\"https://github.com/kevindurston21/YANOM-Note-O-Matic\">https://github.com/kevindurston21/YANOM-Note-O-Matic</a></div>"""
+    note_page_1.parent_notebook = notebook
 
     return note_page_1
 
@@ -189,8 +204,6 @@ def test_increment_duplicated_title(note_page, title_list, expected_new_title):
     assert note_page.title == expected_new_title
 
 
-
-
 @pytest.mark.parametrize(
     'export_format, expected', [
         ('gfm',
@@ -207,8 +220,10 @@ def test_process_note(nsx, note_page_1, export_format, expected, monkeypatch):
     def fake_store_file(ignored):
         pass
 
-    monkeypatch.setattr(sn_attachment.NSAttachment, 'store_file', fake_store_file)
-
+    # NOTE  THIS IS CRAZY.  Depending on the day one of these money patches works.
+    # If the test fails swap to the other and it wil probbaly work until tomoroow!
+    # monkeypatch.setattr(sn_attachment.NSAttachment, 'store_file', fake_store_file)
+    monkeypatch.delattr('sn_attachment.FileNSAttachment.store_file')
     note_page_1.process_note()
 
     assert note_page_1.converted_content == expected

@@ -28,6 +28,7 @@ class Notebook:
         self._full_path_to_notebook = None
         self.note_pages = []
         self.note_titles = []
+        self._attachment_md5_file_name_dict = {}
 
     def process_notebook_pages(self):
         self.logger.info(f"Processing note book {self.title} - {self.notebook_id}")
@@ -70,6 +71,7 @@ class Notebook:
 
         note_page.notebook_folder_name = self.folder_name
         note_page.parent_notebook_id = self.notebook_id
+        note_page.parent_notebook = self
 
         while note_page.title in self.note_titles:
             note_page.increment_duplicated_title(self.note_titles)
@@ -144,3 +146,7 @@ class Notebook:
     @property
     def full_path_to_notebook(self):
         return self._full_path_to_notebook
+
+    @property
+    def attachment_md5_file_name_dict(self):
+        return self._attachment_md5_file_name_dict
