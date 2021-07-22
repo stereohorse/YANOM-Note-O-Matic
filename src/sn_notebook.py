@@ -74,7 +74,7 @@ class Notebook:
                                f"{self.folder_name}-{n}")
 
         target_path.mkdir(parents=True, exist_ok=True)
-        self.folder_name = target_path.stem
+        self.folder_name = target_path.name
         self.full_path_to_notebook = target_path
 
     def create_attachment_folder(self):

@@ -8,6 +8,11 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Increment the minor version number when adding a new feature or set of features and any current bug fixes not yet released
 - Increment the major version when significantly overhaul the user interface, or rewrite all internals.
 
+## [1.3.1] - 2021-07-22
+
+### Fixed
+- Exporting NSX where the notebook name had a dot `.` in it would create a correct notebook directory but the notes would try to save in a directory that was just the part before the dot `1234.567` became `1234` when saving files. NOw files are saved correctly using full directory name.
+
 ## [1.3.0] - 2021-06-16
 
 ### Added
