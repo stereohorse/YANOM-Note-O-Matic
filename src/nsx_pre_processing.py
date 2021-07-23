@@ -41,14 +41,6 @@ class NoteStationPreProcessing:
         self.pre_process_note_page()
         pass
 
-    # @property
-    # def pre_processed_content(self):
-    #     return self._pre_processed_content
-    #
-    # @pre_processed_content.setter
-    # def pre_processed_content(self, content):
-    #     self._pre_processed_content = content
-
     @property
     def metadata_processor(self):
         return self._metadata_processor
@@ -143,12 +135,13 @@ class NoteStationPreProcessing:
         tables = re.findall('<table.*</table>', self.pre_processed_content)
 
         for table in tables:
-            new_table = table
-            new_table = new_table.replace('<b>', '<strong>')
-            new_table = new_table.replace('</b>', '</strong>')
-            new_table = new_table.replace('<tbody>', '<thead>')
-            new_table = new_table.replace('</td></tr>', '</td></tr></thead><tbody>', 1)
-            self.pre_processed_content = self.pre_processed_content.replace(table, new_table)
+            if table.count('<tr>') > 2:  # only make header row if table has more than one row
+                new_table = table
+                new_table = new_table.replace('<b>', '<strong>')
+                new_table = new_table.replace('</b>', '</strong>')
+                new_table = new_table.replace('<tbody>', '<thead>')
+                new_table = new_table.replace('</td></tr>', '</td></tr></thead><tbody>', 1)
+                self.pre_processed_content = self.pre_processed_content.replace(table, new_table)
 
     def _first_column_in_table_as_header_if_required(self):
         self.logger.debug(f"Make tables first column bold")
