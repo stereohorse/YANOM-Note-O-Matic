@@ -86,6 +86,12 @@ class NotePage:
         return self._file_name
 
     def create_attachments(self):
+        if self._attachments_json is None:
+            self.logger.warning(
+                f'Note - {self._title} - Has Null set for attachments. '
+                f'There may be a sync issues between desktop and web version of Note Station.')
+            return
+
         for attachment_id in self._attachments_json:
             if self._attachments_json[attachment_id]['type'].startswith('image'):
                 self._attachments[attachment_id] = sn_attachment.ImageNSAttachment(self, attachment_id)
