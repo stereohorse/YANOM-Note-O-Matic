@@ -83,7 +83,7 @@ def test_generate_filenames_and_paths(export_format, extension, note_page):
 
     assert note_page.file_name == Path(f'page-8-title.{extension}')
     assert note_page.full_path == Path(note_page.conversion_settings.working_directory, config.DATA_DIR,
-                                       note_page.conversion_settings.export_folder_name, note_page.notebook_folder_name,
+                                       note_page.conversion_settings.export_folder, note_page.notebook_folder_name,
                                        note_page.file_name)
 
 

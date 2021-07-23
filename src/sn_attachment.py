@@ -44,7 +44,7 @@ class NSAttachment(ABC):
 
     def generate_absolute_path(self):
         self._full_path = Path(self._conversion_settings.working_directory, config.DATA_DIR,
-                               self._conversion_settings.export_folder_name,
+                               self._conversion_settings.export_folder,
                                self._notebook_folder_name,
                                self._path_relative_to_notebook)
 

@@ -64,13 +64,13 @@ class Notebook:
 
         n = 0
         target_path = Path(current_directory_path, config.DATA_DIR,
-                           self.nsx_file.conversion_settings.export_folder_name,
+                           self.nsx_file.conversion_settings.export_folder,
                            self.folder_name)
 
         while target_path.exists():
             n += 1
             target_path = Path(current_directory_path, config.DATA_DIR,
-                               self.nsx_file.conversion_settings.export_folder_name,
+                               self.nsx_file.conversion_settings.export_folder,
                                f"{self.folder_name}-{n}")
 
         target_path.mkdir(parents=True, exist_ok=True)

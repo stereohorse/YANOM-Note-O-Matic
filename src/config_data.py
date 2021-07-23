@@ -134,7 +134,7 @@ class ConfigData(ConfigParser):
         self._conversion_settings.chart_csv = self.getboolean('chart_options', 'chart_csv')
         self._conversion_settings.chart_data_table = self.getboolean('chart_options', 'chart_data_table')
         self._conversion_settings.source = self['file_options']['source']
-        self._conversion_settings.export_folder_name = self['file_options']['export_folder_name']
+        self._conversion_settings.export_folder = self['file_options']['export_folder']
         self._conversion_settings.attachment_folder_name = self['file_options']['attachment_folder_name']
         self._conversion_settings.creation_time_in_exported_file_name = \
             self.getboolean('file_options', 'creation_time_in_exported_file_name')
@@ -286,7 +286,7 @@ class ConfigData(ConfigParser):
             },
             'file_options': {
                 'source': self._conversion_settings.source,
-                'export_folder_name': self._conversion_settings.export_folder_name,
+                'export_folder': self._conversion_settings.export_folder,
                 'attachment_folder_name': self._conversion_settings.attachment_folder_name,
 
                 'creation_time_in_exported_file_name': self._conversion_settings.creation_time_in_exported_file_name,

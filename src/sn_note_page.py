@@ -74,7 +74,7 @@ class NotePage:
 
     def _generate_absolute_path(self):
         path_to_file = Path(self._conversion_settings.working_directory, config.DATA_DIR,
-                            self._conversion_settings.export_folder_name, self._notebook_folder_name, self._file_name)
+                            self._conversion_settings.export_folder, self._notebook_folder_name, self._file_name)
 
         absolute_file_path = helper_functions.find_valid_full_file_path(path_to_file)
 

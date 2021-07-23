@@ -129,6 +129,15 @@ def test_source_setting_valid_sub_directory(tmp_path):
     assert cs._source_absolute_path == Path(tmp_path, config.DATA_DIR, "my-source")
 
 
+def test_export_folder_setting_provide_a_file_not_directory(tmp_path):
+    cs = conversion_settings.ConversionSettings()
+    cs.working_directory = tmp_path
+    Path(tmp_path, "my-target-file.txt").touch()
+
+    with pytest.raises(ValueError) as exc:
+        cs.export_folder = str(Path(tmp_path, "my-target-file.txt"))
+
+
 def test_front_matter_setter_invalid(caplog):
     cs = conversion_settings.ConversionSettings()
     cs.front_matter_format = 'toml'

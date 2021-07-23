@@ -129,7 +129,7 @@ def test_create_export_folder_if_not_exist(conv_setting, caplog, tmp_path):
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
     nsx_fc.conversion_settings.working_directory = tmp_path
-    nsx_fc.conversion_settings.export_folder_name = 'notes'
+    nsx_fc.conversion_settings.export_folder = 'notes'
 
     nsx_fc.create_export_folder_if_not_exist()
 

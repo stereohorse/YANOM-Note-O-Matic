@@ -72,7 +72,7 @@ chart_data_table = True
 
 [file_options]
 source = my_source
-export_folder_name = notes
+export_folder = notes
 attachment_folder_name = attachments
 creation_time_in_exported_file_name = False
     # creation time in file name only applies to nsx files.
@@ -199,7 +199,7 @@ def test_validate_config_file_missing_keys_and_sections(tmp_path, good_config_in
         ('chart_options', 'chart_image', 'True', 'False', False),
         ('chart_options', 'chart_csv', 'True', 'False', False),
         ('chart_options', 'chart_data_table', 'True', 'False', False),
-        ('file_options', 'export_folder_name', 'export_orig', 'export_new', Path('export_new')),
+        ('file_options', 'export_folder', 'export_orig', 'export_new', Path('export_new')),
         ('file_options', 'attachment_folder_name', 'attachment_orig', 'attachment_new', Path('attachment_new')),
         ('file_options', 'creation_time_in_exported_file_name', 'True', 'False', False),
     ]
@@ -396,7 +396,7 @@ def test_str(good_config_ini, tmp_path):
     cd.parse_config_file()
 
     result = str(cd)
-    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'obsidian'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder_name': 'notes', 'attachment_folder_name': 'attachments', 'creation_time_in_exported_file_name': 'False'}}"
+    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'obsidian'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes', 'attachment_folder_name': 'attachments', 'creation_time_in_exported_file_name': 'False'}}"
 
 
 def test_generate_conversion_settings_using_quick_settings_string(good_config_ini, tmp_path, caplog):

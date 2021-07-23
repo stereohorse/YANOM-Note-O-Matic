@@ -110,7 +110,7 @@ class ConversionSettings:
         },
         'file_options': {
             'source': '',
-            'export_folder_name': '',
+            'export_folder': '',
             'attachment_folder_name': '',
             'creation_time_in_exported_file_name': ('True', 'False')
         }
@@ -163,7 +163,7 @@ class ConversionSettings:
                f"first_row_as_header={self.first_row_as_header}, " \
                f"first_column_as_header={self.first_column_as_header}" \
                f"spaces_in_tags={self.spaces_in_tags}, split_tags={self.split_tags}, " \
-               f"export_folder_name='{self.export_folder_name}', " \
+               f"export_folder='{self.export_folder}', " \
                f"attachment_folder_name='{self.attachment_folder_name}', " \
                f"creation_time_in_exported_file_name='{self.creation_time_in_exported_file_name})'"
 
@@ -180,7 +180,7 @@ class ConversionSettings:
                f"first_row_as_header={self.first_row_as_header}, " \
                f"first_column_as_header={self.first_column_as_header}" \
                f"spaces_in_tags={self.spaces_in_tags}, split_tags={self.split_tags}, " \
-               f"export_folder_name='{self.export_folder_name}', " \
+               f"export_folder='{self.export_folder}', " \
                f"attachment_folder_name='{self.attachment_folder_name}', " \
                f"creation_time_in_exported_file_name='{self.creation_time_in_exported_file_name})'"
 
@@ -549,12 +549,15 @@ class ConversionSettings:
         self._tag_prefix = value
 
     @property
-    def export_folder_name(self):
+    def export_folder(self):
         return self._export_folder_name
 
-    @export_folder_name.setter
-    def export_folder_name(self, value):
-        self._export_folder_name = generate_clean_path(value)
+    @export_folder.setter
+    def export_folder(self, provided_export_folder):
+        if Path(provided_export_folder).is_file():
+            raise ValueError(f"Invalid path provided. Path is to file not a directory. - {provided_export_folder}")
+
+        self._export_folder_name = generate_clean_path(provided_export_folder)
 
     @property
     def attachment_folder_name(self):

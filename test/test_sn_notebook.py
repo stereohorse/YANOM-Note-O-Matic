@@ -12,17 +12,17 @@ def test_create_notebook_folder_folder_does_not_already_exist(tmp_path, nsx, cap
     notebook_title = 'notebook1'
     notebook = sn_notebook.Notebook(nsx, 'abcd', notebook_title)
 
-    notebook.conversion_settings.export_folder_name = 'export-folder'
+    notebook.conversion_settings.export_folder = 'export-folder'
     notebook.folder_name = 'notebook1'
 
-    Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder_name).mkdir(parents=True, exist_ok=True)
+    Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder).mkdir(parents=True, exist_ok=True)
 
     notebook.create_notebook_folder()
 
-    assert Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder_name, notebook.folder_name).exists()
+    assert Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, notebook.folder_name).exists()
 
     assert notebook.folder_name == 'notebook1'
-    assert notebook.full_path_to_notebook == Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder_name, notebook.folder_name)
+    assert notebook.full_path_to_notebook == Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, notebook.folder_name)
 
     assert len(caplog.records) == 1
     assert caplog.records[0].message == f'Creating notebook folder for {notebook_title}'
@@ -32,20 +32,20 @@ def test_create_notebook_folder_folder_already_exist(tmp_path, nsx, caplog):
     notebook_title = 'notebook1'
     notebook = sn_notebook.Notebook(nsx, 'abcd', notebook_title)
 
-    notebook.conversion_settings.export_folder_name = 'export-folder'
+    notebook.conversion_settings.export_folder = 'export-folder'
     notebook.folder_name = 'notebook1'
 
-    Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder_name, notebook.folder_name).mkdir(parents=True, exist_ok=True)
+    Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, notebook.folder_name).mkdir(parents=True, exist_ok=True)
     expected_folder_name = 'notebook1-1'
 
     notebook.create_notebook_folder()
 
-    assert Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder_name,
+    assert Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder,
                 expected_folder_name).exists()
 
     assert notebook.folder_name == expected_folder_name
     assert notebook.full_path_to_notebook == Path(tmp_path, config.DATA_DIR,
-                                                  notebook.conversion_settings.export_folder_name, expected_folder_name)
+                                                  notebook.conversion_settings.export_folder, expected_folder_name)
 
     assert len(caplog.records) == 1
     assert caplog.records[0].message == f'Creating notebook folder for {notebook_title}'
@@ -55,13 +55,13 @@ def test_create_attachment_folder(tmp_path, nsx, caplog):
     config.set_logger_level("DEBUG")
     notebook_title = 'notebook1'
     notebook = sn_notebook.Notebook(nsx, 'abcd', notebook_title)
-    notebook.full_path_to_notebook = Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder_name, 'notebook1')
+    notebook.full_path_to_notebook = Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, 'notebook1')
     notebook.full_path_to_notebook.mkdir(parents=True, exist_ok=True)
     notebook.conversion_settings.attachment_folder_name = 'attachments'
 
     notebook.create_attachment_folder()
 
-    assert Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder_name, 'notebook1', 'attachments').exists()
+    assert Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, 'notebook1', 'attachments').exists()
 
     assert len(caplog.records) == 1
     assert caplog.records[0].message == f'Creating attachment folder'
@@ -72,16 +72,16 @@ def test_create_folders(tmp_path, nsx, caplog):
     notebook_title = 'notebook1'
     notebook = sn_notebook.Notebook(nsx, 'abcd', notebook_title)
     notebook.conversion_settings.attachment_folder_name = 'attachments'
-    notebook.conversion_settings.export_folder_name = 'export-folder'
+    notebook.conversion_settings.export_folder = 'export-folder'
     notebook.folder_name = 'notebook1'
 
-    Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder_name).mkdir(parents=True, exist_ok=True)
+    Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder).mkdir(parents=True, exist_ok=True)
 
     notebook.create_folders()
 
-    assert Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder_name,
+    assert Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder,
                 'notebook1').exists()
-    assert Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder_name, 'notebook1',
+    assert Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, 'notebook1',
                 'attachments').exists()
 
     assert len(caplog.records) == 2

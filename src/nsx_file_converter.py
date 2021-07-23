@@ -102,10 +102,10 @@ class NSXFile:
         self.logger.debug(f"Creating export folder if it does not exist")
 
         target_path = Path(self.conversion_settings.working_directory, config.DATA_DIR,
-                           self._conversion_settings.export_folder_name)
+                           self._conversion_settings.export_folder)
 
         target_path.mkdir(exist_ok=True)
-        self._conversion_settings.export_folder_name = target_path.stem
+        self._conversion_settings.export_folder = target_path.stem
 
     def create_folders(self):
         self.logger.debug(f"Creating folders for notebooks")
