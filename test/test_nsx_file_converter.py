@@ -166,7 +166,9 @@ def test_add_note_pages(conv_setting, caplog, silent_mode):
 
     nsx_fc._note_page_ids = ['1234']
 
-    with patch('zip_file_reader.read_json_data', spec=True, return_value={'title': 'note title', 'ctime': 1620808218, 'mtime': 1620808218, 'parent_id': '1234'}) as mock_read_json_data:
+    with patch('zip_file_reader.read_json_data', spec=True,
+               return_value={'title': 'note title', 'ctime': 1620808218, 'mtime': 1620808218, 'parent_id': '1234',
+                             'encrypt': False}) as mock_read_json_data:
         caplog.clear()
         nsx_fc.add_note_pages()
 
@@ -175,6 +177,27 @@ def test_add_note_pages(conv_setting, caplog, silent_mode):
     assert nsx_fc.note_pages['1234'].title == 'note title'
 
     assert caplog.records[0].message == 'Creating note page objects'
+
+
+def test_add_note_pages_encrypted_note(conv_setting, caplog):
+    config.set_logger_level("DEBUG")
+
+    nsx_fc = nsx_file_converter.NSXFile(Path('fake_file'), conv_setting, 'fake_pandoc_converter')
+
+    nsx_fc._note_page_ids = ['1234']
+
+    with patch('zip_file_reader.read_json_data', spec=True, return_value={'title': 'note title', 'ctime': 1620808218, 'mtime': 1620808218, 'parent_id': '1234', 'encrypt': True}) as mock_read_json_data:
+        caplog.clear()
+        nsx_fc.add_note_pages()
+
+    assert nsx_fc.note_page_count == 0
+
+    assert len(nsx_fc.note_pages) == 0
+
+    assert caplog.records[0].message == 'Creating note page objects'
+    assert caplog.records[1].message == 'The Note - "note title" - is encrypted and has not been converted.'
+
+    assert nsx_fc._encrypted_notes == ['note title']
 
 
 @pytest.fixture

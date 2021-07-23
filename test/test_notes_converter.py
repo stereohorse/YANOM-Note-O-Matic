@@ -77,6 +77,7 @@ class FakeNSXFile:
         self.note_book_count = 2
         self.image_count = 3
         self.attachment_count = 4
+        self.encrypted_notes = []
 
     @staticmethod
     def process_nsx_file():

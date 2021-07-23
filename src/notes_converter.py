@@ -42,6 +42,7 @@ class NotesConvertor:
         self._nsx_backups = []
         self.pandoc_converter = None
         self.config_data = config_data
+        self._encrypted_notes = []
 
     def convert_notes(self):
         self.evaluate_command_line_arguments()
@@ -118,6 +119,7 @@ class NotesConvertor:
             for nsx_file in self._nsx_backups:
                 nsx_file.process_nsx_file()
                 self.update_processing_stats(nsx_file)
+                self._encrypted_notes += nsx_file.encrypted_notes
 
     def update_processing_stats(self, nsx_file):
         self._note_page_count += nsx_file.note_page_count

@@ -10,6 +10,16 @@ and this project follows something close to [Semantic Versioning](https://semver
 
 ## [1.3.2] - 2021-07-23
 
+### Added
+- Refactor image tag processing - improved efficiency
+
+### Fixed
+- Potential pandoc failure when converting single row tables from nsx file.
+- Metadata keys named 'content' would make 3rd party library raise an exception.  Now manually iterate the metadata items instead of using 3rd party function.
+- Metadata key of 'charset' would make 3rd party library raise an exception.
+- File renaming for duplicate attachment names for nsx export - fixes bug introduced in 1.3.0 that resulted in duplicate names over writing each other, now duplicates are renamed.
+- Catch attachments set as null in nsx file, continue to convert note but there will be no attachments. log file records a WARNING message.
+- Web version of note station can export encrypted notes. Check for and filter out encrypted notes from nsx files.  The encrypted notes are not converted and a warning is placed in the log file.
 
 ## [1.3.1] - 2021-07-22
 

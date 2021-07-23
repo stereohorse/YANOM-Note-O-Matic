@@ -38,6 +38,7 @@ class NSXFile:
         self._attachment_count = 0
         self._pandoc_converter = pandoc_converter
         self._inter_note_link_processor = NSXInterNoteLinkProcessor()
+        self._encrypted_notes = []
 
     def process_nsx_file(self):
         self.logger.info(f"Processing {self._nsx_file_name}")
@@ -119,12 +120,22 @@ class NSXFile:
             print(f"Finding note pages in {self._nsx_file_name.name}")
         with alive_bar(len(self._note_page_ids), bar='blocks') as bar:
             for note_id in self._note_page_ids:
-                note_page = NotePage(self, note_id, self.fetch_json_data(note_id))
+                note_data = self.fetch_json_data(note_id)
+                if self.is_note_encrypted(note_data):
+                    self._encrypted_notes.append(note_data['title'])
+                    self.logger.warning(f'The Note - "{note_data["title"]}" - is encrypted and has not been converted.')
+                    continue
+
+                note_page = NotePage(self, note_id, note_data)
                 self._note_pages[note_id] = note_page
                 if not config.silent:
                     bar()
 
             self._note_page_count += len(self._note_pages)
+
+    @staticmethod
+    def is_note_encrypted(note_data):
+        return note_data['encrypt']
 
     def add_note_pages_to_notebooks(self):
         self.logger.info("Add note pages to notebooks")
@@ -195,3 +206,7 @@ class NSXFile:
     @property
     def inter_note_link_processor(self):
         return self._inter_note_link_processor
+
+    @property
+    def encrypted_notes(self):
+        return self._encrypted_notes
