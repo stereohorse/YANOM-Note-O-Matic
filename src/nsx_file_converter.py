@@ -64,11 +64,13 @@ class NSXFile:
         self.inter_note_link_processor.match_renamed_links_using_link_ref_id()
 
     def generate_note_page_filename_and_path(self):
+        used_filenames = set()  # used_filenames is used to ensure no duplicate file names are generated
         for note_page in self.note_pages.values():
             # this has to happen before processing as the file name and path are needed for pre_processing content
             # and all notes have to have these set before any of them are processed to allow links between notes
             # to be created
-            note_page.generate_filenames_and_paths()
+            new_filename = note_page.generate_filenames_and_paths(used_filenames)
+            used_filenames.add(new_filename)
 
     def fetch_json_data(self, data_id):
         return zip_file_reader.read_json_data(self._nsx_file_name, data_id)

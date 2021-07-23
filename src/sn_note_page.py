@@ -55,9 +55,16 @@ class NotePage:
             self.post_process_content()
         self.logger.debug(f"Processing of note page '{self._title}' - {self._note_id}  completed.")
 
-    def _create_file_name(self):
+    def _create_file_name(self, used_filenames):
         dirty_filename = self._append_file_extension()
-        self._file_name = helper_functions.generate_clean_path(dirty_filename)
+        cleaned_filename = helper_functions.generate_clean_path(dirty_filename)
+        new_filename = cleaned_filename
+        n = 0
+        while new_filename in used_filenames:
+            n += 1
+            new_filename = Path(f'{Path(cleaned_filename).stem}-{n}{Path(cleaned_filename).suffix}')
+
+        self._file_name = new_filename
 
     def _append_file_extension(self):
         if self._conversion_settings.export_format == 'html':
@@ -73,10 +80,10 @@ class NotePage:
 
         return absolute_file_path
 
-    def generate_filenames_and_paths(self):
-        self._create_file_name()
+    def generate_filenames_and_paths(self, used_filenames):
+        self._create_file_name(used_filenames)
         self._full_path = self._generate_absolute_path()
-        self._file_name = self._full_path.name
+        return self._file_name
 
     def create_attachments(self):
         for attachment_id in self._attachments_json:

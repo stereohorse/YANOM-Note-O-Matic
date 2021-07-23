@@ -95,9 +95,9 @@ class MetaDataProcessor:
             return
         self.logger.debug(f"Removing spaces from 'tags'")
         if 'tags' in self._metadata:
-            self._metadata['tags'] = [tag.replace(' ', '-') for tag in self._metadata['tags']]
+            self._metadata['tags'] = [str(tag).replace(' ', '-') for tag in self._metadata['tags']]
         if 'tag' in self._metadata:
-            self._metadata['tag'] = [tag.replace(' ', '-') for tag in self._metadata['tag']]
+            self._metadata['tag'] = [str(tag).replace(' ', '-') for tag in self._metadata['tag']]
 
     def split_tags_if_required(self):
         if not self._split_tags:

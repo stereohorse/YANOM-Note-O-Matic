@@ -37,7 +37,33 @@ def test_generate_note_page_filename_and_path(nsx, conv_setting):
     nsx_fc.generate_note_page_filename_and_path()
 
     for note in nsx_fc._note_pages.values():
-        assert note.file_name == 'page-1-title.md'
+        assert note.file_name == Path('page-1-title.md')
+
+
+def test_generate_note_page_filename_and_path_duplicate_titles(nsx, conv_setting):
+    nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
+
+    note_page_1_json = {'parent_id': 'note_book1', 'title': 'Page 1 title', 'mtime': 1619298559, 'ctime': 1619298539,
+                        'attachment': {}, 'content': 'content', 'tag': [1]}
+    note_page_1 = sn_note_page.NotePage(nsx, 1, note_page_1_json)
+    note_page_1.notebook_folder_name = 'note_book1'
+    note_page_1._raw_content = """<div>Below is a hyperlink to the internet</div><div><a href=\"https://github.com/kevindurston21/YANOM-Note-O-Matic\">https://github.com/kevindurston21/YANOM-Note-O-Matic</a></div>"""
+
+    note_page_2_json = {'parent_id': 'note_book1', 'title': 'Page 1 title', 'mtime': 1619298559, 'ctime': 1619298539,
+                        'attachment': {}, 'content': 'content', 'tag': [1]}
+    note_page_2 = sn_note_page.NotePage(nsx, 1, note_page_2_json)
+    note_page_2.notebook_folder_name = 'note_book1'
+    note_page_2._raw_content = """<div>Below is a hyperlink to the internet</div><div><a href=\"https://github.com/kevindurston21/YANOM-Note-O-Matic\">https://github.com/kevindurston21/YANOM-Note-O-Matic</a></div>"""
+
+    nsx_fc._note_pages = {
+        id(note_page_1): note_page_1,
+        id(note_page_2): note_page_2
+    }
+
+    nsx_fc.generate_note_page_filename_and_path()
+
+    assert nsx_fc._note_pages[id(note_page_1)]._file_name == Path('page-1-title.md')
+    assert nsx_fc._note_pages[id(note_page_2)]._file_name == Path('page-1-title-1.md')
 
 
 def test_fetch_json_data(conv_setting):

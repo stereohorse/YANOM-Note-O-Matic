@@ -21,7 +21,7 @@ def note_page(nsx):
 @pytest.fixture
 def note_page_1(nsx):
     note_page_1_json = {'parent_id': 'note_book1', 'title': 'Page 1 title', 'mtime': 1619298559, 'ctime': 1619298539,
-                        'content': 'content', 'tag': [1], 'attachment': {
+                        'content': 'content', 'tag': ['1'], 'attachment': {
             "_-m4Hhgmp34U85IwTdWfbWw": {"md5": "e79072f793f22434740e64e93cfe5926",
                                         "name": "ns_attach_image_787491613404344687.png", "size": 186875, "width": 1848,
                                         "height": 1306, "type": "image/png", "ctime": 1616084097,
@@ -79,9 +79,9 @@ def test_generate_filenames_and_paths(export_format, extension, note_page):
     note_page.conversion_settings.export_format = export_format
     note_page.notebook_folder_name = 'note_book2'
 
-    note_page.generate_filenames_and_paths()
+    note_page.generate_filenames_and_paths([''])
 
-    assert note_page.file_name == f'page-8-title.{extension}'
+    assert note_page.file_name == Path(f'page-8-title.{extension}')
     assert note_page.full_path == Path(note_page.conversion_settings.working_directory, config.DATA_DIR,
                                        note_page.conversion_settings.export_folder_name, note_page.notebook_folder_name,
                                        note_page.file_name)
@@ -108,9 +108,11 @@ def test_process_attachments(nsx, note_page_1):
 
 
 def test_pre_process_content(note_page):
+    note_page.conversion_settings.metadata_schema = ['title']
+    note_page.conversion_settings.export_format = 'html'
     note_page.pre_process_content()
 
-    assert note_page.pre_processed_content == '<head><title> </title></head>content'
+    assert note_page.pre_processed_content == '<head><title>Page 8 title</title><meta title="Page 8 title"/></head>content'
 
 
 @pytest.mark.parametrize(
@@ -133,6 +135,7 @@ def test_post_process_content(note_page, tmp_path):
     note_page._pandoc_converter = pandoc_converter.PandocConverter(note_page.conversion_settings)
     note_page._converted_content = 'content\n'
     note_page._pre_processor = nsx_pre_processing.NoteStationPreProcessing(note_page)
+    note_page.conversion_settings.front_matter_format = 'none'
     note_page.post_process_content()
 
     assert note_page._converted_content == 'content\n\n'
@@ -155,12 +158,13 @@ def test_increment_duplicated_title(note_page, title_list, expected_new_title):
         ('gfm',
          """Below is a hyperlink to the internet\n\n<https://github.com/kevindurston21/YANOM-Note-O-Matic>\n\n###### Attachments\n\n[record-2021-02-15-160013.webm](attachments/record-2021-02-15-160013.webm)\n\n[example-attachment.pdf](attachments/example-attachment.pdf)\n\n[test-page.pdf](attachments/test-page.pdf)\n\n"""),
         ('html',
-         """<head><title> </title></head><p>Below is a hyperlink to the internet</p><p><a href="https://github.com/kevindurston21/YANOM-Note-O-Matic">https://github.com/kevindurston21/YANOM-Note-O-Matic</a></p><h6>Attachments</h6><p><a href="attachments/record-2021-02-15-160013.webm">record-2021-02-15-160013.webm</a></p><p><a href="attachments/example-attachment.pdf">example-attachment.pdf</a></p><p><a href="attachments/test-page.pdf">test-page.pdf</a></p>"""),
+         """<p>Below is a hyperlink to the internet</p><p><a href="https://github.com/kevindurston21/YANOM-Note-O-Matic">https://github.com/kevindurston21/YANOM-Note-O-Matic</a></p><h6>Attachments</h6><p><a href="attachments/record-2021-02-15-160013.webm">record-2021-02-15-160013.webm</a></p><p><a href="attachments/example-attachment.pdf">example-attachment.pdf</a></p><p><a href="attachments/test-page.pdf">test-page.pdf</a></p>"""),
     ]
 )
 def test_process_note(nsx, note_page_1, export_format, expected):
     note_page_1.conversion_settings.export_format = export_format
     note_page_1._pandoc_converter = pandoc_converter.PandocConverter(note_page_1.conversion_settings)
+    note_page_1.conversion_settings.front_matter_format = 'none'
 
     note_page_1.process_note()
 
