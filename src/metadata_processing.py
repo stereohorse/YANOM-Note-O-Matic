@@ -22,6 +22,7 @@ class MetaDataProcessor:
         self._metadata_schema = conversion_settings.metadata_schema
         self._metadata = {}
         self._tags = None
+        self._keys_that_can_not_be_used = {'charset'}  # when `charset` is in meta data yaml.dump will not work.
 
     def parse_html_metadata(self, html_metadata_source):
         self.logger.debug(f"Parsing HTML meta-data")
@@ -36,20 +37,23 @@ class MetaDataProcessor:
         for tag in head:
             if tag.name == 'meta':
                 for key, value in tag.attrs.items():
-                    if self._metadata_schema == [''] or key in self._metadata_schema:
+                    if self._is_meta_data_key_valid(key):
                         self._metadata[key] = value
 
         self.format_tag_metadata_if_required()
 
     def parse_dict_metadata(self, metadata_dict):
         self.logger.debug(f"Parsing a dictionary of meta-data")
-        for item in self._metadata_schema:
-            if item in metadata_dict.keys():
-                self._metadata[item] = metadata_dict[item]
-            else:
-                self.logger.debug('Meta key {item} not found')
+
+        for key, value in metadata_dict.items():
+            if self._is_meta_data_key_valid(key):
+                self._metadata[key] = value
 
         self.format_tag_metadata_if_required()
+
+    def _is_meta_data_key_valid(self, key):
+        return key not in self._keys_that_can_not_be_used \
+               and (self._metadata_schema == [''] or key in self._metadata_schema)
 
     def parse_md_metadata(self, md_string):
         self.logger.debug(f"Parsing markdown front matter meta-data")
@@ -128,7 +132,13 @@ class MetaDataProcessor:
             content = self.add_text_metadata_to_content(content)
             return content
 
-        merged_content = frontmatter.Post(content, **self._metadata)
+        merged_content = frontmatter.Post(content)
+
+        # iterate metadata items rather than using "frontmatter.Post(content, **self._metadata)"
+        # because POST init can not accept a meta data field that ahs a key of 'content' which is common in html
+        # and likely in other files as well
+        for key, value in self._metadata.items():
+            merged_content[key] = value
 
         self._force_pandoc_markdown_to_yaml_front_matter()
 
