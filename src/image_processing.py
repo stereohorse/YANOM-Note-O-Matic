@@ -11,15 +11,24 @@ class ImageTag:
         self._ref = ''
         self._width = None
         self._relative_path = ''
+        self._image_attachments = []
+        self._get_image_attachments()
         self._set_ref_and_relative_path()
         self._set_width()
         self._create_new_tag()
 
+    def _get_image_attachments(self):
+        self._image_attachments = [attachment
+                                   for attachment in self._attachments.values()
+                                   if isinstance(attachment, ImageNSAttachment)
+                                   ]
+
     def _set_ref_and_relative_path(self):
-        for attachment in self._attachments.values():
-            if isinstance(attachment, ImageNSAttachment) and attachment.image_ref in self._raw_tag:
+        for attachment in self._image_attachments:
+            if attachment.image_ref in self._raw_tag:
                 self._ref = attachment.image_ref
                 self._relative_path = str(attachment.path_relative_to_notebook)
+                return
 
     def _set_width(self):
         if 'width="' in self._raw_tag:
