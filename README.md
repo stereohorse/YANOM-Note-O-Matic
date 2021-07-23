@@ -42,7 +42,7 @@ Additionally, YANOM has the capability to add support for modified Markdown form
 ## YANOM Note-O-Matic wiki
 The [YANOM wiki](https://github.com/kevindurston21/YANOM-Note-O-Matic/wiki) explains features, functionality, instalation and use in greater detail than this read me.
 
-## Version 1.3.1 capabilities 
+## Version 1.3.x capabilities 
 - Conversion of Synology Note-Station files to markdown or html.  [Full details of the supported features and examples](https://github.com/kevindurston21/YANOM-Note-O-Matic/wiki/note-station-conversion-details.md) are in the wiki. 
 - Conversion between Markdown formats
 - HTML to Markdown and Markdown to HTML
