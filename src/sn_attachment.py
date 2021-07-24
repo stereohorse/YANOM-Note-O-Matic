@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import logging
 from pathlib import Path
 
 import config
@@ -6,8 +7,14 @@ from file_writer import store_file
 import helper_functions
 
 
+def what_module_is_this():
+    return __name__
+
+
 class NSAttachment(ABC):
     def __init__(self, note, attachment_id):
+        self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger.setLevel(config.logger_level)
         self._attachment_id = attachment_id
         self._nsx_file = note.nsx_file
         self._json = note.note_json
@@ -54,6 +61,10 @@ class NSAttachment(ABC):
 
         self._file_name = self._full_path.name
         self._path_relative_to_notebook = (Path(self._conversion_settings.attachment_folder_name, self._file_name))
+        self.logger.debug(f'Attachment name full path - {self._full_path}')
+        self.logger.debug(f'Attachment name relative path - {self._path_relative_to_notebook}')
+
+
 
     @property
     def notebook_folder_name(self):
@@ -93,8 +104,13 @@ class FileNSAttachment(NSAttachment):
     def create_html_link(self):
         self._html_link = f'<a href="{self._path_relative_to_notebook}">{self.file_name}</a>'
 
-    def create_file_name(self) -> Path:
+    def create_file_name(self):
         self._file_name = helper_functions.generate_clean_path(self._name)
+        self.logger.debug(f'attachment name in note data is {self._name}')
+        self.logger.debug(f'attachment clean filename is {self._file_name}')
+        if self._file_name == '':
+            self._file_name = helper_functions.add_random_string_to_file_name(Path('attachment-file'), 6)
+            self.logger.info(f'attachment name was blank after cleaning new random name is {self._file_name}')
 
     def get_content_to_save(self):
         return self._nsx_file.fetch_attachment_file(self.filename_inside_nsx)
@@ -113,9 +129,14 @@ class ImageNSAttachment(FileNSAttachment):
     def create_html_link(self):
         self._html_link = f'<img src="{self._file_name}" >'
 
-    def create_file_name(self) -> Path:
+    def create_file_name(self):
         self._name = self._name.replace('ns_attach_image_', '')
         self._file_name = helper_functions.generate_clean_path(self._name)
+        self.logger.debug(f'attachment name in note data is {self._name}')
+        self.logger.debug(f'attachment clean filename is {self._file_name}')
+        if self._file_name == '':
+            self._file_name = helper_functions.add_random_string_to_file_name(Path('attachment-file'), 6)
+            self.logger.debug(f'attachment name was blank after cleaning new random name is {self._file_name}')
 
 
 class ChartNSAttachment(NSAttachment):
