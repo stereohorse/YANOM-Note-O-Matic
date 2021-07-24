@@ -17,6 +17,7 @@ def what_module_is_this():
 
 
 Note = namedtuple("Note", "title, note")
+Attachment = namedtuple('Attachment', 'attachment, note_title')
 
 
 class NSXFile:
@@ -54,9 +55,26 @@ class NSXFile:
         self.generate_note_page_filename_and_path()
         self.build_dictionary_of_inter_note_links()
         self.process_notebooks()
-        self.store_attachments()
+        attachments = self.build_list_of_attachments()
+        self.store_attachments(attachments)
         self.save_note_pages()
         self.logger.info(f"Processing of {self._nsx_file_name} complete.")
+
+    def build_list_of_attachments(self) -> list[Attachment]:
+        """
+        Generate and return a list of namedtuple of attachment details.
+
+        Returns
+        =======
+        list[Attachment]
+            list of Attachment named tuples that hold sn_attachment objects and the note title the attachment comes from.
+
+        """
+
+        return [Attachment(attachment, self._note_pages[note_page_id].title)
+                for note_page_id in self._note_pages
+                for attachment in self._note_pages[note_page_id].attachments.values()
+                ]
 
     def build_dictionary_of_inter_note_links(self):
         all_note_pages = list(self._note_pages.values())
@@ -105,8 +123,7 @@ class NSXFile:
         target_path = Path(self.conversion_settings.working_directory, config.DATA_DIR,
                            self._conversion_settings.export_folder)
 
-        target_path.mkdir(exist_ok=True)
-        self._conversion_settings.export_folder = target_path.stem
+        target_path.mkdir(parents=True, exist_ok=True)
 
     def create_folders(self):
         self.logger.debug(f"Creating folders for notebooks")
@@ -147,13 +164,22 @@ class NSXFile:
             else:
                 self._notebooks['recycle-bin'].pair_up_note_pages_and_notebooks(self._note_pages[note_page_id])
 
-    def store_attachments(self):
-        attachments_to_save = [attachment for note_page_id in self._note_pages for attachment in self._note_pages[note_page_id].attachments.values()]
+    def store_attachments(self, attachments: list[Attachment]):
         if not config.silent:
             print("Saving attachments")
-        with alive_bar(len(attachments_to_save), bar='blocks') as bar:
-            for attachment in attachments_to_save:
-                file_writer.store_file(attachment.full_path, attachment.get_content_to_save())
+
+        with alive_bar(len(attachments), bar='blocks') as bar:
+            for attachment in attachments:
+                if attachment.attachment.full_path.is_dir():
+                    message = f'Unable to save attachment for the note {attachment.note_title}.  ' \
+                              f'Attachment path is to existing dir not file - {attachment.attachment.full_path}'
+                    self.logger.warning(message)
+                    if not config.silent:
+                        print(message)
+                        bar()
+                    continue
+
+                file_writer.store_file(attachment.attachment.full_path, attachment.attachment.get_content_to_save())
                 if not config.silent:
                     bar()
 

@@ -7,6 +7,7 @@ import nsx_file_converter
 import pandoc_converter
 import sn_note_page
 import sn_notebook
+import sn_attachment
 
 
 @pytest.fixture
@@ -256,10 +257,35 @@ def test_save_note_pages(notebooks, all_notes_dict, conv_setting, silent_mode):
 
 
 @pytest.mark.parametrize(
-    'silent_mode', [True, False]
+    'silent_mode, expected', [
+        (True, ''),
+        (False, 'Saving attachments'),
+    ]
 )
-def test_store_attachments(notebooks, all_notes_dict, conv_setting, silent_mode):
-    config.set_silent(silent_mode)
+def test_store_attachments(notebooks, all_notes_dict, conv_setting, silent_mode, expected, capsys):
+    with capsys.disabled():
+        config.set_silent(silent_mode)
+        pc = pandoc_converter.PandocConverter(conv_setting)
+        nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, pc)
+        nsx_fc._notebooks = notebooks
+        nsx_fc._note_pages = all_notes_dict
+        nsx_fc.add_note_pages_to_notebooks()
+        nsx_fc.process_notebooks()
+        attachments = nsx_fc.build_list_of_attachments()
+        # attachments_to_save = [attachment.full_path for note_page_id in nsx_fc._note_pages for attachment in
+        #                        nsx_fc._note_pages[note_page_id].attachments.values()]
+    with patch('nsx_file_converter.NSXFile.fetch_attachment_file', autospec=True):
+        with patch('file_writer.store_file', spec=True) as mock_store_file:
+            nsx_fc.store_attachments(attachments)
+
+        assert mock_store_file.call_count == 4
+
+        captured = capsys.readouterr()
+        assert expected in captured.out
+
+
+def test_store_attachments_attachment_paths_are_exiting_directory(notebooks, all_notes_dict, conv_setting,
+                                                                  caplog, tmp_path):
     pc = pandoc_converter.PandocConverter(conv_setting)
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, pc)
     nsx_fc._notebooks = notebooks
@@ -269,6 +295,16 @@ def test_store_attachments(notebooks, all_notes_dict, conv_setting, silent_mode)
 
     with patch('nsx_file_converter.NSXFile.fetch_attachment_file', autospec=True):
         with patch('file_writer.store_file', spec=True) as mock_store_file:
-            nsx_fc.store_attachments()
+            for note_page_id in nsx_fc._note_pages:
+                for attachment in nsx_fc._note_pages[note_page_id].attachments.values():
+                    attachment._full_path = tmp_path
 
-        assert mock_store_file.call_count == 4
+            attachments = nsx_fc.build_list_of_attachments()
+
+            caplog.clear()
+            nsx_fc.store_attachments(attachments)
+
+            assert mock_store_file.call_count == 0
+            assert "Unable to save attachment for the note" in caplog.messages[0]
+            assert len(caplog.records) == 4
+
