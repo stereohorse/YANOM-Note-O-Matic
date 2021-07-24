@@ -100,7 +100,7 @@ def test_read_config_file_file_missing(tmp_path, caplog):
 
     for record in caplog.records:
         if record.levelname == "WARNING":
-            assert 'config.ini missing, generating new file' in record.message
+            assert 'config.ini missing at' in record.message
 
 
 @pytest.mark.parametrize(
@@ -402,11 +402,51 @@ def test_str(good_config_ini, tmp_path):
 def test_generate_conversion_settings_using_quick_settings_string(good_config_ini, tmp_path, caplog):
     Path(f'{str(tmp_path)}/config.ini').write_text(good_config_ini, encoding="utf-8")
 
-    cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'gfm', allow_no_value=True)
+    cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'obsidian', allow_no_value=True)
+
+    # remove the config.ini so we can check it is saved
+    Path(f'{str(tmp_path)}/config.ini').unlink()
+    assert not Path(f'{str(tmp_path)}/config.ini').exists()
 
     cd.generate_conversion_settings_using_quick_settings_string('gfm')
-
+    assert Path(f'{str(tmp_path)}/config.ini').exists()
     assert cd['quick_settings']['quick_setting'] == 'gfm'
+
+@pytest.mark.parametrize(
+    'silent, expected', [
+        (True, ''),
+        (False, 'Unable to save config.ini file')
+    ], ids=['silent-mode', 'not-silent']
+)
+def test_generate_conversion_settings_using_quick_settings_string_to_forced_bad_directory(good_config_ini,
+                                                                                          tmp_path,
+                                                                                          caplog,
+                                                                                          capsys,
+                                                                                          monkeypatch,
+                                                                                          silent,
+                                                                                          expected):
+    """Force a bad directory into the config.ini save method to check it is handled and logged"""
+
+    config.set_silent(silent)
+
+    Path(f'{str(tmp_path)}/config.ini').write_text(good_config_ini, encoding="utf-8")
+
+    cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'obsidian', allow_no_value=True)
+
+    # remove the config.ini so we can check a new one is saved
+    Path(f'{str(tmp_path)}/config.ini').unlink()
+    assert not Path(f'{str(tmp_path)}/config.ini').exists()
+
+    monkeypatch.setattr(ConversionSettings, 'working_directory', Path(tmp_path, "abc"))
+
+    cd.generate_conversion_settings_using_quick_settings_string('gfm')
+    assert not Path(f'{str(tmp_path)}/config.ini').exists()
+
+    assert caplog.records
+    assert f"Unable to save config.ini file `{Path(tmp_path, 'abc')}` is not a directory" in caplog.messages
+
+    captured = capsys.readouterr()
+    assert expected in captured.out
 
 
 def test_generate_conversion_settings_using_quick_settings_string_bad_value(good_config_ini, tmp_path, caplog):

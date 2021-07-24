@@ -51,7 +51,8 @@ class ConfigData(ConfigParser):
 
     def generate_conversion_settings_using_quick_settings_string(self, value):
         if value in self._conversion_settings.valid_quick_settings:
-            self._load_and_save_config_from_conversion_quick_setting_string(value)
+            self._conversion_settings.set_quick_setting(value)
+            self._load_and_save_settings()
             return
 
         self.logger.error(f"Passed invalid value - {value} - is not a recognised quick setting string")
@@ -60,7 +61,8 @@ class ConfigData(ConfigParser):
 
     def generate_conversion_settings_using_quick_settings_object(self, value):
         if isinstance(value, ConversionSettings):
-            self._load_and_save_config_from_conversion_settings_obj(value)
+            self._conversion_settings = value
+            self._load_and_save_settings()
             return
 
         self.logger.error(f"Passed invalid value - {value}")
@@ -90,7 +92,8 @@ class ConfigData(ConfigParser):
         if what_to_do == 'exit':
             sys.exit(0)
         self.logger.info("User chose to create a default file")
-        self._load_and_save_config_from_conversion_quick_setting_string(self._default_quick_setting)
+        self._conversion_settings.set_quick_setting(self._default_quick_setting)
+        self._load_and_save_settings()
 
     def _validate_config(self):
         """
@@ -140,6 +143,13 @@ class ConfigData(ConfigParser):
             self.getboolean('file_options', 'creation_time_in_exported_file_name')
 
     def _write_config_file(self):
+        if not Path(self.conversion_settings.working_directory).is_dir():
+            message = f"Unable to save config.ini file `{self.conversion_settings.working_directory}` is not a directory"
+            self.logger.error(message)
+            if not config.silent:
+                print(message)
+            return
+
         with open(Path(self.conversion_settings.working_directory, self._config_file), 'w') as config_file:
             self.write(config_file)
             self.logger.info("Saving configuration file")
@@ -148,45 +158,21 @@ class ConfigData(ConfigParser):
         """
         Read config file. If file is missing generate a new one using default quick setting.
 
-        If config file is missing set the conversion_settings tp the default quick setting values
+        If config file is missing set the conversion_settings to the default quick setting values
         and use that to generate a config data set.
 
         """
         self.logger.debug('reading config file')
         path = Path(self.conversion_settings.working_directory, self._config_file)
+
         if path.is_file():
             self.read(path)
             self.logger.info(f'Data read from INI file is {self.__repr__()}')
         else:
-            self.logger.warning('config.ini missing, generating new file and settings set to default.')
+            self.logger.warning(f'config.ini missing at {path}, generating new file and settings set to default.')
             if not config.silent:
                 print("config.ini missing, generating new file.")
             self.conversion_settings = self._default_quick_setting
-
-    def _load_and_save_config_from_conversion_quick_setting_string(self, setting):
-        """
-        Generate a config data set and save the updated config file using a 'quick setting' value provided as a string.
-
-        Parameters
-        ----------
-        setting
-            string: A key 'quick setting' value
-
-        """
-        self._conversion_settings.set_quick_setting(setting)
-        self._load_and_save_settings()
-
-    def _load_and_save_config_from_conversion_settings_obj(self, settings: ConversionSettings):
-        """
-        Generate a config data set and save updated config file
-        Parameters
-        ----------
-        settings
-            ConversionSettings: A child of the class ConversionSettings
-
-        """
-        self._conversion_settings = settings
-        self._load_and_save_settings()
 
     def _load_and_save_settings(self):
         """
