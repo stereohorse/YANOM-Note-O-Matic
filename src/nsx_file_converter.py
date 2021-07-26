@@ -67,7 +67,8 @@ class NSXFile:
         Returns
         =======
         list[Attachment]
-            list of Attachment named tuples that hold sn_attachment objects and the note title the attachment comes from.
+            list of Attachment named tuples that hold sn_attachment objects and the note title
+            the attachment comes from.
 
         """
 
@@ -117,13 +118,22 @@ class NSXFile:
         self.logger.debug("Creating recycle bin notebook")
         self._notebooks['recycle-bin'] = Notebook(self, 'recycle-bin', 'recycle-bin')
 
-    def create_export_folder_if_not_exist(self):
+    def create_export_folder_if_not_exist(self, parents=True):
         self.logger.debug("Creating export folder if it does not exist")
 
         target_path = Path(self.conversion_settings.working_directory, config.DATA_DIR,
                            self._conversion_settings.export_folder)
 
-        target_path.mkdir(parents=True, exist_ok=True)
+        if target_path.exists():
+            return
+
+        try:
+            target_path.mkdir(parents=parents, exist_ok=True)
+        except OSError as e:
+            msg = f'Unable to create the export folder\n{e}'
+            self.logger.error(f'{msg}')
+            if not config.silent:
+                print(f'{msg}')
 
     def create_folders(self):
         self.logger.debug(f"Creating folders for notebooks")

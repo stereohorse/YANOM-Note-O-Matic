@@ -138,6 +138,28 @@ def test_create_export_folder_if_not_exist(conv_setting, caplog, tmp_path):
     assert "Creating export folder if it does not exist" in caplog.messages
 
 
+def test_create_export_folder_if_not_exist_force_exception(conv_setting, caplog, tmp_path):
+    config.set_logger_level("DEBUG")
+    Path(tmp_path, config.DATA_DIR).mkdir()
+
+    nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
+
+    nsx_fc.conversion_settings.working_directory = tmp_path
+    nsx_fc.conversion_settings.export_folder = 'notes'
+    Path(conv_setting.working_directory, config.DATA_DIR).rmdir()  # remove a directory to
+
+    expected_error_log_caplog_message = f"Unable to create the export folder\n[Errno 2] No such file or directory: '{Path(conv_setting.working_directory, config.DATA_DIR, nsx_fc.conversion_settings.export_folder)}'"
+
+    nsx_fc.create_export_folder_if_not_exist(parents=False)  # use parents false to force error
+
+    assert "Creating export folder if it does not exist" in caplog.messages
+    assert expected_error_log_caplog_message in caplog.messages
+
+
+
+
+
+
 def test_create_folders(conv_setting, caplog, tmp_path, nsx):
     config.set_logger_level("DEBUG")
 
