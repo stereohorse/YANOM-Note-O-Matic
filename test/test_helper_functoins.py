@@ -1,4 +1,6 @@
-from pathlib import Path
+import os
+from pathlib import Path, PurePosixPath, PureWindowsPath
+import re
 import sys
 
 import pytest
@@ -69,24 +71,136 @@ def test_find_working_directory_when_frozen():
 
 @pytest.mark.parametrize(
     'value, allow_unicode, expected', [
-        ("file", False, Path("file")),
-        ("file.txt", False, Path("file.txt")),
-        ("_file.txt-", False, Path("file.txt")),
-        ("-file.txt_", False, Path("file.txt")),
-        (" file.txt ", False, Path("file.txt")),
-        ("f¥le.txt", False, Path("fle.txt")),
-        ("file", True, Path("file")),
-        ("file.txt", True, Path("file.txt")),
-        ("_file.txt-", True, Path("file.txt")),
-        ("-file.txt_", True, Path("file.txt")),
-        (" file.txt ", True, Path("file.txt")),
-        (" file.txt ", True, Path("file.txt")),
-        (" f¥le.txt ", True, Path("fle.txt")),
+        ("file", False, "file"),
+        ("file.txt", False, "file.txt"),
+        ("_file.txt-", False, "file.txt"),
+        ("-file.txt_", False, "file.txt"),
+        (" file.txt ", False, "file.txt"),
+        ("f¥le.txt", False, "fle.txt"),
+        ("file", True, "file"),
+        ("file.txt", True, "file.txt"),
+        ("_file.txt-", True, "file.txt"),
+        ("-file.txt_", True, "file.txt"),
+        (" file.txt ", True, "file.txt"),
+        (" file.txt ", True, "file.txt"),
+        (" f¥le.txt ", True, "fle.txt"),
+        (" part1.part2.txt ", True, "part1part2.txt"),
+        (" part1 part2.txt ", True, "part1-part2.txt"),
+        (" 漢語.txt ", True, "漢語.txt"),
+        (" 漢語-should ignore the two leading chars.txt ", False, "should-ignore-the-two-leading-chars.txt"),
+        (" dir1/dir2/file.txt ", True, "dir1-dir2-file.txt"),
+        (" .file.txt ", True, "file.txt"),
+        (" COM1.txt ", True, "com1.txt"),
+        ("a-directory-with-dot.in_it", True, "a-directory-with-dot.in_it"),
+        ("a-directory-with.three.dots.in_it", True, "a-directory-withthreedots.in_it"),
+        ("1234567890123456789012345678901234567890", True, "1234567890123456789012345678901234567890"),
+        ("!!!file.!!!txt", False,'file.txt'),
     ]
 )
 def test_generate_clean_path(value, allow_unicode, expected):
 
-    result = helper_functions.generate_clean_path(value, allow_unicode=allow_unicode)
+    result = helper_functions.generate_clean_filename(value, 64, allow_unicode=allow_unicode)
+
+    assert result == expected
+
+@pytest.mark.parametrize(
+    'string_to_test, allow_unicode, expected', [
+        ("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
+        False,
+        '12345678901234567890123456789012'),
+        ("123456789012345678901234567890123456789012345678901234567890123456789.012345678901234567890",
+        False,
+        '123456789012345678901234.01234567'),
+        ("123456789012345678901234567890123456789012345678901234567890123456789.0123",
+        False,
+        '1234567890123456789012345678.0123'),
+    ]
+)
+def test_generate_clean_filename_force_windows_long_name(string_to_test, allow_unicode, expected, monkeypatch):
+
+    with monkeypatch.context() as m:
+        m.setattr(os, 'name', 'nt')
+        result = helper_functions.generate_clean_filename(string_to_test, 32, allow_unicode=allow_unicode, path_class=PureWindowsPath)
+
+        assert result == expected
+
+@pytest.mark.parametrize(
+    'string_to_test, allow_unicode, expected', [
+        ("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
+        False,
+        '12345678901234567890123456789012'),
+        ("12345678901234567890.1234567890123456789012345678901234567890123456789.012345678901234567890",
+        False,
+        '12345678901234567890-12345678901'),
+        ("123456789012345678901234567890123456789012345678901234567890123456789.0123",
+        False,
+        '12345678901234567890123456789012'),
+    ]
+)
+def test_generate_clean_directory_name_force_windows_long_name(string_to_test, allow_unicode, expected, monkeypatch):
+
+    with monkeypatch.context() as m:
+        m.setattr(os, 'name', 'nt')
+        result = helper_functions.generate_clean_directory_name(string_to_test, 32, allow_unicode=allow_unicode, path_class=PureWindowsPath)
+
+        assert result == expected
+
+
+@pytest.mark.parametrize(
+    'string_to_test, allow_unicode, expected', [
+        ("", False, '6-chars-replaced'),
+        (".txt", False, 'txt'),  # this is not an empty string as is read as a hidden file name (stem) and dot is stripped off
+        ("file.!!!", False, 'file.6-chars-replaced'),
+        ("!!!.!!!", False, '6-chars-replaced.6-chars-replaced'),
+    ]
+)
+def test_generate_clean_filename_empty_strings(string_to_test, allow_unicode, expected, monkeypatch):
+
+    result = helper_functions.generate_clean_filename(string_to_test, 64, allow_unicode=allow_unicode)
+
+    # replace the generated 6 char value with placeholder text to allow comparison
+    regex = r"[a-zA-Z]{6}"
+    substitute_text = '6-chars-replaced'
+    result = re.sub(regex, substitute_text, result, 0, re.MULTILINE)
+
+    assert result == expected
+
+@pytest.mark.parametrize(
+    'string_to_test, allow_unicode, expected', [
+        ("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
+        False,
+        '1234567890123456789012345678901234567890123456789012345678901234'),
+        ("1234567890123456789012345678901234567890123456789012345678901234567890",
+        False,
+        '1234567890123456789012345678901234567890123456789012345678901234'),
+        ("123456789012345678901234567890123456789012345678901234567890.12345678901234",
+        False,
+        '123456789012345678901234567890123456789012345678901234567890-123'),
+        (" 漢語-unicode-dir.dir ", True, "漢語-unicode-dir-dir"),
+        (" /dir 1/dir 2/dir 3 ", True, "dir-1-dir-2-dir-3"),
+    ]
+)
+def test_generate_clean_directory_name(string_to_test, allow_unicode, expected, monkeypatch):
+    monkeypatch.setattr(os, 'name', 'posix')
+    result = helper_functions.generate_clean_directory_name(string_to_test, 64, allow_unicode=allow_unicode, path_class=PurePosixPath)
+
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    'string_to_test, allow_unicode, expected', [
+        ("", False, '6-chars-replaced'),
+        ("!!!", False, '6-chars-replaced'),
+    ]
+)
+def test_generate_clean_directory_name_empty_string(string_to_test, allow_unicode, expected, monkeypatch):
+    monkeypatch.setattr(os, 'name', 'posix')
+    result = helper_functions.generate_clean_directory_name(string_to_test, 64, allow_unicode=allow_unicode, path_class=PurePosixPath)
+
+    # replace the generated 6 char value with placeholder text to allow comparison
+    regex = r"[a-zA-Z]{6}"
+    substitute_text = '6-chars-replaced'
+    result = re.sub(regex, substitute_text, result, 0, re.MULTILINE)
 
     assert result == expected
 

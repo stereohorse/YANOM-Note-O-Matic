@@ -13,7 +13,7 @@ def test_create_notebook_folder_folder_does_not_already_exist(tmp_path, nsx, cap
     notebook = sn_notebook.Notebook(nsx, 'abcd', notebook_title)
 
     notebook.conversion_settings.export_folder = 'export-folder'
-    notebook.folder_name = 'notebook1'
+    notebook.folder_name = Path('notebook1')
 
     Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder).mkdir(parents=True, exist_ok=True)
 
@@ -21,11 +21,11 @@ def test_create_notebook_folder_folder_does_not_already_exist(tmp_path, nsx, cap
 
     assert Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, notebook.folder_name).exists()
 
-    assert notebook.folder_name == 'notebook1'
+    assert notebook.folder_name == Path('notebook1')
     assert notebook.full_path_to_notebook == Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, notebook.folder_name)
 
-    assert len(caplog.records) == 1
-    assert caplog.records[0].message == f'Creating notebook folder for {notebook_title}'
+    assert f'Creating notebook folder for {notebook_title}' in caplog.messages
+
 
 def test_create_notebook_folder_folder_already_exist(tmp_path, nsx, caplog):
     config.set_logger_level("DEBUG")
@@ -36,7 +36,7 @@ def test_create_notebook_folder_folder_already_exist(tmp_path, nsx, caplog):
     notebook.folder_name = 'notebook1'
 
     Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, notebook.folder_name).mkdir(parents=True, exist_ok=True)
-    expected_folder_name = 'notebook1-1'
+    expected_folder_name = Path('notebook1-1')
 
     notebook.create_notebook_folder()
 
@@ -47,8 +47,7 @@ def test_create_notebook_folder_folder_already_exist(tmp_path, nsx, caplog):
     assert notebook.full_path_to_notebook == Path(tmp_path, config.DATA_DIR,
                                                   notebook.conversion_settings.export_folder, expected_folder_name)
 
-    assert len(caplog.records) == 1
-    assert caplog.records[0].message == f'Creating notebook folder for {notebook_title}'
+    assert f'Creating notebook folder for {notebook_title}' in caplog.messages
 
 
 def test_create_attachment_folder(tmp_path, nsx, caplog):
@@ -63,8 +62,7 @@ def test_create_attachment_folder(tmp_path, nsx, caplog):
 
     assert Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, 'notebook1', 'attachments').exists()
 
-    assert len(caplog.records) == 1
-    assert caplog.records[0].message == f'Creating attachment folder'
+    assert f'Creating attachment folder' in caplog.messages
 
 
 def test_create_folders(tmp_path, nsx, caplog):
@@ -84,9 +82,8 @@ def test_create_folders(tmp_path, nsx, caplog):
     assert Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, 'notebook1',
                 'attachments').exists()
 
-    assert len(caplog.records) == 2
-    assert caplog.records[1].message == f'Creating attachment folder'
-    assert caplog.records[0].message == f'Creating notebook folder for {notebook_title}'
+    assert f'Creating attachment folder' in caplog.messages
+    assert f'Creating notebook folder for {notebook_title}' in caplog.messages
 
 
 def test_pair_up_note_pages_and_notebooks_note_title_does_not_already_exist(nsx):
@@ -95,7 +92,7 @@ def test_pair_up_note_pages_and_notebooks_note_title_does_not_already_exist(nsx)
     note_page = sn_note_page.NotePage(nsx, '1234', note_jason)
     notebook_title = 'notebook1'
     notebook = sn_notebook.Notebook(nsx, 'notebook_id_abcd', notebook_title)
-    notebook.folder_name = 'notebook_folder'
+    notebook.folder_name = Path('notebook_folder')
 
     notebook.note_titles = ['abcd']
 
@@ -114,7 +111,7 @@ def test_pair_up_note_pages_and_notebooks_note_title_already_exists(nsx):
     note_page = sn_note_page.NotePage(nsx, '1234', note_jason)
     notebook_title = 'notebook1'
     notebook = sn_notebook.Notebook(nsx, 'notebook_id_abcd', notebook_title)
-    notebook.folder_name = 'notebook_folder'
+    notebook.folder_name = Path('notebook_folder')
 
     notebook.note_titles = ['abcd', 'Page 8 title', 'Page 8 title-1']
 
@@ -146,7 +143,7 @@ def test_process_notebook_pages(all_notes, tmp_path, nsx, silent_mode, expected,
 
     mock_process_note.assert_called()
 
-    assert caplog.records[0].message == f"Processing note book {notebook.title} - {notebook.notebook_id}"
+    assert f"Processing note book {notebook.title} - {notebook.notebook_id}" in caplog.messages
 
     captured = capsys.readouterr()
     assert expected in captured.out

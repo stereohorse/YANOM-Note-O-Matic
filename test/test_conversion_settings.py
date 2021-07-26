@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -242,3 +243,24 @@ def test_markdown_conversion_input_setter_invalid_value():
 
     assert cs.markdown_conversion_input == 'gfm'
 
+
+
+@pytest.mark.parametrize(
+    'string_to_test, allow_unicode, expected', [
+        ("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
+         False,
+         Path('1234567890123456789012345678901234567890123456789012345678901234')),
+        ("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
+         False,
+         Path('1234567890123456789012345678901234567890123456789012345678901234')),
+        ("12345678901234567890123456789012345678901234567890123456789012345678901234",
+         False,
+         Path('1234567890123456789012345678901234567890123456789012345678901234')),
+    ]
+)
+def test_attachment_folder_name_setter(string_to_test, allow_unicode, expected, monkeypatch):
+    cs = conversion_settings.ConversionSettings()
+    monkeypatch.setattr(os, 'name', 'posix')
+    cs.attachment_folder_name = string_to_test
+
+    assert cs.attachment_folder_name == expected

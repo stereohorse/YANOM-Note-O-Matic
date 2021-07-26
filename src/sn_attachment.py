@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 
 import config
+from config import yanom_globals
 from file_writer import store_file
 import helper_functions
 
@@ -64,8 +65,6 @@ class NSAttachment(ABC):
         self.logger.debug(f'Attachment name full path - {self._full_path}')
         self.logger.debug(f'Attachment name relative path - {self._path_relative_to_notebook}')
 
-
-
     @property
     def notebook_folder_name(self):
         return self._notebook_folder_name
@@ -105,12 +104,10 @@ class FileNSAttachment(NSAttachment):
         self._html_link = f'<a href="{self._path_relative_to_notebook}">{self.file_name}</a>'
 
     def create_file_name(self):
-        self._file_name = helper_functions.generate_clean_path(self._name)
-        self.logger.debug(f'attachment name in note data is {self._name}')
-        self.logger.debug(f'attachment clean filename is {self._file_name}')
-        if self._file_name == '':
-            self._file_name = helper_functions.add_random_string_to_file_name(Path('attachment-file'), 6)
-            self.logger.info(f'attachment name was blank after cleaning new random name is {self._file_name}')
+        self._file_name = Path(helper_functions.generate_clean_filename(self._name,
+                                                                        yanom_globals.path_part_max_length,
+                                                                        allow_unicode=True))
+        self.logger.info(f'Original attachment name was "{self._name}" the cleaned name used is "{self._file_name}"')
 
     def get_content_to_save(self):
         return self._nsx_file.fetch_attachment_file(self.filename_inside_nsx)
@@ -131,12 +128,10 @@ class ImageNSAttachment(FileNSAttachment):
 
     def create_file_name(self):
         self._name = self._name.replace('ns_attach_image_', '')
-        self._file_name = helper_functions.generate_clean_path(self._name)
-        self.logger.debug(f'attachment name in note data is {self._name}')
-        self.logger.debug(f'attachment clean filename is {self._file_name}')
-        if self._file_name == '':
-            self._file_name = helper_functions.add_random_string_to_file_name(Path('attachment-file'), 6)
-            self.logger.debug(f'attachment name was blank after cleaning new random name is {self._file_name}')
+        self._file_name = Path(helper_functions.generate_clean_filename(self._name,
+                                                                        yanom_globals.path_part_max_length,
+                                                                        allow_unicode=True))
+        self.logger.info(f'Original attachment name was "{self._name}" the cleaned name used is "{self._file_name}"')
 
 
 class ChartNSAttachment(NSAttachment):
@@ -154,7 +149,9 @@ class ChartNSAttachment(NSAttachment):
         pass
 
     def create_file_name(self):
-        self._file_name = helper_functions.generate_clean_path(self._attachment_id)
+        self._file_name = Path(helper_functions.generate_clean_filename(self._attachment_id,
+                                                                        yanom_globals.path_part_max_length,
+                                                                        allow_unicode=True))
 
     @property
     def chart_file_like_object(self):

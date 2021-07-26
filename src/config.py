@@ -1,7 +1,26 @@
+import os
+
 APP_NAME = 'YANOM'
 APP_SUB_NAME = 'Note-O-Matic'
 VERSION = '1.3.3-beta'
 DATA_DIR = 'data'
+
+
+class YanomGlobals:
+    def __init__(self):
+        self._windows_path_part_max_length = 32
+        self._posix_path_part_max_length = 64
+
+    @property
+    def path_part_max_length(self):
+        if os.name == 'nt':
+            return self._windows_path_part_max_length
+
+        return self._posix_path_part_max_length
+
+
+yanom_globals = YanomGlobals()
+
 global logger_level
 logger_level = 20  # INFO
 global silent

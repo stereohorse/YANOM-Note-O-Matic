@@ -4,7 +4,8 @@ from pathlib import Path
 from alive_progress import alive_bar
 
 import config
-from helper_functions import generate_clean_path, find_working_directory
+from config import yanom_globals
+from helper_functions import generate_clean_directory_name
 from sn_note_page import NotePage
 
 
@@ -52,7 +53,10 @@ class Notebook:
         self.note_pages.append(note_page)
 
     def create_folder_name(self):
-        self.folder_name = generate_clean_path(self.title)
+        self.folder_name = Path(generate_clean_directory_name(self.title,
+                                                              yanom_globals.path_part_max_length,
+                                                              allow_unicode=True))
+        self.logger.info(f'For the notebook "{self.title}" the filename used is is {self.folder_name }')
 
     def create_folders(self):
         self.create_notebook_folder()
@@ -74,7 +78,7 @@ class Notebook:
                                f"{self.folder_name}-{n}")
 
         target_path.mkdir(parents=True, exist_ok=True)
-        self.folder_name = target_path.name
+        self.folder_name = Path(target_path.name)
         self.full_path_to_notebook = target_path
 
     def create_attachment_folder(self):

@@ -115,8 +115,7 @@ def test_add_recycle_bin_notebook(conv_setting, caplog):
 
     nsx_fc.add_recycle_bin_notebook()
 
-    assert len(caplog.records) == 1
-    assert caplog.records[0].levelname == 'DEBUG'
+    assert "Creating recycle bin notebook" in caplog.messages
 
     assert len(nsx_fc._notebooks) == 1
     assert 'recycle-bin' in nsx_fc._notebooks.keys()
@@ -135,8 +134,7 @@ def test_create_export_folder_if_not_exist(conv_setting, caplog, tmp_path):
 
     assert Path(tmp_path, config.DATA_DIR, 'notes').exists()
 
-    assert len(caplog.records) == 1
-    assert caplog.records[0].levelname == 'DEBUG'
+    assert "Creating export folder if it does not exist" in caplog.messages
 
 
 def test_create_folders(conv_setting, caplog, tmp_path, nsx):
@@ -144,15 +142,16 @@ def test_create_folders(conv_setting, caplog, tmp_path, nsx):
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
-    test_notebook = sn_notebook.Notebook(nsx, '1234', 'notebook title')
+    test_notebook = sn_notebook.Notebook(nsx, '1234', 'Notebook Title')
     nsx_fc._notebooks = {'1234': test_notebook}
 
-    with patch('sn_notebook.Notebook.create_folders', spec=True) as mock_create_folders:
-        nsx_fc.create_folders()
+    nsx_fc.create_folders()
 
-        mock_create_folders.assert_called_once()
-        assert len(caplog.records) == 1
-        assert caplog.records[0].levelname == 'DEBUG'
+    assert "Creating folders for notebooks" in caplog.messages
+    assert nsx_fc.notebooks['1234'].folder_name == Path('notebook-title')
+    assert Path(tmp_path, config.DATA_DIR, conv_setting.export_folder, 'notebook-title').exists()
+    assert Path(tmp_path, config.DATA_DIR, conv_setting.export_folder, 'notebook-title', conv_setting.attachment_folder_name).exists()
+
 
 
 @pytest.mark.parametrize(

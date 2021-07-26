@@ -3,6 +3,7 @@ import time
 from pathlib import Path
 
 import config
+from config import yanom_globals
 import helper_functions
 from nsx_post_processing import NoteStationPostProcessing
 from nsx_pre_processing import NoteStationPreProcessing
@@ -57,7 +58,10 @@ class NotePage:
 
     def _create_file_name(self, used_filenames):
         dirty_filename = self._append_file_extension()
-        cleaned_filename = helper_functions.generate_clean_path(dirty_filename)
+        cleaned_filename = Path(helper_functions.generate_clean_filename(dirty_filename,
+                                                                         yanom_globals.path_part_max_length,
+                                                                         allow_unicode=True))
+
         new_filename = cleaned_filename
         n = 0
         while new_filename in used_filenames:
@@ -65,6 +69,7 @@ class NotePage:
             new_filename = Path(f'{Path(cleaned_filename).stem}-{n}{Path(cleaned_filename).suffix}')
 
         self._file_name = new_filename
+        self.logger.info(f'For the note "{self._title}" the file name used is "{self._file_name}"')
 
     def _append_file_extension(self):
         if self._conversion_settings.export_format == 'html':
@@ -156,8 +161,8 @@ class NotePage:
         return self._notebook_folder_name
 
     @notebook_folder_name.setter
-    def notebook_folder_name(self, title):
-        self._notebook_folder_name = helper_functions.generate_clean_path(title)
+    def notebook_folder_name(self, valid_folder: Path):
+        self._notebook_folder_name = valid_folder
 
     @property
     def file_name(self):

@@ -9,7 +9,8 @@ import sys
 from typing import Literal
 
 import config
-from helper_functions import generate_clean_path, find_working_directory
+from config import yanom_globals
+from helper_functions import generate_clean_filename, generate_clean_directory_name, find_working_directory
 
 
 def what_module_is_this():
@@ -557,7 +558,11 @@ class ConversionSettings:
         if Path(provided_export_folder).is_file():
             raise ValueError(f"Invalid path provided. Path is to file not a directory. - {provided_export_folder}")
 
-        self._export_folder_name = generate_clean_path(provided_export_folder)
+        self._export_folder_name = Path(generate_clean_directory_name(provided_export_folder,
+                                                                      yanom_globals.path_part_max_length,
+                                                                      allow_unicode=True))
+        self.logger.info(
+            f'For the provided attachment folder name of "{provided_export_folder}" the cleaned name used is {self._export_folder_name}')
 
     @property
     def attachment_folder_name(self):
@@ -565,7 +570,10 @@ class ConversionSettings:
 
     @attachment_folder_name.setter
     def attachment_folder_name(self, value):
-        self._attachment_folder_name = generate_clean_path(value)
+        self._attachment_folder_name = Path(generate_clean_directory_name(value, yanom_globals.path_part_max_length,
+                                                                          allow_unicode=True))
+        self.logger.info(
+            f'For the provided attachment folder name of "{value}" the cleaned name used is {self._attachment_folder_name}')
 
     @property
     def working_directory(self):
@@ -578,4 +586,3 @@ class ConversionSettings:
     @property
     def source_absolute_path(self):
         return self._source_absolute_path
-

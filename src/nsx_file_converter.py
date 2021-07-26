@@ -96,11 +96,11 @@ class NSXFile:
         return notebook_title
 
     def add_recycle_bin_notebook(self):
-        self.logger.debug(f"Creating recycle bin notebook")
+        self.logger.debug("Creating recycle bin notebook")
         self._notebooks['recycle-bin'] = Notebook(self, 'recycle-bin', 'recycle-bin')
 
     def create_export_folder_if_not_exist(self):
-        self.logger.debug(f"Creating export folder if it does not exist")
+        self.logger.debug("Creating export folder if it does not exist")
 
         target_path = Path(self.conversion_settings.working_directory, config.DATA_DIR,
                            self._conversion_settings.export_folder)
