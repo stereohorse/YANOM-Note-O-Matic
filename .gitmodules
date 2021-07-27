@@ -1,0 +1,3 @@
+[submodule "PyInquirer"]
+	path = PyInquirer
+	url = https://github.com/kevindurston21/PyInquirer.git

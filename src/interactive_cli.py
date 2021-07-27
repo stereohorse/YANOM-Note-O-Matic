@@ -3,8 +3,9 @@ import copy
 import logging
 
 from pyfiglet import Figlet
-from PyInquirer import style_from_dict, Token, prompt, Separator
-
+from PyInquirer.prompt import prompt
+from PyInquirer import Separator
+from prompt_toolkit.styles import Style
 import config
 
 
@@ -29,14 +30,15 @@ class InquireCommandLineInterface(ABC):
         ask for input, process responses as required and return required values.
     """
     def __init__(self):
-        self.style = style_from_dict({
-            Token.Separator: '#cc5454',
-            Token.QuestionMark: '#673ab7 bold',
-            Token.Selected: '#cc5454',  # default
-            Token.Pointer: '#673ab7 bold',
-            Token.Instruction: '',  # default
-            Token.Answer: '#f44336 bold',
-            Token.Question: '',
+
+        self.style = Style.from_dict({
+            'separator': '#cc5454',
+            'questionmark': '#673ab7 bold noreverse',
+            'selected': '#cc5454 noreverse',  # default
+            'pointer': '#673ab7 bold',
+            'instruction': '',  # default
+            'answer': '#f44336 bold',
+            'question': '',
         })
 
     @abstractmethod
@@ -303,15 +305,6 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         self._current_conversion_settings.chart_image = 'Include an image of chart' in answers['chart_options']
         self._current_conversion_settings.chart_csv = 'Include a csv file of chart data' in answers['chart_options']
         self._current_conversion_settings.chart_data_table = 'Include a data table of chart data' in answers['chart_options']
-
-        # if 'Include an image of chart' in answers['chart_options']:
-        #     self._current_conversion_settings.chart_image = True
-        #
-        # if 'Include a csv file of chart data' in answers['chart_options']:
-        #     self._current_conversion_settings.chart_csv = True
-        #
-        # if 'Include a data table of chart data' in answers['chart_options']:
-        #     self._current_conversion_settings.chart_data_table = True
 
     def _ask_and_set_tag_prefix(self):
         questions = [

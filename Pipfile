@@ -14,6 +14,8 @@ yanom = {editable = true, path = "."}
 toml = "*"
 alive-progress = "*"
 packaging = "*"
+PyInquirer = {editable = true, path = "."}
+prompt-toolkit = "==3.0.9"
 
 [dev-packages]
 testfixtures = "*"

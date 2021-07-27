@@ -8,6 +8,10 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Increment the minor version number when adding a new feature or set of features and any current bug fixes not yet released
 - Increment the major version when significantly overhaul the user interface, or rewrite all internals.
 
+## On Develop Branches
+- Change PyInquirer from imported pypi package to git submodule.  Forked the original PyInquirer, fixed issues and now have mouse support.
+
+
 ## [1.3.2] - 2021-07-23
 
 ### Added

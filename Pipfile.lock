@@ -1,7 +1,11 @@
 {
     "_meta": {
         "hash": {
+<<<<<<< HEAD
             "sha256": "f34047d378fc9578aecd54d817f6c7cc12f7d1d0780ee89034069bc39e97ab6a"
+=======
+            "sha256": "f1fc5816f34ed3e3985f9d23e5aaabb44b14d13aa53663aa696c0e9ffdb5c383"
+>>>>>>> f67c055 (Change PyInquirer from pypi package to submodule and add mouse support for CLI)
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -212,6 +216,17 @@
             ],
             "markers": "python_version >= '3.6'",
             "version": "==8.3.1"
+<<<<<<< HEAD
+=======
+        },
+        "prompt-toolkit": {
+            "hashes": [
+                "sha256:45b154489d89dc41cce86a069a65f3886206518e7ca93fa9d7dad70546c78d54",
+                "sha256:c5eeab58dd31b541442825d7870777f2a2f764eb5fda03334d5219cd84b9722f"
+            ],
+            "index": "pypi",
+            "version": "==3.0.9"
+>>>>>>> f67c055 (Change PyInquirer from pypi package to submodule and add mouse support for CLI)
         },
         "pyfiglet": {
             "hashes": [
