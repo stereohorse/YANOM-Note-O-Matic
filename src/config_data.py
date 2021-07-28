@@ -112,7 +112,8 @@ class ConfigData(ConfigParser):
 
                 if values:
                     if self[section][key] not in values:
-                        raise ValueError(f'Invalid value of "{self[section][key]}" for {key} under section {section} in the config file')
+                        raise ValueError(f'Invalid value of "{self[section][key]}" for {key} under section {section} '
+                                         f'in the config file')
 
     def generate_conversion_settings_from_parsed_config_file_data(self):
         """
@@ -143,16 +144,27 @@ class ConfigData(ConfigParser):
             self.getboolean('file_options', 'creation_time_in_exported_file_name')
 
     def _write_config_file(self):
-        if not Path(self.conversion_settings.working_directory).is_dir():
-            message = f"Unable to save config.ini file `{self.conversion_settings.working_directory}` is not a directory"
+        try:
+            with open(Path(self.conversion_settings.working_directory, self._config_file), 'w') as config_file:
+                self.write(config_file)
+                self.logger.info("Saving configuration file")
+        except FileNotFoundError as e:
+            if not Path(self.conversion_settings.working_directory).is_dir():
+                message = f"Unable to save config.ini file '{self.conversion_settings.working_directory}' " \
+                          f"is not a directory.\n{e}"
+                self.logger.error(message)
+                if not config.silent:
+                    print(message)
+            else:
+                message = f"Unable to save config.ini file.\n{e}"
+                self.logger.error(message)
+                if not config.silent:
+                    print(message)
+        except IOError as e:
+            message = f"Unable to save config.ini file `{self.conversion_settings.working_directory}`.\n{e}"
             self.logger.error(message)
             if not config.silent:
                 print(message)
-            return
-
-        with open(Path(self.conversion_settings.working_directory, self._config_file), 'w') as config_file:
-            self.write(config_file)
-            self.logger.info("Saving configuration file")
 
     def read_config_file(self):
         """
@@ -250,7 +262,7 @@ class ConfigData(ConfigParser):
                 'metadata_schema': ",".join(self._conversion_settings.metadata_schema),
                 '    # tag prefix is a character you wish to be added to the front of any tag values ': None,
                 '    # retrieved from metadata.  NOTE Use this if using front matter format "text" ': None,
-                '    # or use is your marksown system uses a prefix in a front matter section (most wil not use a prefix) ': None,
+                '    # or use is your markdown system uses a prefix in a front matter section (most wil not use a prefix) ': None,
                 'tag_prefix': self._conversion_settings.tag_prefix,
                 '    # spaces_in_tags if True will maintain spaces in tag words, if False spaces are replaced by a dash -': None,
                 'spaces_in_tags': self._conversion_settings.spaces_in_tags,

@@ -412,6 +412,7 @@ def test_generate_conversion_settings_using_quick_settings_string(good_config_in
     assert Path(f'{str(tmp_path)}/config.ini').exists()
     assert cd['quick_settings']['quick_setting'] == 'gfm'
 
+
 @pytest.mark.parametrize(
     'silent, expected', [
         (True, ''),
@@ -429,21 +430,22 @@ def test_generate_conversion_settings_using_quick_settings_string_to_forced_bad_
 
     config.set_silent(silent)
 
-    Path(f'{str(tmp_path)}/config.ini').write_text(good_config_ini, encoding="utf-8")
+    Path(tmp_path, 'config.ini').write_text(good_config_ini, encoding="utf-8")
 
-    cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'obsidian', allow_no_value=True)
+    cd = config_data.ConfigData(str(Path(tmp_path, 'config.ini')), 'obsidian', allow_no_value=True)
 
     # remove the config.ini so we can check a new one is saved
-    Path(f'{str(tmp_path)}/config.ini').unlink()
-    assert not Path(f'{str(tmp_path)}/config.ini').exists()
+    Path(tmp_path, 'config.ini').unlink()
+    assert not Path(tmp_path, 'config.ini').exists()
+    cd._config_file = 'config.ini'
 
     monkeypatch.setattr(ConversionSettings, 'working_directory', Path(tmp_path, "abc"))
-
     cd.generate_conversion_settings_using_quick_settings_string('gfm')
-    assert not Path(f'{str(tmp_path)}/config.ini').exists()
+    assert not Path(tmp_path, 'abc', 'config.ini').exists()
+    assert not Path(tmp_path, 'config.ini').exists()
 
     assert caplog.records
-    assert f"Unable to save config.ini file `{Path(tmp_path, 'abc')}` is not a directory" in caplog.messages
+    assert f"Unable to save config.ini file '{Path(tmp_path, 'abc')}' is not a directory.\n[Errno 2] No such file or directory: '{Path(tmp_path, 'abc', 'config.ini')}'" in caplog.messages
 
     captured = capsys.readouterr()
     assert expected in captured.out
