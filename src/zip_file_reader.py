@@ -31,8 +31,8 @@ def read_json_data(zip_filename, target_filename):
     try:
         with zipfile.ZipFile(str(zip_filename), 'r') as zip_file:
             return json.loads(zip_file.read(target_filename).decode('utf-8'))
-    except Exception as exc:
-        _error_handling(exc, target_filename, zip_filename)
+    except Exception as e:
+        _error_handling(e, target_filename, zip_filename)
 
 
 def read_binary_file(zip_filename, target_filename):
@@ -54,20 +54,20 @@ def read_binary_file(zip_filename, target_filename):
     try:
         with zipfile.ZipFile(str(zip_filename), 'r') as zip_file:
             return zip_file.read(target_filename)
-    except Exception as exc:
-        _error_handling(exc, target_filename, zip_filename)
+    except Exception as e:
+        _error_handling(e, target_filename, zip_filename)
 
 
-def _error_handling(exc, target_filename, zip_filename):
+def _error_handling(e, target_filename, zip_filename):
     """Error handling for errors encountered reading form zip files"""
 
-    logger.error(exc)
-    msg = f'Error - {exc}'
+    logger.error(e)
+    msg = f'Error - {e}'
 
-    if isinstance(exc, FileNotFoundError):
+    if isinstance(e, FileNotFoundError):
         msg = f'Error - unable to read zip file "{zip_filename}"'
 
-    if isinstance(exc, KeyError):
+    if isinstance(e, KeyError):
         msg = f'Error - unable to find the file "{target_filename}" in the zip file "{zip_filename}"'
 
     logger.error(msg)
