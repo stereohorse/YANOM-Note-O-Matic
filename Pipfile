@@ -5,7 +5,6 @@ name = "pypi"
 
 [packages]
 pyfiglet = "*"
-pyinquirer = "*"
 numpy = "*"
 matplotlib = "*"
 pandas = "*"
