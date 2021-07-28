@@ -82,7 +82,8 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             'type': 'list',
             'name': 'conversion_input',
             'message': 'What do you wish to convert?',
-            'choices': self._default_settings.valid_conversion_inputs
+            'choices': self._default_settings.valid_conversion_inputs,
+            'default': self._default_settings.conversion_input,
         }
         answer = prompt(conversion_input_prompt, style=self.style)
         self._current_conversion_settings.conversion_input = answer['conversion_input']
@@ -124,7 +125,8 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             'type': 'list',
             'name': 'markdown_conversion_input',
             'message': 'What is the format of your current markdown files?',
-            'choices': self._default_settings.valid_markdown_conversion_inputs
+            'choices': self._default_settings.valid_markdown_conversion_inputs,
+            'default': self._default_settings.markdown_conversion_input,
         }
         answer = prompt(markdown_conversion_input, style=self.style)
         self._current_conversion_settings.markdown_conversion_input = answer['markdown_conversion_input']
@@ -138,7 +140,8 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             'type': 'list',
             'name': 'front_matter_format',
             'message': 'What is the format of meta data front matter do you wish to use?',
-            'choices': self._default_settings.valid_front_matter_formats
+            'choices': self._default_settings.valid_front_matter_formats,
+            'default': self._default_settings.front_matter_format,
         }
         answer = prompt(front_matter_format, style=self.style)
         self._current_conversion_settings.front_matter_format = answer['front_matter_format']
@@ -165,37 +168,24 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             self._ask_and_set_metadata_schema()
 
     def _ask_and_set_conversion_quick_setting(self):
-        # ordered_list puts current default into the top of the list, this is needed because the default option on lists
-        # in PyInquirer does not work
-        ordered_list = self._default_settings.valid_quick_settings.copy()
-        ordered_list.insert(0, ordered_list.pop(ordered_list.index(self._default_settings.quick_setting)))
-        if self._current_conversion_settings.conversion_input == 'html':
-            ordered_list.remove('html')
-
         quick_setting_prompt = {
             'type': 'list',
             'name': 'quick_setting',
             'message': 'Choose a quick setting or manual mode',
-            'choices': ordered_list
+            'choices': self._default_settings.valid_quick_settings,
+            'default': self._default_settings.quick_setting,
         }
         answer = prompt(quick_setting_prompt, style=self.style)
         self._current_conversion_settings.set_quick_setting(answer['quick_setting'])
         self._current_conversion_settings.conversion_input = self._current_conversion_settings.conversion_input
 
     def _ask_and_set_export_format(self):
-        # ordered_list puts current default into the top of the list, this is needed because the default option on lists
-        # in PyInquirer does not work
-        ordered_list = self._default_settings.valid_export_formats.copy()
-        ordered_list.insert(0, ordered_list.pop(ordered_list.index(self._default_settings.export_format)))
-        if self._current_conversion_settings.conversion_input == 'html':
-            ordered_list.remove('html')
-
         export_format_prompt = {
             'type': 'list',
             'name': 'export_format',
             'message': 'Choose an export format',
-            'choices': ordered_list
-
+            'choices': self._default_settings.valid_export_formats,
+            'default': self._default_settings.export_format,
         }
         answer = prompt(export_format_prompt, style=self.style)
         self._current_conversion_settings.export_format = answer['export_format']
