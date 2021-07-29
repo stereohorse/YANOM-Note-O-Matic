@@ -1,3 +1,4 @@
+import sys
 from collections import namedtuple
 import logging
 from pathlib import Path
@@ -124,16 +125,29 @@ class NSXFile:
         target_path = Path(self.conversion_settings.working_directory, config.DATA_DIR,
                            self._conversion_settings.export_folder)
 
-        if target_path.exists():
-            return
-
         try:
-            target_path.mkdir(parents=parents, exist_ok=True)
+            target_path.mkdir(parents=parents, exist_ok=False)
+        except FileExistsError as e:
+            if not target_path.is_file():
+                self.logger.debug(f"Export folder already exists - '{target_path}'")
+            else:
+                msg = f'Unable to create the export folder because path is to an existing file not a directory.\n{e}'
+                self.logger.error(f'{msg}')
+                if not config.silent:
+                    print(f'{msg}')
+                sys.exit(1)
+        except FileNotFoundError as e:
+            msg = f'Unable to create the export folder there is a problem with the path.\n{e}'
+            self.logger.error(f'{msg}')
+            if not config.silent:
+                print(f'{msg}')
+            sys.exit(1)
         except OSError as e:
             msg = f'Unable to create the export folder\n{e}'
             self.logger.error(f'{msg}')
             if not config.silent:
                 print(f'{msg}')
+            sys.exit(1)
 
     def create_folders(self):
         self.logger.debug(f"Creating folders for notebooks")
