@@ -286,7 +286,7 @@ def add_strong_between_tags(front_tag, rear_tag, old_html):
     front_tag : str
         String representing the front tag to be replaced for example '<p>'.
     rear_tag : str
-        String representing the rear tag to be replaced for example '<\p>'.
+        String representing the rear tag to be replaced for example '</p>'.
     old_html : str
         String containing the html content to be searched for tags that will be replaced.
 
@@ -313,11 +313,11 @@ def change_html_tags(front_tag, rear_tag, new_front_tag, new_rear_tag, old_html)
     front_tag : str
         String representing the front tag to be replaced for example '<p>'.
     rear_tag : str
-        String representing the rear tag to be replaced for example '<\p>'.
+        String representing the rear tag to be replaced for example '</p>'.
     new_front_tag : str
         String representing the new front tag to be replaced for example '<div>'.
     new_rear_tag : str
-        String representing the rear tag to be replaced for example '<\div>'.
+        String representing the rear tag to be replaced for example '</div>'.
     old_html : str
         String containing the html content to be searched for tags that will be replaced.
 
