@@ -1,5 +1,4 @@
-from unittest.mock import PropertyMock
-
+from logging import DEBUG, INFO
 from mock import patch
 from pathlib import Path
 import pytest
@@ -9,7 +8,6 @@ import nsx_file_converter
 import pandoc_converter
 import sn_note_page
 import sn_notebook
-import sn_attachment
 
 
 @pytest.fixture
@@ -72,7 +70,7 @@ def test_generate_note_page_filename_and_path_duplicate_titles(nsx, conv_setting
 def test_fetch_json_data(conv_setting):
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
-    with patch('zip_file_reader.read_json_data', spec=True, return_value='fake_json') as mock_read_json_data:
+    with patch('zip_file_reader.read_json_data', spec=True, return_value='fake_json'):
         result = nsx_fc.fetch_json_data('data_id')
 
         assert result == 'fake_json'
@@ -81,7 +79,7 @@ def test_fetch_json_data(conv_setting):
 def test_fetch_attachment_file(conv_setting):
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
-    with patch('zip_file_reader.read_binary_file', spec=True, return_value='fake_binary') as mock_read_binary_file:
+    with patch('zip_file_reader.read_binary_file', spec=True, return_value='fake_binary'):
         result = nsx_fc.fetch_attachment_file('data_id')
 
         assert result == 'fake_binary'
@@ -91,7 +89,7 @@ def test_add_notebooks(conv_setting):
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
     nsx_fc._notebook_ids = ['1234', 'abcd']
-    with patch('zip_file_reader.read_json_data', spec=True, return_value={'title': "notebook"}) as mock_read_json_data:
+    with patch('zip_file_reader.read_json_data', spec=True, return_value={'title': "notebook"}):
         nsx_fc.add_notebooks()
 
     assert len(nsx_fc._notebooks) == 2
@@ -106,14 +104,14 @@ def test_add_notebooks(conv_setting):
 def test_fetch_notebook_title(conv_setting, json, expected):
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
-    with patch('zip_file_reader.read_json_data', spec=True, return_value=json) as mock_read_json_data:
+    with patch('zip_file_reader.read_json_data', spec=True, return_value=json):
         result = nsx_fc.fetch_notebook_title('1234')
 
     assert result == expected
 
 
 def test_add_recycle_bin_notebook(conv_setting, caplog):
-    config.set_logger_level("DEBUG")
+    config.set_logger_level(DEBUG)
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
     nsx_fc.add_recycle_bin_notebook()
@@ -125,7 +123,7 @@ def test_add_recycle_bin_notebook(conv_setting, caplog):
 
 
 def test_create_export_folder_if_not_exist(conv_setting, caplog, tmp_path):
-    config.set_logger_level("DEBUG")
+    config.set_logger_level(DEBUG)
     Path(tmp_path, config.DATA_DIR).mkdir()
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
@@ -142,7 +140,7 @@ def test_create_export_folder_if_not_exist(conv_setting, caplog, tmp_path):
 
 def test_create_export_folder_if_not_exist_force_exception_invalid_path_missing_parent_dir(conv_setting, caplog,
                                                                                            tmp_path):
-    config.set_logger_level("DEBUG")
+    config.set_logger_level(DEBUG)
     Path(tmp_path, config.DATA_DIR).mkdir()
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
@@ -161,7 +159,7 @@ def test_create_export_folder_if_not_exist_force_exception_invalid_path_missing_
 
 
 def test_create_export_folder_if_not_exist_force_exception_directory_already_exists(conv_setting, caplog, tmp_path):
-    config.set_logger_level("DEBUG")
+    config.set_logger_level(DEBUG)
     Path(tmp_path, config.DATA_DIR).mkdir()
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
@@ -179,7 +177,7 @@ def test_create_export_folder_if_not_exist_force_exception_directory_already_exi
 
 
 def test_create_export_folder_if_not_exist_force_exception_path_is_to_existing_file(conv_setting, caplog, tmp_path):
-    config.set_logger_level("DEBUG")
+    config.set_logger_level(DEBUG)
     Path(tmp_path, config.DATA_DIR).mkdir()
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
@@ -198,7 +196,7 @@ def test_create_export_folder_if_not_exist_force_exception_path_is_to_existing_f
 
 
 def test_create_notebook_folders(conv_setting, caplog, tmp_path, nsx):
-    config.set_logger_level("DEBUG")
+    config.set_logger_level(DEBUG)
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
@@ -215,7 +213,7 @@ def test_create_notebook_folders(conv_setting, caplog, tmp_path, nsx):
 
 
 def test_create_notebook_folders_force_fail_to_create_folder(conv_setting, caplog, tmp_path, nsx, monkeypatch):
-    config.set_logger_level("DEBUG")
+    config.set_logger_level(DEBUG)
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
@@ -257,16 +255,22 @@ def test_remove_notebooks_to_be_skipped(conv_setting, nsx):
     'silent_mode', [True, False]
 )
 def test_add_note_pages(conv_setting, caplog, silent_mode):
-    config.set_logger_level("DEBUG")
+    config.set_logger_level(DEBUG)
     config.set_silent(silent_mode)
 
     nsx_fc = nsx_file_converter.NSXFile(Path('fake_file'), conv_setting, 'fake_pandoc_converter')
 
     nsx_fc._note_page_ids = ['1234']
 
-    with patch('zip_file_reader.read_json_data', spec=True,
-               return_value={'title': 'note title', 'ctime': 1620808218, 'mtime': 1620808218, 'parent_id': '1234',
-                             'encrypt': False}) as mock_read_json_data:
+    with patch('zip_file_reader.read_json_data',
+               spec=True,
+               return_value={'title': 'note title',
+                             'ctime': 1620808218,
+                             'mtime': 1620808218,
+                             'parent_id': '1234',
+                             'encrypt': False
+                             }
+               ):
         caplog.clear()
         nsx_fc.add_note_pages()
 
@@ -278,7 +282,7 @@ def test_add_note_pages(conv_setting, caplog, silent_mode):
 
 
 def test_add_note_pages_encrypted_note(conv_setting, caplog):
-    config.set_logger_level("DEBUG")
+    config.set_logger_level(DEBUG)
 
     nsx_fc = nsx_file_converter.NSXFile(Path('fake_file'), conv_setting, 'fake_pandoc_converter')
 
@@ -286,7 +290,7 @@ def test_add_note_pages_encrypted_note(conv_setting, caplog):
 
     with patch('zip_file_reader.read_json_data', spec=True,
                return_value={'title': 'note title', 'ctime': 1620808218, 'mtime': 1620808218, 'parent_id': '1234',
-                             'encrypt': True}) as mock_read_json_data:
+                             'encrypt': True}):
         caplog.clear()
         nsx_fc.add_note_pages()
 
@@ -313,7 +317,7 @@ def notebooks(nsx):
 
 
 def test_add_note_pages_to_notebooks(conv_setting, caplog, note_pages, notebooks):
-    config.set_logger_level("INFO")
+    config.set_logger_level(INFO)
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
     nsx_fc._notebooks = notebooks
@@ -329,7 +333,7 @@ def test_add_note_pages_to_notebooks(conv_setting, caplog, note_pages, notebooks
 
 
 def test_process_notebooks(conv_setting, caplog, notebooks):
-    config.set_logger_level("DEBUG")
+    config.set_logger_level(DEBUG)
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
     nsx_fc._notebooks = notebooks
@@ -340,6 +344,57 @@ def test_process_notebooks(conv_setting, caplog, notebooks):
         mock_process_notebook_pages.assert_called()
         assert nsx_fc._note_book_count == 2
 
+
+def test_get_notebook_ids(conv_setting):
+    nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
+
+    nsx_fc._nsx_json_data = {"notebook": ["1234", "2345", "3456"]}
+    nsx_fc.get_notebook_ids()
+    assert nsx_fc._notebook_ids == ["1234", "2345", "3456"]
+
+
+@pytest.mark.parametrize(
+    'nsx_json_data', [
+        {"notebook": []},
+        {"notebook": None},
+        {"tag": ['tag1']}
+    ]
+)
+def test_get_notebook_ids_no_ids(nsx_json_data, conv_setting):
+    nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
+
+    nsx_fc._nsx_json_data = nsx_json_data
+    nsx_fc.get_notebook_ids()
+    assert not nsx_fc._notebook_ids
+
+
+def test_get_note_page_ids(conv_setting):
+    nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
+
+    nsx_fc._nsx_json_data = {"note": ["1234", "2345", "3456"]}
+    nsx_fc.get_note_page_ids()
+    assert nsx_fc._note_page_ids == ["1234", "2345", "3456"]
+
+
+@pytest.mark.parametrize(
+    'nsx_json_data, silent, expected', [
+        ({"note": []}, False, "No note page ID's were found in"),
+        ({"note": []}, True, ''),
+        ({"note": None}, False, "No note page ID's were found in"),
+        ({"tag": ['tag1']}, False, "No note page ID's were found in"),
+    ]
+)
+def test_get_note_page_ids_no_ids(nsx_json_data, conv_setting, silent, expected, capsys, caplog):
+    config.set_silent(silent)
+    nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
+
+    nsx_fc._nsx_json_data = nsx_json_data
+    nsx_fc.get_note_page_ids()
+    assert not nsx_fc._note_page_ids
+    assert f"No note page ID's were found in fake_file. nsx file can not be processed" in caplog.messages
+
+    captured = capsys.readouterr()
+    assert expected in captured.out
 
 
 @pytest.mark.parametrize(

@@ -28,7 +28,7 @@ class NSXFile:
         self.logger.setLevel(config.logger_level)
         self._conversion_settings = conversion_settings
         self._nsx_file_name = file
-        self._nsx_json_data = ''
+        self._nsx_json_data = {}
         self._notebook_ids = None
         self._note_page_ids = None
         self._notebooks = {}
@@ -45,8 +45,14 @@ class NSXFile:
     def process_nsx_file(self):
         self.logger.info(f"Processing {self._nsx_file_name}")
         self._nsx_json_data = self.fetch_json_data('config.json')
-        self._notebook_ids = self._nsx_json_data['notebook']
-        self._note_page_ids = self._nsx_json_data['note']
+        self.get_notebook_ids()
+        if not self._notebook_ids:
+            return
+
+        self.get_note_page_ids()
+        if not self._note_page_ids:
+            return
+
         self.add_notebooks()
         self.add_recycle_bin_notebook()
         self.create_export_folder_if_not_exist()
@@ -61,6 +67,23 @@ class NSXFile:
         self.store_attachments(attachments)
         self.save_note_pages()
         self.logger.info(f"Processing of {self._nsx_file_name} complete.")
+
+    def get_notebook_ids(self):
+        self._notebook_ids = self._nsx_json_data.get('notebook', None)
+        if not self._notebook_ids:
+            msg = f"No notebook ID's were found in {self._nsx_file_name}. nsx file can not be processed"
+            self.report_json_missing_ids(msg)
+
+    def get_note_page_ids(self):
+        self._note_page_ids = self._nsx_json_data.get('note', None)
+        if not self._note_page_ids:
+            msg = f"No note page ID's were found in {self._nsx_file_name}. nsx file can not be processed"
+            self.report_json_missing_ids(msg)
+
+    def report_json_missing_ids(self, msg):
+        self.logger.warning(msg)
+        if not config.silent:
+            print(msg)
 
     def build_list_of_attachments(self) -> list[Attachment]:
         """
