@@ -25,7 +25,7 @@ class NotePage:
         self._note_id = note_id
         self._note_json = note_json
         self.get_json_note_title()
-        self._original_title = self._note_json['title']
+        self._original_title = self._title
         self._format_ctime_and_mtime_if_required()
         self._raw_content = self._note_json.get('content', '')
         self._parent_notebook = self._note_json['parent_id']
