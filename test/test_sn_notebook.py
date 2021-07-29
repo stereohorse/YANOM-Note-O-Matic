@@ -111,7 +111,7 @@ def test_pair_up_note_pages_and_notebooks_note_title_does_not_already_exist(nsx)
     notebook.pair_up_note_pages_and_notebooks(note_page)
 
     assert note_page.notebook_folder_name == Path('notebook_folder')
-    assert note_page.parent_notebook == 'notebook_id_abcd'
+    assert note_page.parent_notebook_id == 'notebook_id_abcd'
 
     assert note_page.title in notebook.note_titles
     assert note_page in notebook.note_pages
@@ -130,7 +130,7 @@ def test_pair_up_note_pages_and_notebooks_note_title_already_exists(nsx):
     notebook.pair_up_note_pages_and_notebooks(note_page)
 
     assert note_page.notebook_folder_name == Path('notebook_folder')
-    assert note_page.parent_notebook == 'notebook_id_abcd'
+    assert note_page.parent_notebook_id == 'notebook_id_abcd'
 
     assert note_page.title == 'Page 8 title-2'
     assert note_page.title in notebook.note_titles

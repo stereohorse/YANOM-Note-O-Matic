@@ -98,7 +98,7 @@ def test_init_note_page(nsx, front_matter_format, creation_time_in_exported_file
     assert note_page.title == 'Page 8 title'
     assert note_page.original_title == 'Page 8 title'
     assert note_page.raw_content == 'content'
-    assert note_page.parent_notebook == 'note_book2'
+    assert note_page.parent_notebook_id == 'note_book2'
     assert note_page._attachments_json == {'test': 'test_value'}
 
 
@@ -255,6 +255,32 @@ def test_get_json_attachment_data_key_missing_in_json(note_page_1, caplog):
 
     assert note_page_1._attachments_json == {}
     assert expected_caplog_msg in caplog.messages
+
+
+def test_get_json_parent_notebook(note_page_1, caplog):
+    expected = 'Note Parent ID Testing Get'
+    note_page_1._note_json = {'parent_id': expected}
+    note_page_1.get_json_parent_notebook()
+    assert note_page_1._parent_notebook_id == expected
+
+
+@pytest.mark.parametrize(
+    'silent, expected_out', [
+        (True, ''),
+        (False, "Note will be in the Recycle Bin notebook"),
+    ]
+)
+def test_get_json_parent_notebook_key_missing_in_json(note_page_1, silent, expected_out, caplog, capsys):
+    config.set_silent(silent)
+    note_page_1._note_json = {'tag': 'tag1'}
+    note_page_1.get_json_parent_notebook()
+    expected_caplog_msg = f"No parent notebook ID was found in note id '{note_page_1._note_id}'.  Using a placeholder id of '{note_page_1._parent_notebook_id}'.  Notes will be in the Recycle bin notebook"
+
+    assert note_page_1._parent_notebook_id == 'Parent Notebook ID missing from nsx file note data'
+    assert expected_caplog_msg in caplog.messages
+
+    captured = capsys.readouterr()
+    assert expected_out in captured.out
 
 
 def test_get_json_attachment_data_key_is_null(note_page_1, caplog):

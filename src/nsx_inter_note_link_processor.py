@@ -47,7 +47,7 @@ class NSXInterNoteLinkProcessor:
         def generate_new_links(self):
             self.logger.debug("Creating inter note links")
             for target_note in self._target_notes:
-                if self._source_note_page.parent_notebook == target_note.parent_notebook:
+                if self._source_note_page.parent_notebook_id == target_note.parent_notebook_id:
                     replacement_text = f'<a href="{target_note.file_name}">{self._text}</a>'
                 else:
                     replacement_text = f'<a href="../{target_note.notebook_folder_name}/{target_note.file_name}">{self._text}</a>'

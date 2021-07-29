@@ -218,7 +218,7 @@ class NSXFile:
         self.logger.info("Add note pages to notebooks")
 
         for note_page_id in self._note_pages:
-            current_parent_id = self._note_pages[note_page_id].parent_notebook
+            current_parent_id = self._note_pages[note_page_id].parent_notebook_id
             if current_parent_id in self._notebooks:
                 self._notebooks[current_parent_id].pair_up_note_pages_and_notebooks(self._note_pages[note_page_id])
             else:

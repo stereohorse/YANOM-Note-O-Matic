@@ -21,6 +21,7 @@ class NotePage:
         self._title = None
         self._raw_content = None
         self._attachments_json = None
+        self._parent_notebook_id = None
         self._nsx_file = nsx_file
         self._pandoc_converter = nsx_file.pandoc_converter
         self._conversion_settings = nsx_file.conversion_settings
@@ -30,7 +31,7 @@ class NotePage:
         self._original_title = self._title
         self._format_ctime_and_mtime_if_required()
         self.get_json_note_content()
-        self._parent_notebook = self._note_json['parent_id']
+        self.get_json_parent_notebook()
         self.get_json_attachment_data()
         self._attachments = {}
         self._pre_processed_content = ''
@@ -66,6 +67,16 @@ class NotePage:
         if not self._attachments_json:
             self._attachments_json = {}
             self.logger.info(f"No attachments were found in note id '{self._note_id}'.")
+
+    def get_json_parent_notebook(self):
+        self._parent_notebook_id = self._note_json.get('parent_id', None)
+        if not self._parent_notebook_id:
+            self._parent_notebook_id = 'Parent Notebook ID missing from nsx file note data'
+            self.logger.info(f"No parent notebook ID was found in note id '{self._note_id}'.  "
+                             f"Using a placeholder id of '{self._parent_notebook_id}'.  "
+                             f"Notes will be in the Recycle bin notebook")
+            if not config.silent:
+                print(f"No parent notebook ID was found in '{self._note_id}'.  Note will be in the Recycle Bin notebook")
 
     def _format_ctime_and_mtime_if_required(self):
         if self._conversion_settings.front_matter_format != 'none' \
@@ -238,12 +249,12 @@ class NotePage:
         return self._conversion_settings
 
     @property
-    def parent_notebook(self):
-        return self._parent_notebook
+    def parent_notebook_id(self):
+        return self._parent_notebook_id
 
-    @parent_notebook.setter
-    def parent_notebook(self, value):
-        self._parent_notebook = value
+    @parent_notebook_id.setter
+    def parent_notebook_id(self, value):
+        self._parent_notebook_id = value
 
     @property
     def pre_processor(self):

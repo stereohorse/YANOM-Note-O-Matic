@@ -43,7 +43,7 @@ class Notebook:
                           f"to Notebook '{self.title}' - {self.notebook_id}")
 
         note_page.notebook_folder_name = self.folder_name
-        note_page.parent_notebook = self.notebook_id
+        note_page.parent_notebook_id = self.notebook_id
 
         while note_page.title in self.note_titles:
             note_page.increment_duplicated_title(self.note_titles)
