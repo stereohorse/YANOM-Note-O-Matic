@@ -50,7 +50,8 @@ class NSXFile:
         self.add_notebooks()
         self.add_recycle_bin_notebook()
         self.create_export_folder_if_not_exist()
-        self.create_folders()
+        notebooks_to_skip = self.create_notebook_folders()
+        self.remove_notebooks_to_be_skipped(notebooks_to_skip)
         self.add_note_pages()
         self.add_note_pages_to_notebooks()
         self.generate_note_page_filename_and_path()
@@ -106,8 +107,6 @@ class NSXFile:
             for notebook_id in self._notebook_ids
         }
 
-        self._note_book_count += len(self._notebooks)
-
     def fetch_notebook_title(self, notebook_id):
         notebook_title = zip_file_reader.read_json_data(self._nsx_file_name, notebook_id)['title']
         if notebook_title == "":  # The notebook with no title is called 'My Notes' in note station
@@ -149,10 +148,24 @@ class NSXFile:
                 print(f'{msg}')
             sys.exit(1)
 
-    def create_folders(self):
+    def create_notebook_folders(self) -> list:
+        """Create notebook folders and return list of notebook ids for those where a notebook folder was  not created"""
         self.logger.debug(f"Creating folders for notebooks")
+        notebooks_to_skip = []
         for notebooks_id in self._notebooks:
-            self._notebooks[notebooks_id].create_folders()
+            self._notebooks[notebooks_id].create_notebook_folder()
+            if not self._notebooks[notebooks_id].full_path_to_notebook:
+                notebooks_to_skip.append(notebooks_id)
+                continue
+
+            self._notebooks[notebooks_id].create_attachment_folder()
+
+        return notebooks_to_skip
+
+    def remove_notebooks_to_be_skipped(self, notebooks_to_skip):
+        for notebook_id in notebooks_to_skip:
+            self.logger.warning(f"The notebook `{self._notebooks[notebook_id].title} is being skipped'")
+            del self._notebooks[notebook_id]
 
     def add_note_pages(self):
         self.logger.debug(f"Creating note page objects")
@@ -208,6 +221,8 @@ class NSXFile:
                     bar()
 
     def process_notebooks(self):
+        self._note_book_count += len(self._notebooks)
+
         for notebooks_id in self._notebooks:
             self._notebooks[notebooks_id].process_notebook_pages()
 

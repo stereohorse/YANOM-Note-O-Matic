@@ -24,7 +24,7 @@ class Notebook:
         self.title = title
         self.folder_name = ''
         self.create_folder_name()
-        self.full_path_to_notebook = ''
+        self._full_path_to_notebook = None
         self.note_pages = []
         self.note_titles = []
 
@@ -58,29 +58,44 @@ class Notebook:
                                                               allow_unicode=True))
         self.logger.info(f'For the notebook "{self.title}" the filename used is is {self.folder_name }')
 
-    def create_folders(self):
-        self.create_notebook_folder()
-        self.create_attachment_folder()
-
-    def create_notebook_folder(self):
+    def create_notebook_folder(self, parents=True):
         self.logger.debug(f"Creating notebook folder for {self.title}")
-        current_directory_path = self.conversion_settings.working_directory
 
         n = 0
-        target_path = Path(current_directory_path, config.DATA_DIR,
+        target_path = Path(self.conversion_settings.working_directory,
+                           config.DATA_DIR,
                            self.nsx_file.conversion_settings.export_folder,
                            self.folder_name)
 
         while target_path.exists():
             n += 1
-            target_path = Path(current_directory_path, config.DATA_DIR,
+            target_path = Path(self.conversion_settings.working_directory,
+                               config.DATA_DIR,
                                self.nsx_file.conversion_settings.export_folder,
                                f"{self.folder_name}-{n}")
-
-        target_path.mkdir(parents=True, exist_ok=True)
-        self.folder_name = Path(target_path.name)
-        self.full_path_to_notebook = target_path
+        try:
+            target_path.mkdir(parents=parents, exist_ok=False)
+            self.folder_name = Path(target_path.name)
+            self._full_path_to_notebook = target_path
+        except FileNotFoundError as e:
+            msg = f'Unable to create notebook folder there is a problem with the path.\n{e}'
+            self.logger.error(f'{msg}')
+            if not config.silent:
+                print(f'{msg}')
+        except OSError as e:
+            msg = f'Unable to create note book folder\n{e}'
+            self.logger.error(f'{msg}')
+            if not config.silent:
+                print(f'{msg}')
 
     def create_attachment_folder(self):
-        self.logger.debug(f"Creating attachment folder")
-        Path(self.full_path_to_notebook, self.conversion_settings.attachment_folder_name).mkdir()
+        if self.full_path_to_notebook:   #if full path is still None then the fodler was not created and we can skip
+            self.logger.debug(f"Creating attachment folder")
+            Path(self.full_path_to_notebook, self.conversion_settings.attachment_folder_name).mkdir()
+            return
+
+        self.logger.warning(f"Attachment folder for '{self.title}' was not created as the notebook folder has not been created")
+
+    @property
+    def full_path_to_notebook(self):
+        return self._full_path_to_notebook

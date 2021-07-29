@@ -1,3 +1,5 @@
+from unittest.mock import PropertyMock
+
 from mock import patch
 from pathlib import Path
 import pytest
@@ -92,7 +94,7 @@ def test_add_notebooks(conv_setting):
     with patch('zip_file_reader.read_json_data', spec=True, return_value={'title': "notebook"}) as mock_read_json_data:
         nsx_fc.add_notebooks()
 
-    assert nsx_fc.note_book_count == 2
+    assert len(nsx_fc._notebooks) == 2
 
 
 @pytest.mark.parametrize(
@@ -138,7 +140,8 @@ def test_create_export_folder_if_not_exist(conv_setting, caplog, tmp_path):
     assert "Creating export folder if it does not exist" in caplog.messages
 
 
-def test_create_export_folder_if_not_exist_force_exception_invalid_path_missing_parent_dir(conv_setting, caplog, tmp_path):
+def test_create_export_folder_if_not_exist_force_exception_invalid_path_missing_parent_dir(conv_setting, caplog,
+                                                                                           tmp_path):
     config.set_logger_level("DEBUG")
     Path(tmp_path, config.DATA_DIR).mkdir()
 
@@ -194,7 +197,7 @@ def test_create_export_folder_if_not_exist_force_exception_path_is_to_existing_f
     assert expected_error_log_caplog_message in caplog.messages
 
 
-def test_create_folders(conv_setting, caplog, tmp_path, nsx):
+def test_create_notebook_folders(conv_setting, caplog, tmp_path, nsx):
     config.set_logger_level("DEBUG")
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
@@ -202,13 +205,52 @@ def test_create_folders(conv_setting, caplog, tmp_path, nsx):
     test_notebook = sn_notebook.Notebook(nsx, '1234', 'Notebook Title')
     nsx_fc._notebooks = {'1234': test_notebook}
 
-    nsx_fc.create_folders()
+    nsx_fc.create_notebook_folders()
 
     assert "Creating folders for notebooks" in caplog.messages
     assert nsx_fc.notebooks['1234'].folder_name == Path('notebook-title')
     assert Path(tmp_path, config.DATA_DIR, conv_setting.export_folder, 'notebook-title').exists()
-    assert Path(tmp_path, config.DATA_DIR, conv_setting.export_folder, 'notebook-title', conv_setting.attachment_folder_name).exists()
+    assert Path(tmp_path, config.DATA_DIR, conv_setting.export_folder, 'notebook-title',
+                conv_setting.attachment_folder_name).exists()
 
+
+def test_create_notebook_folders_force_fail_to_create_folder(conv_setting, caplog, tmp_path, nsx, monkeypatch):
+    config.set_logger_level("DEBUG")
+
+    nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
+
+    test_notebook = sn_notebook.Notebook(nsx, '1234', 'Notebook Title')
+    nsx_fc._notebooks = {'1234': test_notebook}
+
+    monkeypatch.setattr(sn_notebook.Notebook, 'full_path_to_notebook', None)
+    result = nsx_fc.create_notebook_folders()
+
+    assert nsx_fc._notebooks['1234'].full_path_to_notebook is None
+
+    assert "Creating folders for notebooks" in caplog.messages
+    # confirm notebook folder was created
+    assert Path(conv_setting.working_directory,
+                config.DATA_DIR,
+                nsx_fc.conversion_settings.export_folder,
+                nsx_fc._notebooks['1234'].folder_name).exists()
+    # confirm the attachment folder was not created
+    assert not Path(conv_setting.working_directory,
+                    config.DATA_DIR,
+                    nsx_fc.conversion_settings.export_folder,
+                    nsx_fc._notebooks['1234'].folder_name,
+                    nsx_fc.conversion_settings.attachment_folder_name).exists()
+    # confirm the notebook is listed to be skipped
+    assert result == ['1234']
+
+
+def test_remove_notebooks_to_be_skipped(conv_setting, nsx):
+    nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
+    test_notebook1 = sn_notebook.Notebook(nsx, '1234', 'Notebook Title')
+    test_notebook2 = sn_notebook.Notebook(nsx, '7890', 'Notebook Title2')
+    nsx_fc._notebooks = {'1234': test_notebook1, '7890': test_notebook2}
+    notebooks_to_skip = ['1234']
+    nsx_fc.remove_notebooks_to_be_skipped(notebooks_to_skip)
+    assert nsx_fc._notebooks == {'7890': test_notebook2}
 
 
 @pytest.mark.parametrize(
@@ -242,7 +284,9 @@ def test_add_note_pages_encrypted_note(conv_setting, caplog):
 
     nsx_fc._note_page_ids = ['1234']
 
-    with patch('zip_file_reader.read_json_data', spec=True, return_value={'title': 'note title', 'ctime': 1620808218, 'mtime': 1620808218, 'parent_id': '1234', 'encrypt': True}) as mock_read_json_data:
+    with patch('zip_file_reader.read_json_data', spec=True,
+               return_value={'title': 'note title', 'ctime': 1620808218, 'mtime': 1620808218, 'parent_id': '1234',
+                             'encrypt': True}) as mock_read_json_data:
         caplog.clear()
         nsx_fc.add_note_pages()
 
@@ -294,6 +338,8 @@ def test_process_notebooks(conv_setting, caplog, notebooks):
         nsx_fc.process_notebooks()
 
         mock_process_notebook_pages.assert_called()
+        assert nsx_fc._note_book_count == 2
+
 
 
 @pytest.mark.parametrize(
@@ -363,4 +409,3 @@ def test_store_attachments_attachment_paths_are_exiting_directory(notebooks, all
             assert mock_store_file.call_count == 0
             assert "Unable to save attachment for the note" in caplog.messages[0]
             assert len(caplog.records) == 4
-
