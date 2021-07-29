@@ -224,3 +224,45 @@ def test_get_json_note_title_key_missing_in_json(note_page_1, caplog):
     assert len(note_page_1.title) == 8
     assert expected_caplog_msg in caplog.messages
 
+
+def test_get_json_note_content(note_page_1, caplog):
+    note_page_1._note_json = {'content': 'Note Content Testing Get'}
+    expected = 'Note Content Testing Get'
+    note_page_1.get_json_note_content()
+    assert note_page_1._raw_content == expected
+
+
+def test_get_json_note_content_key_missing_in_json(note_page_1, caplog):
+    note_page_1._note_json = {'tag': 'tag1'}
+    note_page_1.get_json_note_content()
+    expected_caplog_msg = f"No content was found in note id '{note_page_1._note_id}'."
+
+    assert note_page_1._raw_content == ''
+    assert expected_caplog_msg in caplog.messages
+
+
+def test_get_json_attachment_data(note_page_1, caplog):
+    expected = 'Note Attachment Testing Get'
+    note_page_1._note_json = {'attachment': expected}
+    note_page_1.get_json_attachment_data()
+    assert note_page_1._attachments_json == expected
+
+
+def test_get_json_attachment_data_key_missing_in_json(note_page_1, caplog):
+    note_page_1._note_json = {'tag': 'tag1'}
+    note_page_1.get_json_attachment_data()
+    expected_caplog_msg = f"No attachments were found in note id '{note_page_1._note_id}'."
+
+    assert note_page_1._attachments_json == {}
+    assert expected_caplog_msg in caplog.messages
+
+
+def test_get_json_attachment_data_key_is_null(note_page_1, caplog):
+    note_page_1._note_json = {'attachment': None}
+    note_page_1.get_json_attachment_data()
+    expected_caplog_msg1 = f"Note - '{note_page_1._title}' - Has Null set for attachments. There may be a sync issues between desktop and web version of Note Station."
+    expected_caplog_msg2 = f"No attachments were found in note id '{note_page_1._note_id}'."
+
+    assert note_page_1._attachments_json == {}
+    assert expected_caplog_msg1 in caplog.messages
+    assert expected_caplog_msg2 in caplog.messages

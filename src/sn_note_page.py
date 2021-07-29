@@ -19,6 +19,8 @@ class NotePage:
         self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.logger_level)
         self._title = None
+        self._raw_content = None
+        self._attachments_json = None
         self._nsx_file = nsx_file
         self._pandoc_converter = nsx_file.pandoc_converter
         self._conversion_settings = nsx_file.conversion_settings
@@ -27,9 +29,9 @@ class NotePage:
         self.get_json_note_title()
         self._original_title = self._title
         self._format_ctime_and_mtime_if_required()
-        self._raw_content = self._note_json.get('content', '')
+        self.get_json_note_content()
         self._parent_notebook = self._note_json['parent_id']
-        self._attachments_json = self._note_json.get('attachment', {})
+        self.get_json_attachment_data()
         self._attachments = {}
         self._pre_processed_content = ''
         self._converted_content = ''
@@ -46,7 +48,24 @@ class NotePage:
         self.logger.debug(f"Note title from json is '{self._title}'")
         if not self.title:
             self._title = helper_functions.get_random_string(8)
-            self.logger.info(f"no title was found in note id '{self._note_id}'.  Using random string for title '{self._title}'")
+            self.logger.info(f"no title was found in note id '{self._note_id}'.  "
+                             f"Using random string for title '{self._title}'")
+
+    def get_json_note_content(self):
+        self._raw_content = self._note_json.get('content', None)
+        if self._raw_content is None:
+            self._raw_content = ''
+            self.logger.info(f"No content was found in note id '{self._note_id}'.")
+
+    def get_json_attachment_data(self):
+        self._attachments_json = self._note_json.get('attachment', {})
+        if self._attachments_json is None:
+            self.logger.warning(
+                f"Note - '{self._title}' - Has Null set for attachments. "
+                f"There may be a sync issues between desktop and web version of Note Station.")
+        if not self._attachments_json:
+            self._attachments_json = {}
+            self.logger.info(f"No attachments were found in note id '{self._note_id}'.")
 
     def _format_ctime_and_mtime_if_required(self):
         if self._conversion_settings.front_matter_format != 'none' \
@@ -99,12 +118,6 @@ class NotePage:
         return self._file_name
 
     def create_attachments(self):
-        if self._attachments_json is None:
-            self.logger.warning(
-                f'Note - {self._title} - Has Null set for attachments. '
-                f'There may be a sync issues between desktop and web version of Note Station.')
-            return
-
         for attachment_id in self._attachments_json:
             if self._attachments_json[attachment_id]['type'].startswith('image'):
                 self._attachments[attachment_id] = sn_attachment.ImageNSAttachment(self, attachment_id)
