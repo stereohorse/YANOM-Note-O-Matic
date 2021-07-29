@@ -1,3 +1,4 @@
+from logging import DEBUG
 from mock import patch
 from pathlib import Path
 
@@ -20,21 +21,53 @@ def note_page(nsx):
 
 @pytest.fixture
 def note_page_1(nsx):
-    note_page_1_json = {'parent_id': 'note_book1', 'title': 'Page 1 title', 'mtime': 1619298559, 'ctime': 1619298539,
-                        'content': 'content', 'tag': ['1'], 'attachment': {
-            "_-m4Hhgmp34U85IwTdWfbWw": {"md5": "e79072f793f22434740e64e93cfe5926",
-                                        "name": "ns_attach_image_787491613404344687.png", "size": 186875, "width": 1848,
-                                        "height": 1306, "type": "image/png", "ctime": 1616084097,
-                                        "ref": "MTYxMzQwNDM0NDczN25zX2F0dGFjaF9pbWFnZV83ODc0OTE2MTM0MDQzNDQ2ODcucG5n"},
-            "_YOgkfaY7aeHcezS-jgGSmA": {"md5": "6c4b828f227a096d3374599cae3f94ec",
-                                        "name": "Record 2021-02-15 16:00:13.webm", "size": 9627, "width": 0,
-                                        "height": 0, "type": "video/webm", "ctime": 1616084097},
-            "_yITQrdarvsdg3CkL-ifh4Q": {"md5": "c4ee8b831ad1188509c0f33f0c072af5", "name": "example-attachment.pdf",
-                                        "size": 14481, "width": 0, "height": 0, "type": "application/pdf",
-                                        "ctime": 1616084097},
-            "file_dGVzdCBwYWdlLnBkZjE2MTkyOTg3MjQ2OTE=": {"md5": "27a9aadc878b718331794c8bc50a1b8c",
-                                                          "name": "test page.pdf", "size": 320357, "width": 0,
-                                                          "height": 0, "type": "application/pdf", "ctime": 1619295124}}}
+    note_page_1_json = {
+        'parent_id': 'note_book1',
+        'title': 'Page 1 title',
+        'mtime': 1619298559,
+        'ctime': 1619298539,
+        'content': 'content',
+        'tag': ['1'],
+        'attachment': {
+            "_-m4Hhgmp34U85IwTdWfbWw": {
+                "md5": "e79072f793f22434740e64e93cfe5926",
+                "name": "ns_attach_image_787491613404344687.png",
+                "size": 186875,
+                "width": 1848,
+                "height": 1306,
+                "type": "image/png",
+                "ctime": 1616084097,
+                "ref": "MTYxMzQwNDM0NDczN25zX2F0dGFjaF9pbWFnZV83ODc0OTE2MTM0MDQzNDQ2ODcucG5n"
+            },
+            "_YOgkfaY7aeHcezS-jgGSmA": {
+                "md5": "6c4b828f227a096d3374599cae3f94ec",
+                "name": "Record 2021-02-15 16:00:13.webm",
+                "size": 9627,
+                "width": 0,
+                "height": 0,
+                "type": "video/webm",
+                "ctime": 1616084097,
+            },
+            "_yITQrdarvsdg3CkL-ifh4Q": {
+                "md5": "c4ee8b831ad1188509c0f33f0c072af5",
+                "name": "example-attachment.pdf",
+                "size": 14481,
+                "width": 0,
+                "height": 0,
+                "type": "application/pdf",
+                "ctime": 1616084097,
+            },
+            "file_dGVzdCBwYWdlLnBkZjE2MTkyOTg3MjQ2OTE=": {
+                "md5": "27a9aadc878b718331794c8bc50a1b8c",
+                "name": "test page.pdf",
+                "size": 320357,
+                "width": 0,
+                "height": 0,
+                "type": "application/pdf",
+                "ctime": 1619295124,
+            },
+        },
+        }
     note_page_1 = sn_note_page.NotePage(nsx, 1, note_page_1_json)
     note_page_1.notebook_folder_name = 'note_book1'
     note_page_1._file_name = 'page-1-title.md'
@@ -169,3 +202,25 @@ def test_process_note(nsx, note_page_1, export_format, expected):
     note_page_1.process_note()
 
     assert note_page_1.converted_content == expected
+
+
+def test_get_json_note_title(note_page_1, caplog):
+    config.set_logger_level(DEBUG)
+    note_page_1.logger.setLevel(config.logger_level)
+    note_page_1._note_json = {'title': 'Note Title Testing Get'}
+    expected = 'Note Title Testing Get'
+    note_page_1.get_json_note_title()
+    assert note_page_1.title == expected
+    assert f"Note title from json is '{expected}'" in caplog.messages
+
+
+def test_get_json_note_title_key_missing_in_json(note_page_1, caplog):
+    config.set_logger_level(DEBUG)
+    note_page_1.logger.setLevel(config.logger_level)
+    note_page_1._note_json = {'tag': 'tag1'}
+    note_page_1.get_json_note_title()
+
+    expected_caplog_msg = f"no title was found in note id '{note_page_1._note_id}'.  Using random string for title '{note_page_1._title}'"
+    assert len(note_page_1.title) == 8
+    assert expected_caplog_msg in caplog.messages
+

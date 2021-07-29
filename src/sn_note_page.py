@@ -18,12 +18,13 @@ class NotePage:
     def __init__(self, nsx_file, note_id, note_json):
         self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.logger_level)
+        self._title = None
         self._nsx_file = nsx_file
         self._pandoc_converter = nsx_file.pandoc_converter
         self._conversion_settings = nsx_file.conversion_settings
         self._note_id = note_id
         self._note_json = note_json
-        self._title = self._note_json['title']
+        self.get_json_note_title()
         self._original_title = self._note_json['title']
         self._format_ctime_and_mtime_if_required()
         self._raw_content = self._note_json.get('content', '')
@@ -39,6 +40,13 @@ class NotePage:
         self._attachment_count = 0
         self._pre_processor = None
         self._post_processor = None
+
+    def get_json_note_title(self):
+        self._title = self._note_json.get('title', None)
+        self.logger.debug(f"Note title from json is '{self._title}'")
+        if not self.title:
+            self._title = helper_functions.get_random_string(8)
+            self.logger.info(f"no title was found in note id '{self._note_id}'.  Using random string for title '{self._title}'")
 
     def _format_ctime_and_mtime_if_required(self):
         if self._conversion_settings.front_matter_format != 'none' \

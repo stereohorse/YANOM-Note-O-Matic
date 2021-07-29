@@ -68,7 +68,7 @@ def generate_clean_filename(filename, max_length, allow_unicode=False, path_clas
     filename = str(filename)
 
     if not filename:  # empty string
-        return _get_random_string(6)
+        return get_random_string(6)
 
     filename = replace_slashes(filename)
 
@@ -117,7 +117,7 @@ def generate_clean_directory_name(directory_name, max_length, allow_unicode=Fals
 
     """
     if not directory_name:  # empty string
-        return _get_random_string(6)
+        return get_random_string(6)
     directory_name = replace_slashes(directory_name)
     directory_name = directory_name.replace('.', '-')
     parts = [path_class(directory_name).parts[-1]]
@@ -154,7 +154,7 @@ def clean_path_parts(allow_unicode, parts):
 def add_random_string_to_any_empty_path_parts(parts):
     for i in range(len(parts)):
         if not len(parts[i]):
-            parts[i] = _get_random_string(6)
+            parts[i] = get_random_string(6)
 
     return parts
 
@@ -263,13 +263,13 @@ def add_random_string_to_file_name(path, length: int):
         pathlib.Path object of the new path/filename
     """
     stem = Path(path).stem
-    stem = f"{stem}-{_get_random_string(length)}"
+    stem = f"{stem}-{get_random_string(length)}"
     new_filename = f"{stem}{Path(path).suffix}"
     path = Path(Path(path).parent, new_filename)
     return path
 
 
-def _get_random_string(length: int):
+def get_random_string(length: int):
     """Return a string of length random characters.  If length is zero or negative value empty string is returned."""
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for _ in range(length))
