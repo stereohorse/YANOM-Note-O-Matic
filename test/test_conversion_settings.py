@@ -102,9 +102,12 @@ def test_source_setting_empty_string(tmp_path):
 
 
 @pytest.mark.parametrize(
-    'silent', [True, False]
+    'silent, expected_screen_output', [
+        (True, ''),
+        (False, 'Invalid source location'),
+    ]
 )
-def test_source_setting_sub_directory_not_existing(tmp_path, caplog, silent):
+def test_source_setting_sub_directory_not_existing(tmp_path, caplog, capsys, silent, expected_screen_output):
     cs = conversion_settings.ConversionSettings()
     cs.working_directory = tmp_path
     config.set_silent(silent)
@@ -118,6 +121,8 @@ def test_source_setting_sub_directory_not_existing(tmp_path, caplog, silent):
 
     for record in caplog.records:
         assert record.levelname == "ERROR"
+    captured = capsys.readouterr()
+    assert expected_screen_output in captured.out
 
 
 def test_source_setting_valid_sub_directory(tmp_path):
@@ -130,13 +135,25 @@ def test_source_setting_valid_sub_directory(tmp_path):
     assert cs._source_absolute_path == Path(tmp_path, config.DATA_DIR, "my-source")
 
 
-def test_export_folder_setting_provide_a_file_not_directory(tmp_path):
+@pytest.mark.parametrize(
+    'silent, expected_screen_output', [
+        (True, ''),
+        (False, 'Invalid path provided. Path is to existing file not a directory'),
+    ]
+)
+def test_export_folder_setting_provide_a_file_not_directory(tmp_path, caplog, capsys, silent, expected_screen_output):
+    config.set_silent(silent)
     cs = conversion_settings.ConversionSettings()
     cs.working_directory = tmp_path
     Path(tmp_path, "my-target-file.txt").touch()
 
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(SystemExit) as exc:
         cs.export_folder = str(Path(tmp_path, "my-target-file.txt"))
+
+    assert f"Invalid path provided. Path is to existing file not a directory '{Path(tmp_path, 'my-target-file.txt')}'" in caplog.messages
+    captured = capsys.readouterr()
+    assert expected_screen_output in captured.out
+
 
 
 def test_front_matter_setter_invalid(caplog):

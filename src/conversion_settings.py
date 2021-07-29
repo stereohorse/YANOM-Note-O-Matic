@@ -10,7 +10,7 @@ from typing import Literal
 
 import config
 from config import yanom_globals
-from helper_functions import generate_clean_filename, generate_clean_directory_name, find_working_directory
+from helper_functions import generate_clean_directory_name, find_working_directory
 
 
 def what_module_is_this():
@@ -434,7 +434,8 @@ class ConversionSettings:
 
     @source.setter
     def source(self, provided_source):
-
+        if isinstance(provided_source, str):
+            provided_source = provided_source.strip()
         if provided_source == '':
             provided_source = Path(self._working_directory, config.DATA_DIR)
             provided_source.mkdir(parents=True, exist_ok=True)
@@ -461,6 +462,7 @@ class ConversionSettings:
 
     @conversion_input.setter
     def conversion_input(self, value):
+        value = value.strip()
         if value in self._valid_conversion_inputs:
             self._conversion_input = value
             return
@@ -474,6 +476,7 @@ class ConversionSettings:
 
     @markdown_conversion_input.setter
     def markdown_conversion_input(self, value):
+        value = value.strip()
         if value in self._valid_markdown_conversion_inputs:
             self._markdown_conversion_input = value
             return
@@ -487,6 +490,7 @@ class ConversionSettings:
 
     @quick_setting.setter
     def quick_setting(self, value):
+        value = value.strip()
         if value in self.valid_quick_settings:
             self._quick_setting = value
             return
@@ -500,6 +504,7 @@ class ConversionSettings:
 
     @export_format.setter
     def export_format(self, value):
+        value = value.strip()
         if value in self.valid_export_formats:
             self._export_format = value
             return
@@ -534,6 +539,7 @@ class ConversionSettings:
 
     @front_matter_format.setter
     def front_matter_format(self, value: str):
+        value = value.strip()
         if value in self._valid_front_matter_formats:
             self._front_matter_format = value
             return
@@ -547,6 +553,7 @@ class ConversionSettings:
 
     @tag_prefix.setter
     def tag_prefix(self, value: str):
+        value = value.strip()
         self._tag_prefix = value
 
     @property
@@ -555,12 +562,18 @@ class ConversionSettings:
 
     @export_folder.setter
     def export_folder(self, provided_export_folder):
+        provided_export_folder = provided_export_folder.strip()
         if Path(provided_export_folder).is_file():
-            raise ValueError(f"Invalid path provided. Path is to file not a directory. - {provided_export_folder}")
+            msg = f"Invalid path provided. Path is to existing file not a directory '{provided_export_folder}'"
+            self.logger.error(msg)
+            if not config.silent:
+                print(msg)
+            sys.exit(1)
 
         self._export_folder_name = Path(generate_clean_directory_name(provided_export_folder,
                                                                       yanom_globals.path_part_max_length,
                                                                       allow_unicode=True))
+
         self.logger.info(
             f'For the provided attachment folder name of "{provided_export_folder}" the cleaned name used is {self._export_folder_name}')
 
