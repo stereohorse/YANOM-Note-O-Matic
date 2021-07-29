@@ -20,7 +20,6 @@ class Notebook:
         self.nsx_file = nsx_file
         self.notebook_id = notebook_id
         self.conversion_settings = self.nsx_file.conversion_settings
-        self.notebook_json = dict
         self.title = title
         self.folder_name = ''
         self.create_folder_name()
