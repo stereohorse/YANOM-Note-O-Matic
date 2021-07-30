@@ -177,12 +177,10 @@ class TestMetaDataProcessor(unittest.TestCase):
             (['title', 'mtime'],
              {'title': 'My Title',
               'ctime': '1234',
-              'mtime': '5678'
+              'content': 'my_content'
               },
-             {'title': 'My Title',
-              'mtime': '5678'
-              },
-             'generating metadata with one less item in schema failed'
+             {'title': 'My Title'},
+             'generating metadata with "content" in metadata'
              ),
             (['title', 'tags', 'ctime', 'mtime'],
              {'title': 'My Title',
@@ -217,7 +215,7 @@ class TestMetaDataProcessor(unittest.TestCase):
         self.metadata_processor._split_tags = True
         self.metadata_processor._spaces_in_tags = False
         self.metadata_processor._metadata = {}
-        self.metadata_processor._metadata_schema = ['tags']
+        self.metadata_processor._metadata_schema = ['tags', 'content']
         raw_metadata = {'tags': ["Tag1",
                                  "Tag1/Sub Tag1",
                                  "Tag1/Sub Tag1/Sub Sub Tag1",
@@ -317,7 +315,7 @@ class TestMetaDataProcessor(unittest.TestCase):
     def test_parse_html_meta_data(self):
         test_data_sets = [
             (['title', 'creation_time'],
-             '<head><meta title="this is test2"/><meta creation_time="test-meta-content"/></head>',
+             '<head><meta title="this is test2"/><meta charset="utf8"/><meta content="my_content"/><meta creation_time="test-meta-content"/></head>',
              {'title': 'this is test2', 'creation_time': 'test-meta-content'},
              'meta data not parsed correctly'),
             (['title', 'creation_time'],
@@ -335,6 +333,7 @@ class TestMetaDataProcessor(unittest.TestCase):
         ]
         for test_set in test_data_sets:
             with self.subTest(msg=f'Testing paring of html for meta tags {test_set}'):
+                self.metadata_processor._conversion_settings.metadata_schema = ['title', 'ctime', 'mtime', 'tag', 'content']
                 self.metadata_processor._metadata = {}
                 self.metadata_processor._metadata_schema = test_set[0]
                 self.metadata_processor.parse_html_metadata(test_set[1])
@@ -376,11 +375,11 @@ class TestMetaDataProcessor(unittest.TestCase):
              {'excerpt': 'tl;dr', 'layout': 'post', 'title': 'Hello, world!'},
              'with md metadata and empty schema, incorrect metadata'
              ),
-            ('---\nexcerpt: tl;dr\nlayout: post\ntitle: Hello, world!\n---\n\nHello',
-             ['title', 'layout', 'ctime', 'mtime'],
+            ('---\nexcerpt: tl;dr\nlayout: post\ntitle: Hello, world!\ncontent: my content\n---\n\nHello',
+             ['title', 'layout', 'ctime', 'mtime', 'content'],
              'Hello',
              'with md metadata, content was incorrect',
-             {'title': 'Hello, world!', 'layout': 'post'},
+             {'title': 'Hello, world!', 'layout': 'post', 'content': 'my content'},
              'with md metadata to parse, incorrect metadata'
              ),
             ('---\nexcerpt: tl;dr\nlayout: post\ntitle: Hello, world!\n---\n\nHello',
@@ -400,7 +399,7 @@ class TestMetaDataProcessor(unittest.TestCase):
         ]
 
         for test_set in test_data_sets:
-            with self.subTest(msg=f'Testing parsing meta data form MD {test_set}'):
+            with self.subTest(msg=f'Testing parsing meta data from MD {test_set}'):
                 md_string = test_set[0]
                 self.metadata_processor._metadata = {}
                 self.metadata_processor._metadata_schema = test_set[1]
