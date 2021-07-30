@@ -1,6 +1,5 @@
 import json
 import logging
-import sys
 import zipfile
 
 import config
@@ -73,6 +72,5 @@ def _error_handling(e, target_filename, zip_filename):
     logger.error(msg)
     if not config.silent:
         print(msg)
-    sys.exit(1)
 
 

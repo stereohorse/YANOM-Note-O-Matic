@@ -3,7 +3,6 @@ from pathlib import Path
 import zipfile
 
 import config
-import pytest
 
 import zip_file_reader
 
@@ -48,11 +47,7 @@ def test_read_binary_file_bad_file_name(tmp_path, caplog, capfd):
     with zipfile.ZipFile(str(zip_filename), 'w') as zip_file:
         zip_file.write(Path(tmp_path, target_filename), target_filename)
 
-    with pytest.raises(SystemExit) as exc:
-        result = zip_file_reader.read_binary_file(zip_filename, 'bad_file_name')
-
-    assert isinstance(exc.type, type(SystemExit))
-    assert str(exc.value) == '1'
+    _ = zip_file_reader.read_binary_file(zip_filename, 'bad_file_name')
 
     assert len(caplog.records) == 2
 
@@ -76,11 +71,8 @@ def test_read_binary_file_bad_zip_file_name(tmp_path, caplog, capfd):
     with zipfile.ZipFile(str(zip_filename), 'w') as zip_file:
         zip_file.write(Path(tmp_path, target_filename), target_filename)
 
-    with pytest.raises(SystemExit) as exc:
-        result = zip_file_reader.read_binary_file('bad_file_name', target_filename)
-
-    assert isinstance(exc.type, type(SystemExit))
-    assert str(exc.value) == '1'
+    # with pytest.raises(SystemExit) as exc:
+    _ = zip_file_reader.read_binary_file('bad_file_name', target_filename)
 
     assert len(caplog.records) == 2
 
@@ -101,11 +93,7 @@ def test_read_json_data_bad_zip_file_name(tmp_path, caplog, capfd):
     with zipfile.ZipFile(str(zip_filename), 'w') as zip_file:
         zip_file.writestr(target_filename, json.dumps(expected))
 
-    with pytest.raises(SystemExit) as exc:
-        result = zip_file_reader.read_json_data('bad_file_name', target_filename)
-
-    assert isinstance(exc.type, type(SystemExit))
-    assert str(exc.value) == '1'
+    _ = zip_file_reader.read_json_data('bad_file_name', target_filename)
 
     assert len(caplog.records) == 2
 
@@ -126,11 +114,7 @@ def test_read_json_data_bad_file_name(tmp_path, caplog, capfd):
     with zipfile.ZipFile(str(zip_filename), 'w') as zip_file:
         zip_file.writestr(target_filename, json.dumps(expected))
 
-    with pytest.raises(SystemExit) as exc:
-        result = zip_file_reader.read_json_data(zip_filename, 'bad_file_name')
-
-    assert isinstance(exc.type, type(SystemExit))
-    assert str(exc.value) == '1'
+    _ = zip_file_reader.read_json_data(zip_filename, 'bad_file_name')
 
     assert len(caplog.records) == 2
 
@@ -152,11 +136,7 @@ def test_read_json_data_bad_zip_file_name_in_silent_mode(tmp_path, caplog, capfd
     with zipfile.ZipFile(str(zip_filename), 'w') as zip_file:
         zip_file.writestr(target_filename, json.dumps(expected))
 
-    with pytest.raises(SystemExit) as exc:
-        result = zip_file_reader.read_json_data('bad_file_name', target_filename)
-
-    assert isinstance(exc.type, type(SystemExit))
-    assert str(exc.value) == '1'
+    _ = zip_file_reader.read_json_data('bad_file_name', target_filename)
 
     assert len(caplog.records) == 2
 
@@ -178,11 +158,7 @@ def test_read_json_data_bad_file_name_in_silent_mode(tmp_path, caplog, capfd):
     with zipfile.ZipFile(str(zip_filename), 'w') as zip_file:
         zip_file.writestr(target_filename, json.dumps(expected))
 
-    with pytest.raises(SystemExit) as exc:
-        result = zip_file_reader.read_json_data(zip_filename, 'bad_file_name')
-
-    assert isinstance(exc.type, type(SystemExit))
-    assert str(exc.value) == '1'
+    _ = zip_file_reader.read_json_data(zip_filename, 'bad_file_name')
 
     assert len(caplog.records) == 2
 

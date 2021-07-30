@@ -429,8 +429,7 @@ def test_store_attachments(notebooks, all_notes_dict, conv_setting, silent_mode,
         nsx_fc.add_note_pages_to_notebooks()
         nsx_fc.process_notebooks()
         attachments = nsx_fc.build_list_of_attachments()
-        # attachments_to_save = [attachment.full_path for note_page_id in nsx_fc._note_pages for attachment in
-        #                        nsx_fc._note_pages[note_page_id].attachments.values()]
+
     with patch('nsx_file_converter.NSXFile.fetch_attachment_file', autospec=True):
         with patch('file_writer.store_file', spec=True) as mock_store_file:
             nsx_fc.store_attachments(attachments)
@@ -464,3 +463,12 @@ def test_store_attachments_attachment_paths_are_exiting_directory(notebooks, all
             assert mock_store_file.call_count == 0
             assert "Unable to save attachment for the note" in caplog.messages[0]
             assert len(caplog.records) == 4
+
+
+def test_process_nsx_file_no_config_json(conv_setting, caplog, tmp_path):
+    pc = pandoc_converter.PandocConverter(conv_setting)
+    nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, pc)
+    with patch('nsx_file_converter.NSXFile.fetch_json_data', autospec=True, return_value=None):
+        nsx_fc.process_nsx_file()
+
+    assert f"No config.json found in nsx file '{nsx_fc._nsx_file_name}'. Skipping nsx file" in caplog.messages

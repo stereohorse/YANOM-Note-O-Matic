@@ -45,6 +45,9 @@ class NSXFile:
     def process_nsx_file(self):
         self.logger.info(f"Processing {self._nsx_file_name}")
         self._nsx_json_data = self.fetch_json_data('config.json')
+        if not self._nsx_json_data:
+            self.logger.warning(f"No config.json found in nsx file '{self._nsx_file_name}'. Skipping nsx file")
+            return
         self.get_notebook_ids()
         if not self._notebook_ids:
             return
