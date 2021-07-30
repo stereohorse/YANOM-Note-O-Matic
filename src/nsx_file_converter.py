@@ -209,7 +209,6 @@ class NSXFile:
                     continue
                 if self.is_note_encrypted(note_data):
                     self._encrypted_notes.append(note_data['title'])
-                    self.logger.warning(f'The Note - "{note_data["title"]}" - is encrypted and has not been converted.')
                     bar()
                     continue
 
@@ -231,10 +230,15 @@ class NSXFile:
             if not config.silent:
                 print(msg)
 
+    def is_note_encrypted(self, note_data):
+        if 'encrypt' not in note_data:
+            self.logger.warning(f"The Note - '{note_data['title']}' - has no encryption flag, it may or may not "
+                                f"be encrypted. Assuming it is not.")
+            return False
 
+        if note_data['encrypt']:
+            self.logger.warning(f"The Note - '{note_data['title']}' - is encrypted and has not been converted.")
 
-    @staticmethod
-    def is_note_encrypted(note_data):
         return note_data['encrypt']
 
     def add_note_pages_to_notebooks(self):

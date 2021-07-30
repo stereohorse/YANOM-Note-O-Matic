@@ -334,10 +334,30 @@ def test_add_note_pages_encrypted_note(conv_setting, caplog):
 
     assert len(nsx_fc.note_pages) == 0
 
-    assert caplog.records[0].message == 'Creating note page objects'
-    assert caplog.records[1].message == 'The Note - "note title" - is encrypted and has not been converted.'
+    assert 'Creating note page objects' in caplog.messages
+    assert "The Note - 'note title' - is encrypted and has not been converted." in caplog.messages
 
     assert nsx_fc._encrypted_notes == ['note title']
+
+
+def test_add_note_pages_encrypted_note_no_encrypt_key_in_note_data(conv_setting, caplog):
+    config.set_logger_level(DEBUG)
+
+    nsx_fc = nsx_file_converter.NSXFile(Path('fake_file'), conv_setting, 'fake_pandoc_converter')
+
+    nsx_fc._note_page_ids = ['1234']
+
+    with patch('zip_file_reader.read_json_data', spec=True,
+               return_value={'title': 'note title', 'ctime': 1620808218, 'mtime': 1620808218, 'parent_id': '1234'}):
+        caplog.clear()
+        nsx_fc.add_note_pages()
+
+    assert nsx_fc.note_page_count == 1
+
+    assert len(nsx_fc.note_pages) == 1
+
+    assert 'Creating note page objects' in caplog.messages
+    assert f"The Note - 'note title' - has no encryption flag, it may or may not be encrypted. Assuming it is not." in caplog.messages
 
 
 @pytest.fixture
