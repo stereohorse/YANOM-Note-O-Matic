@@ -8,9 +8,29 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Increment the minor version number when adding a new feature or set of features and any current bug fixes not yet released
 - Increment the major version when significantly overhaul the user interface, or rewrite all internals.
 
-## On Develop Branches
-- Change PyInquirer from imported pypi package to git submodule.  Forked the original PyInquirer, fixed issues and now have mouse support.
 
+## [1.3.3] - 2021-07-31
+- Change PyInquirer from imported pypi package to git submodule using fork of the original PyInquirer.
+  - Add mouse support for command line interface. Items can be mouse clicked, where there is a list of choices (radio butotns) or text entry the return key must be used to move to next question.
+  - In list questions, the last value used or value from config.ini is at its original place in the list rather than moving it to the top of list as the default option in the new PyInquirer code now works.
+- Add check for valid working directory when saving config.ini
+- Replace directory and filename cleaning functions.  
+  - If cleaned name becomes and empty string generate random name.
+  - Allow unicode characters in names.
+  - Unquote non-ASCII (uses utf-8).
+- Increased logging around changing file names and directories and any issues creating them on disk.
+- All calls to get values from json data now check the key exists and logs if it is not and handle the absence of the key.  This allows for unknown versions of nsx files, that may have missing key values, attempt to continue conversion.
+  - If note json data does not have a key for encrypt the assumption is the note is not encrypted.  Note text will appear encrypted after conversion if the note is actually encrypted.
+  - If notes or notebooks data is missing fomr the nsx file the note or notebook is skipped rather than exiting the program.
+  - Parent notebook key and id are missing from the nsx note data the note will be placed in the Recycle Bin notebook directory.
+- If export folder or attachment folder names are blank in config.ini or the interactive command line tool YANOM defaults of 'notes' and 'attachments'.
+- With an attempted read of an encrypted attachment from the nsx file sys.exit is no longer called.  A warning is logged and execution continues.
+- Tidy up docker files using best practices.  No functional changes. Removed no longer used ubuntu docker file.
+
+#### Fixed
+- Fatal Error when user clicks with mouse in interactive command line.  Now supports mouse, no longer reliant on user only using keyboard.
+- Fixed unknown nsx format with missing encrypt key causes error.  Add defensive checks around json data requests for potential unknown nsx formats.
+- Fixed possible error due to name cleaning resulting in zero length name.  Replaced file and directory cleaning functions that do not return zero length names.
 
 ## [1.3.2] - 2021-07-23
 
