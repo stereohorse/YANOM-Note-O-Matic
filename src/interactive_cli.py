@@ -310,18 +310,23 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         self._current_conversion_settings.tag_prefix = answer['tag_prefix']
 
     def _ask_and_set_export_folder_name(self):
+        default_folder_name = str(self._default_settings.export_folder)
+        if default_folder_name == '':
+            default_folder_name = 'notes'
         questions = [
             {
                 'type': 'input',
                 'name': 'export_folder',
-                'message': 'Enter a directory name for notes to be exported to',
-                'default': str(self._default_settings.export_folder)
+                'message': 'Enter a directory name for notes to be exported to (blank entry "notes" will bw used)',
+                'default': default_folder_name
             }
         ]
         answers = prompt(questions, style=self.style)
+        if answers['export_folder'] == '':
+            answers['export_folder'] = 'notes'
         self._current_conversion_settings.export_folder = answers['export_folder']
 
-        if str(self._current_conversion_settings.export_folder) != answers['export_folder']:
+        if default_folder_name != answers['export_folder']:
             self._ask_to_confirm_changed_path_name(self._current_conversion_settings.export_folder)
 
     def _ask_and_set_attachment_folder_name(self):

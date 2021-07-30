@@ -81,6 +81,77 @@ creation_time_in_exported_file_name = False
 """
 
 
+@pytest.fixture
+def good_config_ini_no_notes_or_attachment_folder() -> str:
+    return """[conversion_inputs]
+    # valid entries are nsx, html, markdown
+    #  nsx = synology note station export file
+    #  html = simple html based notes pages, no complex css or javascript
+    #  markdown =  text files in markdown format
+conversion_input = nsx
+
+[markdown_conversion_inputs]
+    # valid entries are obsidian, gfm, commonmark, q_own_notes, pandoc_markdown_strict, pandoc_markdown, multimarkdown
+markdown_conversion_input = obsidian
+
+[quick_settings]
+    # valid entries are q_own_notes, obsidian, gfm, pandoc_markdown, commonmark, pandoc_markdown_strict, multimarkdown, html
+    # use manual to use the manual settings in the sections below
+    # note if an option other than - manual - is used the rest of the 
+    # settings in this file will be set automatically
+    #
+quick_setting = obsidian
+    # 
+    # the following sections only apply if the above is set to manual
+    #  
+
+[export_formats]
+    # valid entries are q_own_notes, obsidian, gfm, pandoc_markdown, commonmark, pandoc_markdown_strict, multimarkdown, html
+export_format = obsidian
+
+[meta_data_options]
+    # note: front_matter_format sets the presence and type of the section with metadata 
+    #retrieved from the source
+    # valid entries are yaml, toml, json, text, none
+    # no entry will result in no front matter section
+front_matter_format = yaml
+    # metadata schema is a comma separated list of metadata keys that you wish to 
+    # restrict the retrieved metadata keys. for example 
+    # title, tags    will return those two if they are found
+    # if left blank any meta data found will be used
+    # the useful available keys in an nsx file are title, ctime, mtime, tag
+metadata_schema = title,ctime,mtime,tag
+    # tag prefix is a character you wish to be added to the front of any tag values 
+    # retrieved from metadata.  note this is only used if front_matter_format is none
+tag_prefix = #
+    # spaces_in_tags if true will maintain spaces in tag words, if false spaces are replaced by a dash -
+spaces_in_tags = False
+    # split tags will split grouped tags into individual tags if true
+    # "tag1", "tag1/sub tag2"  will become "tag1", "sub tag2"
+    # grouped tags are only split where a "/" character is found
+split_tags = False
+
+[table_options]
+  #  these two table options apply to nsx files only
+first_row_as_header = True
+first_column_as_header = True
+
+[chart_options]
+  #  these three chart options apply to nsx files only
+chart_image = True
+chart_csv = True
+chart_data_table = True
+
+[file_options]
+source = my_source
+export_folder = 
+attachment_folder_name = 
+creation_time_in_exported_file_name = False
+    # creation time in file name only applies to nsx files.
+    # if true creation time as `yyyymmddhhmm-` will be added as prefix to file name
+
+"""
+
 def test_initialisation(tmp_path):
     cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'gfm', allow_no_value=True)
 
@@ -133,6 +204,18 @@ def test_validate_config_file_good_file(tmp_path, good_config_ini):
     cd.read_config_file()
     valid_config = cd.validate_config_file()
     assert valid_config
+
+
+def test_validate_good_config_ini_no_notes_or_attachment_folder(tmp_path, good_config_ini_no_notes_or_attachment_folder):
+    Path(f'{str(tmp_path)}/config.ini').write_text(good_config_ini_no_notes_or_attachment_folder, encoding="utf-8")
+
+    cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'gfm', allow_no_value=True)
+
+    cd.read_config_file()
+    valid_config = cd.validate_config_file()
+    assert valid_config
+    assert cd.conversion_settings.export_folder == 'notes'
+    assert cd.conversion_settings.attachment_folder_name == 'attachments'
 
 
 @pytest.mark.parametrize(

@@ -138,6 +138,8 @@ class ConfigData(ConfigParser):
         self._conversion_settings.chart_csv = self.getboolean('chart_options', 'chart_csv')
         self._conversion_settings.chart_data_table = self.getboolean('chart_options', 'chart_data_table')
         self._conversion_settings.source = self['file_options']['source']
+        if self['file_options']['export_folder'] == '':
+            self['file_options']['export_folder'] = 'notes'
         self._conversion_settings.export_folder = self['file_options']['export_folder']
         if self['file_options']['attachment_folder_name'] == '':
             self['file_options']['attachment_folder_name'] = 'attachments'
