@@ -176,8 +176,15 @@ def test_create_export_folder_if_not_exist_force_exception_directory_already_exi
     assert expected_error_log_caplog_message in caplog.messages
 
 
-def test_create_export_folder_if_not_exist_force_exception_path_is_to_existing_file(conv_setting, caplog, tmp_path):
+@pytest.mark.parametrize(
+    'silent, expected_out', [
+        (True, ''),
+        (False, "Unable to create the export folder because path is to an existing file not a directory."),
+    ]
+)
+def test_create_export_folder_if_not_exist_force_exception_path_is_to_existing_file(silent, expected_out, conv_setting, caplog, capsys, tmp_path):
     config.set_logger_level(DEBUG)
+    config.set_silent(silent)
     Path(tmp_path, config.DATA_DIR).mkdir()
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
@@ -194,6 +201,9 @@ def test_create_export_folder_if_not_exist_force_exception_path_is_to_existing_f
 
     assert expected_error_log_caplog_message in caplog.messages
 
+    captured = capsys.readouterr()
+    assert expected_out in captured.out
+
 
 def test_create_notebook_folders(conv_setting, caplog, tmp_path, nsx):
     config.set_logger_level(DEBUG)
@@ -203,7 +213,7 @@ def test_create_notebook_folders(conv_setting, caplog, tmp_path, nsx):
     test_notebook = sn_notebook.Notebook(nsx, '1234', 'Notebook Title')
     nsx_fc._notebooks = {'1234': test_notebook}
 
-    nsx_fc.create_notebook_folders()
+    nsx_fc.create_notebook_and_attachemnt_folders()
 
     assert "Creating folders for notebooks" in caplog.messages
     assert nsx_fc.notebooks['1234'].folder_name == Path('notebook-title')
@@ -212,7 +222,7 @@ def test_create_notebook_folders(conv_setting, caplog, tmp_path, nsx):
                 conv_setting.attachment_folder_name).exists()
 
 
-def test_create_notebook_folders_force_fail_to_create_folder(conv_setting, caplog, tmp_path, nsx, monkeypatch):
+def test_create_notebook_folders_force_fail_to_create_attachment_folder(conv_setting, caplog, capsys, tmp_path, nsx, monkeypatch):
     config.set_logger_level(DEBUG)
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
@@ -221,7 +231,7 @@ def test_create_notebook_folders_force_fail_to_create_folder(conv_setting, caplo
     nsx_fc._notebooks = {'1234': test_notebook}
 
     monkeypatch.setattr(sn_notebook.Notebook, 'full_path_to_notebook', None)
-    result = nsx_fc.create_notebook_folders()
+    result = nsx_fc.create_notebook_and_attachemnt_folders()
 
     assert nsx_fc._notebooks['1234'].full_path_to_notebook is None
 

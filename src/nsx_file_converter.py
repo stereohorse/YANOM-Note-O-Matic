@@ -61,7 +61,7 @@ class NSXFile:
         self.add_notebooks()
         self.add_recycle_bin_notebook()
         self.create_export_folder_if_not_exist()
-        notebooks_to_skip = self.create_notebook_folders()
+        notebooks_to_skip = self.create_notebook_and_attachemnt_folders()
         self.remove_notebooks_to_be_skipped(notebooks_to_skip)
         self.add_note_pages()
         self.add_note_pages_to_notebooks()
@@ -159,24 +159,23 @@ class NSXFile:
                 self.logger.debug(f"Export folder already exists - '{target_path}'")
             else:
                 msg = f'Unable to create the export folder because path is to an existing file not a directory.\n{e}'
-                self.logger.error(f'{msg}')
-                if not config.silent:
-                    print(f'{msg}')
+                self._report_create_export_folder_errors(msg)
                 sys.exit(1)
         except FileNotFoundError as e:
             msg = f'Unable to create the export folder there is a problem with the path.\n{e}'
-            self.logger.error(f'{msg}')
-            if not config.silent:
-                print(f'{msg}')
+            self._report_create_export_folder_errors(msg)
             sys.exit(1)
         except OSError as e:
             msg = f'Unable to create the export folder\n{e}'
-            self.logger.error(f'{msg}')
-            if not config.silent:
-                print(f'{msg}')
+            self._report_create_export_folder_errors(msg)
             sys.exit(1)
 
-    def create_notebook_folders(self) -> list:
+    def _report_create_export_folder_errors(self, msg):
+        self.logger.error(f'{msg}')
+        if not config.silent:
+            print(f'{msg}')
+
+    def create_notebook_and_attachemnt_folders(self) -> list:
         """Create notebook folders and return list of notebook ids for those where a notebook folder was  not created"""
         self.logger.debug(f"Creating folders for notebooks")
         notebooks_to_skip = []
