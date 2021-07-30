@@ -126,7 +126,7 @@ class MetaDataProcessor:
             return content
 
         if frontmatter.checks(content):
-            self.logger.warning('Meta data front matter already exits, continuing to add a second front matter section')
+            _, content = frontmatter.parse(content)  # remove metadata if pandoc has added it (pandoc v2.13 and above)
 
         if self._conversion_settings.front_matter_format == 'text':
             content = self.add_text_metadata_to_content(content)

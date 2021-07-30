@@ -247,7 +247,7 @@ class TestMDToMDConverter(unittest.TestCase):
         self.file_converter._conversion_settings.markdown_conversion_input = 'pandoc_markdown'
         self.file_converter.post_process_content()
 
-        self.assertEqual('---\ntitle: My Title\n---\n\n---\ntest: data\n---\n\nHello',
+        self.assertEqual('---\ntitle: My Title\n---\n\nHello',
                          self.file_converter._post_processed_content,
                          'failed to post process content 2')
 
@@ -256,7 +256,7 @@ class TestMDToMDConverter(unittest.TestCase):
         self.file_converter._conversion_settings.markdown_conversion_input = 'gfm'
         self.file_converter.post_process_content()
 
-        self.assertEqual('---\ntitle: My Title\n---\n\n---\ntest: data\n---\n\nHello',
+        self.assertEqual('---\ntitle: My Title\n---\n\nHello',
                          self.file_converter._post_processed_content,
                          'failed to post process content 3')
 
