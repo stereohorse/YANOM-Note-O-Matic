@@ -107,7 +107,8 @@ class FileNSAttachment(NSAttachment):
         self._file_name = Path(helper_functions.generate_clean_filename(self._name,
                                                                         yanom_globals.path_part_max_length,
                                                                         allow_unicode=True))
-        self.logger.info(f'Original attachment name was "{self._name}" the cleaned name used is "{self._file_name}"')
+        if not self._name == str(self._file_name):
+            self.logger.info(f'Original attachment name was "{self._name}" the cleaned name used is "{self._file_name}"')
 
     def get_content_to_save(self):
         return self._nsx_file.fetch_attachment_file(self.filename_inside_nsx)
@@ -131,7 +132,8 @@ class ImageNSAttachment(FileNSAttachment):
         self._file_name = Path(helper_functions.generate_clean_filename(self._name,
                                                                         yanom_globals.path_part_max_length,
                                                                         allow_unicode=True))
-        self.logger.info(f'Original attachment name was "{self._name}" the cleaned name used is "{self._file_name}"')
+        if self._name != str(self._file_name):
+            self.logger.info(f'Original attachment name was "{self._name}" the cleaned name used is "{self._file_name}"')
 
 
 class ChartNSAttachment(NSAttachment):

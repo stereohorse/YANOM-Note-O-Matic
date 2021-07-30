@@ -55,7 +55,7 @@ class Notebook:
         self.folder_name = Path(generate_clean_directory_name(self.title,
                                                               yanom_globals.path_part_max_length,
                                                               allow_unicode=True))
-        self.logger.info(f'For the notebook "{self.title}" the filename used is is {self.folder_name }')
+        self.logger.info(f'For the notebook "{self.title}" the folder name used is is {self.folder_name }')
 
     def create_notebook_folder(self, parents=True):
         self.logger.debug(f"Creating notebook folder for {self.title}")
