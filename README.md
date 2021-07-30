@@ -198,4 +198,3 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE) f
 ## Acknowledgments
 
 - [Maboroshy](https://github.com/Maboroshy) for showing that dissecting an NSX file was possible
-- Django Software Foundation and individual contributors for use of the path cleaning function that was modified for use in YANOM.
