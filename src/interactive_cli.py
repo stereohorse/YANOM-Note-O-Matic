@@ -325,18 +325,24 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             self._ask_to_confirm_changed_path_name(self._current_conversion_settings.export_folder)
 
     def _ask_and_set_attachment_folder_name(self):
+        default_folder_name = str(self._default_settings.attachment_folder_name)
+        if default_folder_name == '':
+            default_folder_name = 'attachments'
+
         questions = [
             {
                 'type': 'input',
                 'name': 'attachment_folder_name',
-                'message': 'Enter a directory name for notes to be exported to',
-                'default': str(self._default_settings.attachment_folder_name)
+                'message': 'Enter a directory name for notes to be exported to (blank entry "attachments" will bw used)',
+                'default': default_folder_name
             },
         ]
         answers = prompt(questions, style=self.style)
+        if answers['attachment_folder_name'] == '':
+            answers['attachment_folder_name'] = 'attachments'
         self._current_conversion_settings.attachment_folder_name = answers['attachment_folder_name']
 
-        if str(self._current_conversion_settings.attachment_folder_name) != answers['attachment_folder_name']:
+        if default_folder_name != answers['attachment_folder_name']:
             self._ask_to_confirm_changed_path_name(self._current_conversion_settings.attachment_folder_name)
 
     def _ask_to_confirm_changed_path_name(self, new_path):

@@ -139,6 +139,8 @@ class ConfigData(ConfigParser):
         self._conversion_settings.chart_data_table = self.getboolean('chart_options', 'chart_data_table')
         self._conversion_settings.source = self['file_options']['source']
         self._conversion_settings.export_folder = self['file_options']['export_folder']
+        if self['file_options']['attachment_folder_name'] == '':
+            self['file_options']['attachment_folder_name'] = 'attachments'
         self._conversion_settings.attachment_folder_name = self['file_options']['attachment_folder_name']
         self._conversion_settings.creation_time_in_exported_file_name = \
             self.getboolean('file_options', 'creation_time_in_exported_file_name')
