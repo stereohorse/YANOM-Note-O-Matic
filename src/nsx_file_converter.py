@@ -55,6 +55,7 @@ class NSXFile:
 
         self.get_note_page_ids()
         if not self._note_page_ids:
+            self.logger.warning(f"No note page ids found in nsx file '{self._nsx_file_name}'. Skipping nsx file")
             return
 
         self.add_notebooks()
