@@ -472,3 +472,12 @@ def test_process_nsx_file_no_config_json(conv_setting, caplog, tmp_path):
         nsx_fc.process_nsx_file()
 
     assert f"No config.json found in nsx file '{nsx_fc._nsx_file_name}'. Skipping nsx file" in caplog.messages
+
+
+def test_process_nsx_file_no_notebook_ids(conv_setting, caplog, tmp_path):
+    pc = pandoc_converter.PandocConverter(conv_setting)
+    nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, pc)
+    with patch('nsx_file_converter.NSXFile.fetch_json_data', autospec=True, return_value={'tag': 'tag1'}):
+        nsx_fc.process_nsx_file()
+
+    assert f"No notebook ids found in nsx file '{nsx_fc._nsx_file_name}'. Skipping nsx file" in caplog.messages

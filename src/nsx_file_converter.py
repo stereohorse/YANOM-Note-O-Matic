@@ -50,6 +50,7 @@ class NSXFile:
             return
         self.get_notebook_ids()
         if not self._notebook_ids:
+            self.logger.warning(f"No notebook ids found in nsx file '{self._nsx_file_name}'. Skipping nsx file")
             return
 
         self.get_note_page_ids()
