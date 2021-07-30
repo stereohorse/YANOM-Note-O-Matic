@@ -2,7 +2,7 @@ import os
 
 APP_NAME = 'YANOM'
 APP_SUB_NAME = 'Note-O-Matic'
-VERSION = '1.3.3-beta'
+VERSION = '1.3.3'
 DATA_DIR = 'data'
 
 
