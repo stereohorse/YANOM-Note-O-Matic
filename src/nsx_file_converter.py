@@ -202,9 +202,15 @@ class NSXFile:
         with alive_bar(len(self._note_page_ids), bar='blocks') as bar:
             for note_id in self._note_page_ids:
                 note_data = self.fetch_json_data(note_id)
+                if not note_data:
+                    self.logger.warning(f"Unable to locate note data for note id '{note_id}' "
+                                        f"from nsx file'{self._nsx_file_name.name}'. No note data to process ")
+                    bar()
+                    continue
                 if self.is_note_encrypted(note_data):
                     self._encrypted_notes.append(note_data['title'])
                     self.logger.warning(f'The Note - "{note_data["title"]}" - is encrypted and has not been converted.')
+                    bar()
                     continue
 
                 note_page = NotePage(self, note_id, note_data)
@@ -213,6 +219,19 @@ class NSXFile:
                     bar()
 
             self._note_page_count += len(self._note_pages)
+
+            self._warn_if_note_pages_missing()
+
+    def _warn_if_note_pages_missing(self):
+        if len(self._note_pages) < len(self._note_page_ids):
+            msg = f"There are {len(self._note_pages) - len(self._note_page_ids)} less note pages to process " \
+                  f"than note page id's in the nsx file.\nPlease review log file as there may be issues " \
+                  f"with the nsx file."
+            self.logger.warning(msg)
+            if not config.silent:
+                print(msg)
+
+
 
     @staticmethod
     def is_note_encrypted(note_data):

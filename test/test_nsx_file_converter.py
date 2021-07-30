@@ -291,6 +291,32 @@ def test_add_note_pages(conv_setting, caplog, silent_mode):
     assert caplog.records[0].message == 'Creating note page objects'
 
 
+@pytest.mark.parametrize(
+    'silent_mode', [True, False]
+)
+def test_add_note_pages_missing_data_in_nsx_file(conv_setting, caplog, silent_mode):
+    config.set_logger_level(DEBUG)
+    config.set_silent(silent_mode)
+
+    nsx_fc = nsx_file_converter.NSXFile(Path('fake_file'), conv_setting, 'fake_pandoc_converter')
+
+    nsx_fc._note_page_ids = ['1234']
+
+    with patch('zip_file_reader.read_json_data',
+               spec=True,
+               return_value=None,
+               ):
+        caplog.clear()
+        nsx_fc.add_note_pages()
+
+    assert nsx_fc.note_page_count == 0
+    expected_log_message = msg = f"There are {len(nsx_fc._note_pages) - len(nsx_fc._note_page_ids)} less note pages to process " \
+                      f"than note page id's in the nsx file.\nPlease review log file as there may be issues " \
+                      f"with the nsx file."
+    assert 'Creating note page objects' in caplog.messages
+    assert f"Unable to locate note data for note id '1234' from nsx file'{nsx_fc._nsx_file_name.name}'. No note data to process " in caplog.messages
+    assert expected_log_message in caplog.messages
+
 def test_add_note_pages_encrypted_note(conv_setting, caplog):
     config.set_logger_level(DEBUG)
 
