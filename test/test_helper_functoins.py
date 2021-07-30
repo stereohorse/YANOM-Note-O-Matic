@@ -87,6 +87,8 @@ def test_find_working_directory_when_frozen():
         (" part1.part2.txt ", True, "part1part2.txt"),
         (" part1 part2.txt ", True, "part1-part2.txt"),
         (" 漢語.txt ", True, "漢語.txt"),
+        (" 漢語%20file.txt ", True, "漢語-file.txt"),
+        (" 漢語+file.txt ", True, "漢語-file.txt"),
         (" 漢語-should ignore the two leading chars.txt ", False, "should-ignore-the-two-leading-chars.txt"),
         (" dir1/dir2/file.txt ", True, "dir1-dir2-file.txt"),
         (" .file.txt ", True, "file.txt"),
@@ -97,7 +99,7 @@ def test_find_working_directory_when_frozen():
         ("!!!file.!!!txt", False,'file.txt'),
     ]
 )
-def test_generate_clean_path(value, allow_unicode, expected):
+def test_generate_clean_filename(value, allow_unicode, expected):
 
     result = helper_functions.generate_clean_filename(value, 64, allow_unicode=allow_unicode)
 
@@ -177,6 +179,7 @@ def test_generate_clean_filename_empty_strings(string_to_test, allow_unicode, ex
         False,
         '123456789012345678901234567890123456789012345678901234567890-123'),
         (" 漢語-unicode-dir.dir ", True, "漢語-unicode-dir-dir"),
+        (" 漢語%20unicode+dir.dir ", True, "漢語-unicode-dir-dir"),
         (" /dir 1/dir 2/dir 3 ", True, "dir-1-dir-2-dir-3"),
     ]
 )

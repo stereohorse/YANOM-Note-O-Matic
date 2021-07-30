@@ -6,6 +6,7 @@ import string
 import sys
 from typing import Tuple
 import unicodedata
+from urllib.parse import unquote_plus
 
 
 def find_working_directory(is_frozen=getattr(sys, 'frozen', False)) -> Tuple[Path, str]:
@@ -70,6 +71,8 @@ def generate_clean_filename(filename, max_length, allow_unicode=False, path_clas
     if not filename:  # empty string
         return get_random_string(6)
 
+    filename = unquote_plus(filename)
+
     filename = replace_slashes(filename)
 
     parts = split_string_to_file_parts(path_class, filename)
@@ -118,6 +121,7 @@ def generate_clean_directory_name(directory_name, max_length, allow_unicode=Fals
     """
     if not directory_name:  # empty string
         return get_random_string(6)
+    directory_name = unquote_plus(directory_name)
     directory_name = replace_slashes(directory_name)
     directory_name = directory_name.replace('.', '-')
     parts = [path_class(directory_name).parts[-1]]
