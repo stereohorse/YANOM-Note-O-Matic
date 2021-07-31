@@ -198,7 +198,7 @@ def test_create_notebook_folders(conv_setting, caplog, tmp_path, nsx):
         test_notebook = sn_notebook.Notebook(nsx, '1234')
         nsx_fc._notebooks = {'1234': test_notebook}
 
-        nsx_fc.create_notebook_and_attachemnt_folders()
+        nsx_fc.create_notebook_and_attachment_folders()
 
     assert "Creating folders for notebooks" in caplog.messages
     assert nsx_fc.notebooks['1234'].folder_name == Path('unknown-notebook')
@@ -217,7 +217,7 @@ def test_create_notebook_folders_force_fail_to_create_attachment_folder(conv_set
         nsx_fc._notebooks = {'1234': test_notebook}
 
         monkeypatch.setattr(sn_notebook.Notebook, 'full_path_to_notebook', None)
-        result = nsx_fc.create_notebook_and_attachemnt_folders()
+        result = nsx_fc.create_notebook_and_attachment_folders()
 
     assert nsx_fc._notebooks['1234'].full_path_to_notebook is None
 
@@ -299,7 +299,7 @@ def test_add_note_pages_missing_data_in_nsx_file(conv_setting, caplog, silent_mo
         nsx_fc.add_note_pages()
 
     assert nsx_fc.note_page_count == 0
-    expected_log_message = msg = f"There are {len(nsx_fc._note_pages) - len(nsx_fc._note_page_ids)} less note pages to process " \
+    expected_log_message = msg = f"There are {len(nsx_fc._note_page_ids) - len(nsx_fc._note_pages)} less note pages to process " \
                       f"than note page id's in the nsx file.\nPlease review log file as there may be issues " \
                       f"with the nsx file."
     assert 'Creating note page objects' in caplog.messages

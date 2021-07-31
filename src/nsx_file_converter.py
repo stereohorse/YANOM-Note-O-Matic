@@ -62,7 +62,7 @@ class NSXFile:
         self.add_notebooks()
         self.add_recycle_bin_notebook()
         self.create_export_folder_if_not_exist()
-        notebooks_to_skip = self.create_notebook_and_attachemnt_folders()
+        notebooks_to_skip = self.create_notebook_and_attachment_folders()
         self.remove_notebooks_to_be_skipped(notebooks_to_skip)
         self.add_note_pages()
         self.add_note_pages_to_notebooks()
@@ -170,7 +170,7 @@ class NSXFile:
         if not config.silent:
             print(f'{msg}')
 
-    def create_notebook_and_attachemnt_folders(self) -> list:
+    def create_notebook_and_attachment_folders(self) -> list:
         """Create notebook folders and return list of notebook ids for those where a notebook folder was  not created"""
         self.logger.debug(f"Creating folders for notebooks")
         notebooks_to_skip = []
@@ -218,7 +218,7 @@ class NSXFile:
 
     def _warn_if_note_pages_missing(self):
         if len(self._note_pages) < len(self._note_page_ids):
-            msg = f"There are {len(self._note_pages) - len(self._note_page_ids)} less note pages to process " \
+            msg = f"There are {len(self._note_page_ids) - len(self._note_pages)} less note pages to process " \
                   f"than note page id's in the nsx file.\nPlease review log file as there may be issues " \
                   f"with the nsx file."
             self.logger.warning(msg)
