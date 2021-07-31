@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """ Parse command line arguments, configure root loggers and initialise the note conversion process """
-import logging.handlers as handlers
-import os
 
 import argparse
 import logging
+import logging.handlers as handlers
+import os
 import sys
 
 import config
@@ -74,6 +74,7 @@ def setup_logging(working_path):
     log_filename = f"{working_path}/{config.DATA_DIR}/logs/normal.log"
     error_log_filename = f"{working_path}/{config.DATA_DIR}/logs/error.log"
     debug_log_filename = f"{working_path}/{config.DATA_DIR}/logs/debug.log"
+    warning_log_filename = f"{working_path}/{config.DATA_DIR}/logs/warning.log"
 
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
@@ -88,6 +89,10 @@ def setup_logging(working_path):
     errorLogHandler.setLevel(logging.ERROR)
     errorLogHandler.setFormatter(file_formatter)
 
+    warningLogHandler = handlers.RotatingFileHandler(warning_log_filename, maxBytes=2 * 1024 * 1024, backupCount=5)
+    warningLogHandler.setLevel(logging.WARNING)
+    warningLogHandler.setFormatter(file_formatter)
+
     if config.logger_level == logging.DEBUG:
         debugLogHandler = handlers.RotatingFileHandler(debug_log_filename, maxBytes=2 * 1024 * 1024, backupCount=5)
         debugLogHandler.setLevel(logging.DEBUG)
@@ -100,6 +105,7 @@ def setup_logging(working_path):
     root_logger.addHandler(console_handler)
     root_logger.addHandler(logHandler)
     root_logger.addHandler(errorLogHandler)
+    root_logger.addHandler(warningLogHandler)
 
 
 def main(command_line_sys_argv=sys.argv):
