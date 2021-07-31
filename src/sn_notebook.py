@@ -6,6 +6,7 @@ from alive_progress import alive_bar
 
 import config
 from config import yanom_globals
+import helper_functions
 from helper_functions import generate_clean_directory_name
 from sn_note_page import NotePage
 
@@ -100,11 +101,13 @@ class Notebook:
         except FileNotFoundError as e:
             msg = f'Unable to create notebook folder there is a problem with the path.\n{e}'
             self.logger.error(f'{msg}')
+            self.logger.error(helper_functions.log_traceback(e))
             if not config.silent:
                 print(f'{msg}')
         except OSError as e:
             msg = f'Unable to create note book folder\n{e}'
             self.logger.error(f'{msg}')
+            self.logger.error(helper_functions.log_traceback(e))
             if not config.silent:
                 print(f'{msg}')
 

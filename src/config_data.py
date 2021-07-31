@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 
 import config
+import helper_functions
 from interactive_cli import InvalidConfigFileCommandLineInterface
 from conversion_settings import ConversionSettings
 
@@ -157,16 +158,19 @@ class ConfigData(ConfigParser):
                 message = f"Unable to save config.ini file '{self.conversion_settings.working_directory}' " \
                           f"is not a directory.\n{e}"
                 self.logger.error(message)
+                self.logger.error(helper_functions.log_traceback(e))
                 if not config.silent:
                     print(message)
             else:
                 message = f"Unable to save config.ini file.\n{e}"
                 self.logger.error(message)
+                self.logger.error(helper_functions.log_traceback(e))
                 if not config.silent:
                     print(message)
         except IOError as e:
             message = f"Unable to save config.ini file `{self.conversion_settings.working_directory}`.\n{e}"
             self.logger.error(message)
+            self.logger.error(helper_functions.log_traceback(e))
             if not config.silent:
                 print(message)
 

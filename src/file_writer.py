@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 
 import config
+import helper_functions
 
 logger = logging.getLogger(f'{config.APP_NAME}.{__name__}')
 logger.setLevel(config.logger_level)
@@ -50,11 +51,14 @@ def write_bytes_IO(absolute_path, content_to_save):
 def error_handling(e, write_type):
     if isinstance(e, FileNotFoundError):
         logger.error(f"Attempting to write {write_type} to invalid path - {e}")
+        logger.error(helper_functions.log_traceback(e))
         return
 
     if isinstance(e, IsADirectoryError):
         logger.error(f"Attempting to write {write_type} to an existing directory name not a file - {e}")
+        logger.error(helper_functions.log_traceback(e))
         return
 
     if isinstance(e, IOError):
         logger.error(f"Attempting to write {write_type} failed - {e}")
+        logger.error(helper_functions.log_traceback(e))

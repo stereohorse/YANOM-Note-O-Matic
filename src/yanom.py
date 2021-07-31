@@ -61,8 +61,8 @@ def set_logging_level(log_level: str):
     if new_level is None:
         try:
             raise ValueError(f'Invalid log level on command line: "{log_level}"')
-        except Exception as exc:
-            sys.exit(exc)
+        except Exception as e:
+            sys.exit(e)
 
     config.set_logger_level(new_level)
     pass

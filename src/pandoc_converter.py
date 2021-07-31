@@ -5,6 +5,7 @@ import subprocess
 import sys
 
 import config
+import helper_functions
 
 
 def what_module_is_this():
@@ -67,8 +68,9 @@ class PandocConverter:
                 print('Found pandoc ' + str(self._pandoc_version))
             self.logger.debug(f"Found pandoc version {str(self._pandoc_version)} at {self._pandoc_path}")
 
-        except subprocess.CalledProcessError as exc:
-            self.logger.warning(f"Exiting as unable to get pandoc version\n{exc}")
+        except subprocess.CalledProcessError as e:
+            self.logger.error(f"Exiting as unable to get pandoc version")
+            self.logger.error(helper_functions.log_traceback(e))
             if not config.silent:
                 print("Unable to fetch pandoc version please check log files for additional information.")
                 print("Exiting.")
@@ -109,8 +111,9 @@ class PandocConverter:
                 self.logger.error(f"Pandoc Return code={out.returncode}, error={out.stderr}")
             return out.stdout
 
-        except subprocess.CalledProcessError as exc:
-            self.logger.error(f"Unable to convert note {note_title}. Pandoc error - {exc}")
+        except subprocess.CalledProcessError as e:
+            self.logger.error(f"Unable to convert note '{note_title}'.")
+            self.logger.error(helper_functions.log_traceback(e))
             if not config.silent:
                 print(f"Error converting note {note_title} with pandoc please check log file and pandoc installation.")
                 print("Attempting to continue...")

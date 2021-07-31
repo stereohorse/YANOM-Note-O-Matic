@@ -1,4 +1,5 @@
 import subprocess
+from logging import DEBUG
 from unittest.mock import patch
 
 import pytest
@@ -49,7 +50,7 @@ def test_check_and_set_up_pandoc_if_required_nsx_and_html(conversion_input, mark
     ], ids=['is_silent', 'not_silent']
 )
 def test_find_pandoc_version(caplog, capsys, silent_mode, expected_capture_out):
-    config.set_logger_level('DEBUG')
+    config.set_logger_level(DEBUG)
     config.set_silent(silent_mode)
     cs = conversion_settings.ConversionSettings()
     pandoc_processor = pandoc_converter.PandocConverter(cs)
@@ -67,7 +68,7 @@ def test_find_pandoc_version(caplog, capsys, silent_mode, expected_capture_out):
 
 
 def test_find_pandoc_version_invalid_path_check_sys_exit(caplog):
-    config.set_logger_level('DEBUG')
+    config.set_logger_level(DEBUG)
     cs = conversion_settings.ConversionSettings()
     pandoc_processor = pandoc_converter.PandocConverter(cs)
     pandoc_processor._pandoc_path = 'invalid-path'
@@ -89,7 +90,6 @@ def test_find_pandoc_version_force_subprocess_error(caplog, capsys, monkeypatch,
     def mock_run(ignored, capture_output, text, timeout):
         raise subprocess.CalledProcessError(3, "a_command'")
 
-    config.set_logger_level('WARNING')
     config.set_silent(silent_mode)
     cs = conversion_settings.ConversionSettings()
     pandoc_processor = pandoc_converter.PandocConverter(cs)
@@ -98,11 +98,7 @@ def test_find_pandoc_version_force_subprocess_error(caplog, capsys, monkeypatch,
         monkeypatch.setattr(subprocess, 'run', mock_run)
         pandoc_processor.find_pandoc_version()
 
-    assert len(caplog.records) == 1
-
-    for record in caplog.records:
-        assert record.levelname == "WARNING"
-        assert 'Exiting as unable to get pandoc version' in record.message
+    assert 'Exiting as unable to get pandoc version' in caplog.messages
 
     captured = capsys.readouterr()
     assert expected_capture_out in captured.out
@@ -120,7 +116,6 @@ def test_find_pandoc_version_force_subprocess_error(caplog, capsys, monkeypatch,
     ]
 )
 def test_generate_pandoc_options_check_pandoc_conversion_option_lookup(caplog, version, conversion_input, input_file_format, output_file_format, expected):
-    config.set_logger_level('DEBUG')
     cs = conversion_settings.ConversionSettings()
     cs.conversion_input = conversion_input
     pandoc_processor = pandoc_converter.PandocConverter(cs)
@@ -128,11 +123,6 @@ def test_generate_pandoc_options_check_pandoc_conversion_option_lookup(caplog, v
     pandoc_processor.output_file_format = output_file_format
     caplog.clear()
     pandoc_processor.generate_pandoc_options()
-
-    assert len(caplog.records) == 1
-
-    for record in caplog.records:
-        assert record.levelname == "DEBUG"
 
     assert pandoc_processor.pandoc_options[-2] == expected
 
@@ -145,7 +135,6 @@ def test_generate_pandoc_options_check_pandoc_conversion_option_lookup(caplog, v
     ]
 )
 def test_generate_pandoc_options_check_conversion_input_format_setting(caplog, version, conversion_input, markdown_conversion_input, output_file_format, expected):
-    config.set_logger_level('DEBUG')
     cs = conversion_settings.ConversionSettings()
     cs.conversion_input = conversion_input
     cs.markdown_conversion_input = markdown_conversion_input
@@ -154,11 +143,6 @@ def test_generate_pandoc_options_check_conversion_input_format_setting(caplog, v
     pandoc_processor.output_file_format = output_file_format
     caplog.clear()
     pandoc_processor.generate_pandoc_options()
-
-    assert len(caplog.records) == 1
-
-    for record in caplog.records:
-        assert record.levelname == "DEBUG"
 
     assert pandoc_processor.pandoc_options[2] == expected
 
@@ -176,7 +160,6 @@ def test_generate_pandoc_options_check_conversion_input_format_setting(caplog, v
     ]
 )
 def test_generate_pandoc_options_check_pandoc_version_conversion_settings(caplog, version, conversion_input, input_file_format, output_file_format, expected):
-    config.set_logger_level('DEBUG')
     cs = conversion_settings.ConversionSettings()
     cs.conversion_input = conversion_input
     pandoc_processor = pandoc_converter.PandocConverter(cs)
@@ -184,11 +167,6 @@ def test_generate_pandoc_options_check_pandoc_version_conversion_settings(caplog
     pandoc_processor.output_file_format = output_file_format
     caplog.clear()
     pandoc_processor.generate_pandoc_options()
-
-    assert len(caplog.records) == 1
-
-    for record in caplog.records:
-        assert record.levelname == "DEBUG"
 
     assert pandoc_processor.pandoc_options[-2:] == expected
 
@@ -228,9 +206,7 @@ def test_convert_using_strings_forcing_subprocess_error(caplog, capsys, monkeypa
     result = pandoc_processor.convert_using_strings('hello world', 'my_note')
 
     assert result == 'Error converting data'
-    assert len(caplog.records) == 1
-    for record in caplog.records:
-        assert 'Unable to convert note my_note' in record.message
+    assert "Unable to convert note 'my_note'." in caplog.messages
 
     captured = capsys.readouterr()
     assert expected_capture_out in captured.out

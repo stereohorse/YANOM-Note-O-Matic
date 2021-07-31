@@ -7,6 +7,7 @@ from alive_progress import alive_bar
 
 import config
 import file_writer
+import helper_functions
 from nsx_inter_note_link_processor import NSXInterNoteLinkProcessor
 from sn_notebook import Notebook
 from sn_note_page import NotePage
@@ -152,19 +153,20 @@ class NSXFile:
                 self.logger.debug(f"Export folder already exists - '{target_path}'")
             else:
                 msg = f'Unable to create the export folder because path is to an existing file not a directory.\n{e}'
-                self._report_create_export_folder_errors(msg)
+                self._report_create_export_folder_errors(msg, e)
                 sys.exit(1)
         except FileNotFoundError as e:
             msg = f'Unable to create the export folder there is a problem with the path.\n{e}'
-            self._report_create_export_folder_errors(msg)
+            self._report_create_export_folder_errors(msg, e)
             sys.exit(1)
         except OSError as e:
             msg = f'Unable to create the export folder\n{e}'
-            self._report_create_export_folder_errors(msg)
+            self._report_create_export_folder_errors(msg, e)
             sys.exit(1)
 
-    def _report_create_export_folder_errors(self, msg):
+    def _report_create_export_folder_errors(self, msg, e):
         self.logger.error(f'{msg}')
+        self.logger.error(helper_functions.log_traceback(e))
         if not config.silent:
             print(f'{msg}')
 
