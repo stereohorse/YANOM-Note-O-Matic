@@ -1,4 +1,5 @@
 import os
+import traceback
 from pathlib import Path, PurePath
 import random
 import re
@@ -349,3 +350,9 @@ def _update_html_with_changed_tags(front_tag, rear_tag, new_front_tag, new_rear_
 def _find_tags(front_tag, rear_tag, html):
     return re.findall(f'{front_tag}([^<]*){rear_tag}', html)
 
+
+def log_traceback(e):
+    traceback_lines = traceback.format_exception(e.__class__, e, e.__traceback__)
+    traceback_text = ''.join(traceback_lines)
+
+    return traceback_text

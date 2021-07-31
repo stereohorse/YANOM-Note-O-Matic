@@ -1,8 +1,11 @@
 import json
 import logging
+import traceback
 import zipfile
 
 import config
+# import yanom
+import helper_functions
 
 logger = logging.getLogger(f'{config.APP_NAME}.{__name__}')
 logger.setLevel(config.logger_level)
@@ -60,7 +63,7 @@ def read_binary_file(zip_filename, target_filename):
 def _error_handling(e, target_filename, zip_filename):
     """Error handling for errors encountered reading form zip files"""
 
-    logger.error(e)
+    traceback_text = helper_functions.log_traceback(e)
     msg = f'Error - {e}'
 
     if isinstance(e, FileNotFoundError):
@@ -70,7 +73,7 @@ def _error_handling(e, target_filename, zip_filename):
         msg = f'Error - unable to find the file "{target_filename}" in the zip file "{zip_filename}"'
 
     logger.error(msg)
+    logger.error(traceback_text)
     if not config.silent:
         print(msg)
-
 
