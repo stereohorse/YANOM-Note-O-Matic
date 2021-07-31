@@ -1,7 +1,6 @@
 import logging
 from pathlib import Path
 
-import zip_file_reader
 from alive_progress import alive_bar
 
 import config
@@ -9,6 +8,7 @@ from config import yanom_globals
 import helper_functions
 from helper_functions import generate_clean_directory_name
 from sn_note_page import NotePage
+import zip_file_reader
 
 
 def what_module_is_this():

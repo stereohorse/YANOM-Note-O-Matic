@@ -1,7 +1,6 @@
 import logging
 import re
 
-
 from chart_processing import NSXChartProcessor
 from checklist_processing import NSXInputMDOutputChecklistProcessor, NSXInputHTMLOutputChecklistProcessor
 import config

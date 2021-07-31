@@ -4,7 +4,7 @@ import logging
 
 from pyfiglet import Figlet
 from PyInquirer.prompt import prompt
-from PyInquirer import Separator
+import PyInquirer
 from prompt_toolkit.styles import Style
 import config
 
@@ -216,7 +216,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
                 'message': 'Select meta data details',
                 'name': 'metadata_details',
                 'choices': [
-                    Separator('= Tag options ='),
+                    PyInquirer.Separator('= Tag options ='),
                     {
                         'name': 'Spaces in tags',
                         'checked': self._default_settings.spaces_in_tags
@@ -258,7 +258,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
                 'message': 'Select table options',
                 'name': 'table_options',
                 'choices': [
-                    Separator('= Table Options ='),
+                    PyInquirer.Separator('= Table Options ='),
                     {
                         'name': 'First row of table as header row',
                         'checked': self._default_settings.first_row_as_header
@@ -287,7 +287,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
                 'message': 'Select chart options',
                 'name': 'chart_options',
                 'choices': [
-                    Separator('= Chart Options ='),
+                    PyInquirer.Separator('= Chart Options ='),
                     {
                         'name': 'Include an image of chart',
                         'checked': self._default_settings.chart_image

@@ -1,6 +1,6 @@
-from packaging import version
 import logging
 from pathlib import Path
+from packaging import version
 import subprocess
 import sys
 

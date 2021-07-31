@@ -2,7 +2,6 @@ import logging
 
 from bs4 import BeautifulSoup
 import frontmatter
-from frontmatter import YAMLHandler, TOMLHandler, JSONHandler
 
 import config
 
@@ -143,11 +142,11 @@ class MetaDataProcessor:
         self._force_pandoc_markdown_to_yaml_front_matter()
 
         if self._conversion_settings.front_matter_format == 'yaml':
-            content = frontmatter.dumps(merged_content, handler=YAMLHandler())
+            content = frontmatter.dumps(merged_content, handler=frontmatter.YAMLHandler())
         if self._conversion_settings.front_matter_format == 'toml':
-            content = frontmatter.dumps(merged_content, handler=TOMLHandler())
+            content = frontmatter.dumps(merged_content, handler=frontmatter.TOMLHandler())
         if self._conversion_settings.front_matter_format == 'json':
-            content = frontmatter.dumps(merged_content, handler=JSONHandler())
+            content = frontmatter.dumps(merged_content, handler=frontmatter.JSONHandler())
 
         return content
 

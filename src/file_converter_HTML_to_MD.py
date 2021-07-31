@@ -1,8 +1,7 @@
 from checklist_processing import HTMLInputMDOutputChecklistProcessor
 from file_converter_abstract import FileConverter
-from metadata_processing import MetaDataProcessor
-
 from iframe_processing import pre_process_iframes_from_html, post_process_iframes_to_markdown
+from metadata_processing import MetaDataProcessor
 
 
 class HTMLToMDConverter(FileConverter):

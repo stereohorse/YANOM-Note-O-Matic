@@ -4,7 +4,6 @@ from pathlib import Path
 
 import config
 from config import yanom_globals
-from file_writer import store_file
 import helper_functions
 
 
