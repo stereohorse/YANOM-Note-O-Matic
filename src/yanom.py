@@ -129,5 +129,16 @@ def run_yanom(command_line_args):
     notes_converter.convert_notes()
 
 
+def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
+    """Handler for unhandled exceptions that will write to the logs"""
+    if issubclass(exc_type, KeyboardInterrupt):
+        logging.warning("Cancelled by User", exc_info=(exc_type, exc_value, exc_traceback))
+        return
+
+    logging.critical("Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback))
+
+
+sys.excepthook = handle_unhandled_exception
+
 if __name__ == '__main__':
     main()

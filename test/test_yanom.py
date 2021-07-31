@@ -2,6 +2,7 @@ from mock import patch
 from pathlib import Path
 import pytest
 import logging
+import sys
 
 import config
 import yanom
@@ -121,3 +122,24 @@ def test_configure_environment(caplog):
         command_line_sys_argv = ["pytest"]
         yanom.main(command_line_sys_argv)
         assert config.logger_level == logging.INFO
+
+
+def test_handle_unhandled_exception(caplog):
+    assert sys.excepthook is yanom.handle_unhandled_exception
+    try:
+        1 / 0
+    except ZeroDivisionError:
+        yanom.handle_unhandled_exception(*sys.exc_info())
+
+    assert "Unhandled exception" in caplog.text
+
+
+def test_handle_unhandled_exception_keyboard_interupt(caplog):
+    assert sys.excepthook is yanom.handle_unhandled_exception
+    try:
+        raise KeyboardInterrupt
+    except KeyboardInterrupt:
+        yanom.handle_unhandled_exception(*sys.exc_info())
+
+    assert len(caplog.records) == 1
+    assert "Cancelled by User" in caplog.text
