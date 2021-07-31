@@ -7,26 +7,29 @@ import yanom
 
 
 @pytest.mark.parametrize(
-    'args, expected', [
+    'log_level, expected', [
         ('critical', logging.CRITICAL),
         ('error', logging.ERROR),
         ('warn', logging.WARNING),
         ('warning', logging.WARNING),
         ('info', logging.INFO),
         ('debug', logging.DEBUG),
+        ('fred', logging.INFO),
         ]
 )
-def test_set_logging_level(args, expected):
-    yanom.set_logging_level(args)
+def test_set_logging_level(log_level, expected, tmp_path):
+    logger = yanom.setup_logging(tmp_path)
+    yanom.set_logging_level(log_level, logger)
     assert config.logger_level == expected
     config.set_logger_level(11)
 
 
-def test_set_logging_level_invalid_arg():
+def test_set_logging_level_invalid_arg(tmp_path, caplog):
+    logger = yanom.setup_logging(tmp_path)
     config.set_logger_level(logging.INFO)
-    with pytest.raises(SystemExit) as exc:
-        yanom.set_logging_level('bad-value')
+    yanom.set_logging_level('bad-value', logger)
     assert config.logger_level == logging.INFO
+    assert f'Invalid log level on command line: "bad-value".  Using INFO level' in caplog.messages
 
 
 @pytest.mark.parametrize(
@@ -61,21 +64,14 @@ def test_command_line_parser_bad_args(command_line_args, value):
 
 
 def test_setup_logging(tmp_path):
-    yanom.setup_logging(tmp_path)
+    _ = yanom.setup_logging(tmp_path)
     normal_log_path = Path(tmp_path, f'{config.DATA_DIR}/logs/normal.log')
     error_log_path = Path(tmp_path, f'{config.DATA_DIR}/logs/error.log')
-    assert normal_log_path.is_file()
-    assert error_log_path.is_file()
-
-
-def test_setup_logging_debug_mode(tmp_path):
-    config.set_logger_level(logging.DEBUG)
-    yanom.setup_logging(tmp_path)
-    normal_log_path = Path(tmp_path, f'{config.DATA_DIR}/logs/normal.log')
-    error_log_path = Path(tmp_path, f'{config.DATA_DIR}/logs/error.log')
+    warning_log_path = Path(tmp_path, f'{config.DATA_DIR}/logs/warning.log')
     debug_log_path = Path(tmp_path, f'{config.DATA_DIR}/logs/debug.log')
     assert normal_log_path.is_file()
     assert error_log_path.is_file()
+    assert warning_log_path.is_file()
     assert debug_log_path.is_file()
 
 
@@ -114,11 +110,6 @@ def test_configure_environment_debug(caplog):
     command_line_sys_argv = ["pytest", "-l", "debug"]
     yanom.main(command_line_sys_argv)
     assert config.logger_level == logging.DEBUG
-
-    assert len(caplog.records) > 0
-
-    for record in caplog.records:
-        assert record.levelname == "DEBUG"
 
 
 def test_configure_environment(caplog):

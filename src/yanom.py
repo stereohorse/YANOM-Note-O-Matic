@@ -4,7 +4,7 @@
 import argparse
 import logging
 import logging.handlers as handlers
-import os
+from pathlib import Path
 import sys
 
 import config
@@ -47,7 +47,7 @@ def command_line_parser(args):
     return vars(parser.parse_args(args))
 
 
-def set_logging_level(log_level: str):
+def set_logging_level(log_level: str, logger):
     levels = {
         'critical': logging.CRITICAL,
         'error': logging.ERROR,
@@ -59,17 +59,14 @@ def set_logging_level(log_level: str):
     new_level = levels.get(log_level.lower(), None)
 
     if new_level is None:
-        try:
-            raise ValueError(f'Invalid log level on command line: "{log_level}"')
-        except Exception as e:
-            sys.exit(e)
+        logger.warning(f'Invalid log level on command line: "{log_level}".  Using INFO level')
+        new_level = logging.INFO
 
     config.set_logger_level(new_level)
-    pass
 
 
 def setup_logging(working_path):
-    os.makedirs(f"{working_path}/{config.DATA_DIR}/logs", exist_ok=True)
+    Path(working_path, config.DATA_DIR, 'logs').mkdir(parents=True, exist_ok=True)
 
     log_filename = f"{working_path}/{config.DATA_DIR}/logs/normal.log"
     error_log_filename = f"{working_path}/{config.DATA_DIR}/logs/error.log"
@@ -93,11 +90,10 @@ def setup_logging(working_path):
     warningLogHandler.setLevel(logging.WARNING)
     warningLogHandler.setFormatter(file_formatter)
 
-    if config.logger_level == logging.DEBUG:
-        debugLogHandler = handlers.RotatingFileHandler(debug_log_filename, maxBytes=2 * 1024 * 1024, backupCount=5)
-        debugLogHandler.setLevel(logging.DEBUG)
-        debugLogHandler.setFormatter(file_formatter)
-        root_logger.addHandler(debugLogHandler)
+    debugLogHandler = handlers.RotatingFileHandler(debug_log_filename, maxBytes=2 * 1024 * 1024, backupCount=5)
+    debugLogHandler.setLevel(logging.DEBUG)
+    debugLogHandler.setFormatter(file_formatter)
+    root_logger.addHandler(debugLogHandler)
 
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.CRITICAL)
@@ -107,15 +103,18 @@ def setup_logging(working_path):
     root_logger.addHandler(errorLogHandler)
     root_logger.addHandler(warningLogHandler)
 
+    logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}')
+
+    return logger
+
 
 def main(command_line_sys_argv=sys.argv):
-    args = command_line_parser(command_line_sys_argv[1:])
-    set_logging_level(args['log'])
-    config.set_silent(args['silent'])
     working_directory, working_directory_message = find_working_directory()
-    setup_logging(working_directory)
-    logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}')
+    logger = setup_logging(working_directory)
     logger.debug(working_directory_message)
+    args = command_line_parser(command_line_sys_argv[1:])
+    set_logging_level(args['log'], logger)
+    config.set_silent(args['silent'])
     return args
 
 
