@@ -98,13 +98,15 @@ def test_add_notebooks(conv_setting):
 @pytest.mark.parametrize(
     'json, expected', [
         ({'title': 'notebook'}, 'notebook'),
-        ({'title': ''}, 'My Notebook')
+        ({'title': ''}, 'My Notebook'),
+        ({'tag': 'tag1'}, 'Unknown Notebook'),
     ]
 )
 def test_fetch_notebook_title(conv_setting, json, expected):
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
     with patch('zip_file_reader.read_json_data', spec=True, return_value=json):
+        nsx_fc._nsx_json_data = json
         result = nsx_fc.fetch_notebook_title('1234')
 
     assert result == expected

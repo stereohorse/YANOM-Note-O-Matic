@@ -139,9 +139,13 @@ class NSXFile:
 
     def fetch_notebook_title(self, notebook_id):
         self.logger.info(f"Fetching json data file {notebook_id} from {self._nsx_file_name}")
-        notebook_title = zip_file_reader.read_json_data(self._nsx_file_name, notebook_id)['title']
+        note_book_json = zip_file_reader.read_json_data(self._nsx_file_name, notebook_id)
+        notebook_title = note_book_json.get('title', None)
+        if notebook_title is None:
+            self.logger.warning(f"The data for notebook id '{notebook_id}' does not have a key for 'title' using 'Unknown Notebook'")
+            return 'Unknown Notebook'
         if notebook_title == "":  # The notebook with no title is called 'My Notes' in note station
-            notebook_title = "My Notebook"
+            return "My Notebook"
 
         return notebook_title
 
