@@ -19,6 +19,13 @@ def show_app_title():
     print(f.renderText(config.APP_SUB_NAME))
 
 
+def _exit_if_keyboard_interrupt(answer):
+    """Check if user used keyboard interrupt on question"""
+    # PyInquirer intercepts keyboard interrupt and returns {} check for {} and exit gracefully if found
+    if answer == {}:
+        raise KeyboardInterrupt  # will be caught by yanom.py handle_unhandled_exception() method
+
+
 class InquireCommandLineInterface(ABC):
     """
     Abstract class to define a consistent style format for child classes
@@ -86,6 +93,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             'default': self._default_settings.conversion_input,
         }
         answer = prompt(conversion_input_prompt, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
         self._current_conversion_settings.conversion_input = answer['conversion_input']
         if answer['conversion_input'] == 'nsx':
             self._current_conversion_settings.metadata_schema = 'title, ctime, mtime, tag'
@@ -129,6 +137,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             'default': self._default_settings.markdown_conversion_input,
         }
         answer = prompt(markdown_conversion_input, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
         self._current_conversion_settings.markdown_conversion_input = answer['markdown_conversion_input']
 
     def _ask_and_set_front_matter_format(self):
@@ -144,6 +153,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             'default': self._default_settings.front_matter_format,
         }
         answer = prompt(front_matter_format, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
         self._current_conversion_settings.front_matter_format = answer['front_matter_format']
 
     def _ask_nsx_conversion_options(self):
@@ -176,6 +186,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             'default': self._default_settings.quick_setting,
         }
         answer = prompt(quick_setting_prompt, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
         self._current_conversion_settings.set_quick_setting(answer['quick_setting'])
         self._current_conversion_settings.conversion_input = self._current_conversion_settings.conversion_input
 
@@ -188,6 +199,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             'default': self._default_settings.export_format,
         }
         answer = prompt(export_format_prompt, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
         self._current_conversion_settings.export_format = answer['export_format']
 
     def _set_meta_data_for_html(self):
@@ -218,6 +230,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         ]
 
         answers = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answers)
 
         if 'Spaces in tags' in answers['metadata_details']:
             self._current_conversion_settings.spaces_in_tags = True
@@ -235,6 +248,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             },
         ]
         answer = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
         self._current_conversion_settings.metadata_schema = answer['metadata_schema']
 
     def _ask_and_set_table_details(self):
@@ -253,12 +267,12 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
                         'name': 'First column of table as header column',
                         'checked': self._default_settings.first_column_as_header
                     },
-
                 ],
             }
         ]
 
         answers = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answers)
 
         if 'First row of table as header row' in answers['table_options']:
             self._current_conversion_settings.first_row_as_header = True
@@ -291,6 +305,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         ]
 
         answers = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answers)
 
         self._current_conversion_settings.chart_image = 'Include an image of chart' in answers['chart_options']
         self._current_conversion_settings.chart_csv = 'Include a csv file of chart data' in answers['chart_options']
@@ -307,6 +322,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         ]
 
         answer = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
         self._current_conversion_settings.tag_prefix = answer['tag_prefix']
 
     def _ask_and_set_export_folder_name(self):
@@ -321,12 +337,13 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
                 'default': default_folder_name
             }
         ]
-        answers = prompt(questions, style=self.style)
-        if answers['export_folder'] == '':
-            answers['export_folder'] = 'notes'
-        self._current_conversion_settings.export_folder = answers['export_folder']
+        answer = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
+        if answer['export_folder'] == '':
+            answer['export_folder'] = 'notes'
+        self._current_conversion_settings.export_folder = answer['export_folder']
 
-        if default_folder_name != answers['export_folder']:
+        if default_folder_name != answer['export_folder']:
             self._ask_to_confirm_changed_path_name(self._current_conversion_settings.export_folder)
 
     def _ask_and_set_attachment_folder_name(self):
@@ -342,12 +359,13 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
                 'default': default_folder_name
             },
         ]
-        answers = prompt(questions, style=self.style)
-        if answers['attachment_folder_name'] == '':
-            answers['attachment_folder_name'] = 'attachments'
-        self._current_conversion_settings.attachment_folder_name = answers['attachment_folder_name']
+        answer = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
+        if answer['attachment_folder_name'] == '':
+            answer['attachment_folder_name'] = 'attachments'
+        self._current_conversion_settings.attachment_folder_name = answer['attachment_folder_name']
 
-        if default_folder_name != answers['attachment_folder_name']:
+        if default_folder_name != answer['attachment_folder_name']:
             self._ask_to_confirm_changed_path_name(self._current_conversion_settings.attachment_folder_name)
 
     def _ask_to_confirm_changed_path_name(self, new_path):
@@ -362,6 +380,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         ]
 
         answer = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
         if not answer['accept_change']:
             self._ask_and_set_export_folder_name()
 
@@ -375,9 +394,10 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             }
         ]
 
-        answers = prompt(questions, style=self.style)
+        answer = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
         self._current_conversion_settings.creation_time_in_exported_file_name = \
-            answers['creation_time_in_exported_file_name']
+            answer['creation_time_in_exported_file_name']
 
 
 class InvalidConfigFileCommandLineInterface(InquireCommandLineInterface):
@@ -400,6 +420,7 @@ class InvalidConfigFileCommandLineInterface(InquireCommandLineInterface):
         }
 
         answer = prompt(question, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
         if answer['what_to_do'] == 'Create a default configuration':
             return 'default'
         return 'exit'
