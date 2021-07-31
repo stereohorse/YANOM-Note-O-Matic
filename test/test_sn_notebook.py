@@ -198,3 +198,9 @@ def test_fetch_notebook_title(nsx, json, expected):
         result = notebook.fetch_notebook_title()
 
     assert result == expected
+
+
+def test_init_notebook_for_recycle_bin(nsx):
+    notebook = sn_notebook.Notebook(nsx, 'recycle-bin')
+
+    assert notebook.title == 'recycle-bin'
