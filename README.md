@@ -1,4 +1,4 @@
-![coverage 93%](https://img.shields.io/badge/coverage-93%25-orange)  ![open issues](https://img.shields.io/github/issues/kevindurston21/YANOM-Note-O-Matic)  ![License](https://img.shields.io/github/license/kevindurston21/YANOM-Note-O-Matic)  ![version tag](https://img.shields.io/github/v/tag/kevindurston21/YANOM-Note-O-Matic)
+![coverage 92%](https://img.shields.io/badge/coverage-92%25-orange)  ![open issues](https://img.shields.io/github/issues/kevindurston21/YANOM-Note-O-Matic)  ![License](https://img.shields.io/github/license/kevindurston21/YANOM-Note-O-Matic)  ![version tag](https://img.shields.io/github/v/tag/kevindurston21/YANOM-Note-O-Matic)
 
 # YANOM - Yet Another Note-O-Matic
 YANOM - stands for Yet Another Note-O-Matic. 
@@ -15,17 +15,17 @@ Additionally, YANOM has the capability to add support for modified Markdown form
 
 # Sections in this read me are
 - [YANOM - Yet Another Note-O-Matic](#yanom---yet-another-note-o-matic)
-  * [YANOM's Goals](#yanom-s-goals)
+  * [YANOM's Goals](#yanoms-goals)
 - [Sections in this read me are](#sections-in-this-read-me-are)
   * [YANOM Note-O-Matic wiki](#yanom-note-o-matic-wiki)
-  * [Version 1.1.0 capabilities](#version-110-capabilities)
+  * [Version 1.1.0 capabilities](#current-capabilities)
     + [Current functionality](#current-functionality)
   * [Getting Started](#getting-started)
     + [Prerequisites](#prerequisites)
       - [Prerequisites source code](#prerequisites-source-code)
       - [Prerequisite for the Debian packaged version](#prerequisite-for-the-debian-packaged-version)
-      - [No prerequisites Windows and Mac OSX packaged versions](#no-prerequisites-windows-and-mac-osx-packaged-versions)
-    + [Using the pre-built packaged versions for Debian linux, windows and Mac OSX](#using-the-pre-built-packaged-versions-for-debian-linux--windows-and-mac-osx)
+      - [No prerequisites for the Windows and Mac OSX packaged versions, or the docker image](#no-prerequisites-for-the-windows-and-mac-osx-packaged-versions-or-the-docker-image)
+    + [Using the pre-built packaged versions for Debian linux, windows and Mac OSX](#using-the-pre-built-packaged-versions-for-debian-linux-windows-and-mac-osx)
     + [Using the docker image](#using-the-docker-image)
     + [Installing from source code](#installing-from-source-code)
   * [Running the tests](#running-the-tests)
@@ -40,9 +40,9 @@ Additionally, YANOM has the capability to add support for modified Markdown form
   * [Acknowledgments](#acknowledgments)
 
 ## YANOM Note-O-Matic wiki
-The [YANOM wiki](https://github.com/kevindurston21/YANOM-Note-O-Matic/wiki) explains features, functionality, instalation and use in greater detail than this read me.
+The [YANOM wiki](https://github.com/kevindurston21/YANOM-Note-O-Matic/wiki) explains features, functionality, installation and use in greater detail than this read me.
 
-## Version 1.3.x capabilities 
+## Current capabilities 
 - Conversion of Synology Note-Station files to markdown or html.  [Full details of the supported features and examples](https://github.com/kevindurston21/YANOM-Note-O-Matic/wiki/note-station-conversion-details.md) are in the wiki. 
 - Conversion between Markdown formats
 - HTML to Markdown and Markdown to HTML
@@ -103,7 +103,7 @@ The wiki also includes more detailed instructions on [installing and using the s
 #### Prerequisites source code
 YANOM relies on a python environment when run form source code.  
 
-1. You will need to have a working installation of Python 3.6 or higher.  Details of how to instal python and the instalation files can be found on the [python website](https://www.python.org/downloads/)
+1. You will need to have a working installation of Python 3.6 or higher.  Details of how to install python, and the installation files, can be found on the [python website](https://www.python.org/downloads/)
 2. Once Python is installed, install pipenv using `pip install pipenv`.
 3. If using PyCharm - Edit your yanom.py Run time settings from the menu 'Run' -> 'Edit configuration..' and tick the "Emulate terminal in output console" option in the 'Execution' section.  This is required for the interactive command line to run.
 
@@ -120,7 +120,7 @@ The packaged versions include the required python environment and pandoc.
 
 Packaged versions of YANOM are available.  Please see the wiki for how to install and use them.
 
-Also, please note the Mac OSX package is slow to start and can take 15 or more seconds to launch. Running a second time from the same terminal window it is usualy just a few seconds.
+Also, please note the Mac OSX package is slow to start and can take 15 or more seconds to launch. Running a second time from the same terminal window it is usually just a few seconds.
 
 ### Using the docker image
 A docker image has been created and is available on [docker hub](https://hub.docker.com/r/thehistorianandthegeek/yanom).
@@ -133,7 +133,7 @@ Download the source code from [git hub](https://github.com/kevindurston21/YANOM-
 
 Un-zip the downloaded file.
 
-Use `pipenv install` to configure a virtual environment and install the required dependencies.  If you are gogint o develop the code use `pipenv install --dev` to install additional devleopment dependencies.
+Use `pipenv install` to configure a virtual environment and install the required dependencies.  If you are going to develop the code use `pipenv install --dev` to install additional development dependencies.
 
 >NOTE it has been seen in some linux versions that a dependency for the package `toml` was not installed automatically.   The symptoms seen were that when a file was converted using `toml` as the front matter format YANOM would crash.  The workaround was to use `pipenv install toml` and then YANOM would run OK.
 
