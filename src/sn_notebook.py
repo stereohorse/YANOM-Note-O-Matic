@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 
+import zip_file_reader
 from alive_progress import alive_bar
 
 import config
@@ -14,13 +15,14 @@ def what_module_is_this():
 
 
 class Notebook:
-    def __init__(self, nsx_file, notebook_id, title):
+    def __init__(self, nsx_file, notebook_id):
         self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.logger_level)
         self.nsx_file = nsx_file
         self.notebook_id = notebook_id
         self.conversion_settings = self.nsx_file.conversion_settings
-        self.title = title
+        self._notebook_json = self.fetch_notebook_json(notebook_id)
+        self.title = self.fetch_notebook_title()
         self.folder_name = ''
         self.create_folder_name()
         self._full_path_to_notebook = None
@@ -37,6 +39,25 @@ class Notebook:
                 note_page.process_note()
                 if not config.silent:
                     bar()
+
+    def fetch_notebook_json(self, notebook_id):
+        self.logger.info(f"Fetching json data file {notebook_id} from {self.nsx_file.nsx_file_name}")
+        note_book_json =  zip_file_reader.read_json_data(self.nsx_file.nsx_file_name, notebook_id)
+        if note_book_json is None:
+            self.logger.warning("Unable to read notebook json data from nsx file. using 'title': 'Unknown Notebook'")
+            return {'title': 'Unknown Notebook'}
+
+        return note_book_json
+
+    def fetch_notebook_title(self):
+        notebook_title = self._notebook_json.get('title', None)
+        if notebook_title is None:
+            self.logger.warning(f"The data for notebook id '{self.notebook_id}' does not have a key for 'title' using 'Unknown Notebook'")
+            return 'Unknown Notebook'
+        if notebook_title == "":  # The notebook with no title is called 'My Notebook' in note station
+            return "My Notebook"
+
+        return notebook_title
 
     def pair_up_note_pages_and_notebooks(self, note_page: NotePage):
         self.logger.debug(f"Adding note '{note_page.title}' - {note_page.note_id} "

@@ -95,28 +95,11 @@ def test_add_notebooks(conv_setting):
     assert len(nsx_fc._notebooks) == 2
 
 
-@pytest.mark.parametrize(
-    'json, expected', [
-        ({'title': 'notebook'}, 'notebook'),
-        ({'title': ''}, 'My Notebook'),
-        ({'tag': 'tag1'}, 'Unknown Notebook'),
-    ]
-)
-def test_fetch_notebook_title(conv_setting, json, expected):
-    nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
-
-    with patch('zip_file_reader.read_json_data', spec=True, return_value=json):
-        nsx_fc._nsx_json_data = json
-        result = nsx_fc.fetch_notebook_title('1234')
-
-    assert result == expected
-
-
 def test_add_recycle_bin_notebook(conv_setting, caplog):
     config.set_logger_level(DEBUG)
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
-
-    nsx_fc.add_recycle_bin_notebook()
+    with patch('zip_file_reader.read_json_data', autospec=True, return_value=None):
+        nsx_fc.add_recycle_bin_notebook()
 
     assert "Creating recycle bin notebook" in caplog.messages
 
@@ -211,16 +194,16 @@ def test_create_notebook_folders(conv_setting, caplog, tmp_path, nsx):
     config.set_logger_level(DEBUG)
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
+    with patch('zip_file_reader.read_json_data', autospec=True, return_value=None):
+        test_notebook = sn_notebook.Notebook(nsx, '1234')
+        nsx_fc._notebooks = {'1234': test_notebook}
 
-    test_notebook = sn_notebook.Notebook(nsx, '1234', 'Notebook Title')
-    nsx_fc._notebooks = {'1234': test_notebook}
-
-    nsx_fc.create_notebook_and_attachemnt_folders()
+        nsx_fc.create_notebook_and_attachemnt_folders()
 
     assert "Creating folders for notebooks" in caplog.messages
-    assert nsx_fc.notebooks['1234'].folder_name == Path('notebook-title')
-    assert Path(tmp_path, config.DATA_DIR, conv_setting.export_folder, 'notebook-title').exists()
-    assert Path(tmp_path, config.DATA_DIR, conv_setting.export_folder, 'notebook-title',
+    assert nsx_fc.notebooks['1234'].folder_name == Path('unknown-notebook')
+    assert Path(tmp_path, config.DATA_DIR, conv_setting.export_folder, 'unknown-notebook').exists()
+    assert Path(tmp_path, config.DATA_DIR, conv_setting.export_folder, 'unknown-notebook',
                 conv_setting.attachment_folder_name).exists()
 
 
@@ -229,11 +212,12 @@ def test_create_notebook_folders_force_fail_to_create_attachment_folder(conv_set
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
-    test_notebook = sn_notebook.Notebook(nsx, '1234', 'Notebook Title')
-    nsx_fc._notebooks = {'1234': test_notebook}
+    with patch('zip_file_reader.read_json_data', autospec=True, return_value=None):
+        test_notebook = sn_notebook.Notebook(nsx, '1234')
+        nsx_fc._notebooks = {'1234': test_notebook}
 
-    monkeypatch.setattr(sn_notebook.Notebook, 'full_path_to_notebook', None)
-    result = nsx_fc.create_notebook_and_attachemnt_folders()
+        monkeypatch.setattr(sn_notebook.Notebook, 'full_path_to_notebook', None)
+        result = nsx_fc.create_notebook_and_attachemnt_folders()
 
     assert nsx_fc._notebooks['1234'].full_path_to_notebook is None
 
@@ -255,8 +239,11 @@ def test_create_notebook_folders_force_fail_to_create_attachment_folder(conv_set
 
 def test_remove_notebooks_to_be_skipped(conv_setting, nsx):
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
-    test_notebook1 = sn_notebook.Notebook(nsx, '1234', 'Notebook Title')
-    test_notebook2 = sn_notebook.Notebook(nsx, '7890', 'Notebook Title2')
+    with patch('zip_file_reader.read_json_data', autospec=True, return_value={'title': 'Notebook Title'}):
+        test_notebook1 = sn_notebook.Notebook(nsx, '1234')
+    with patch('zip_file_reader.read_json_data', autospec=True, return_value={'title': 'Notebook Title2'}):
+        test_notebook2 = sn_notebook.Notebook(nsx, '7890')
+
     nsx_fc._notebooks = {'1234': test_notebook1, '7890': test_notebook2}
     notebooks_to_skip = ['1234']
     nsx_fc.remove_notebooks_to_be_skipped(notebooks_to_skip)
@@ -319,6 +306,7 @@ def test_add_note_pages_missing_data_in_nsx_file(conv_setting, caplog, silent_mo
     assert f"Unable to locate note data for note id '1234' from nsx file'{nsx_fc._nsx_file_name.name}'. No note data to process " in caplog.messages
     assert expected_log_message in caplog.messages
 
+
 def test_add_note_pages_encrypted_note(conv_setting, caplog):
     config.set_logger_level(DEBUG)
 
@@ -369,8 +357,10 @@ def note_pages(all_notes):
 
 @pytest.fixture
 def notebooks(nsx):
-    test_notebook1 = sn_notebook.Notebook(nsx, 'note_book1', 'notebook 1')
-    test_notebook2 = sn_notebook.Notebook(nsx, 'recycle-bin', 'recycle bin')
+    with patch('zip_file_reader.read_json_data', autospec=True, return_value={'title': 'notebook 1'}):
+        test_notebook1 = sn_notebook.Notebook(nsx, 'note_book1')
+    with patch('zip_file_reader.read_json_data', autospec=True, return_value={'title': 'recycle bin'}):
+        test_notebook2 = sn_notebook.Notebook(nsx, 'recycle-bin')
     return {'note_book1': test_notebook1, 'recycle-bin': test_notebook2}
 
 

@@ -132,26 +132,12 @@ class NSXFile:
 
     def add_notebooks(self):
         self.logger.info(f"Creating Notebooks")
-        self._notebooks = {
-            notebook_id: Notebook(self, notebook_id, self.fetch_notebook_title(notebook_id))
-            for notebook_id in self._notebook_ids
-        }
-
-    def fetch_notebook_title(self, notebook_id):
-        self.logger.info(f"Fetching json data file {notebook_id} from {self._nsx_file_name}")
-        note_book_json = zip_file_reader.read_json_data(self._nsx_file_name, notebook_id)
-        notebook_title = note_book_json.get('title', None)
-        if notebook_title is None:
-            self.logger.warning(f"The data for notebook id '{notebook_id}' does not have a key for 'title' using 'Unknown Notebook'")
-            return 'Unknown Notebook'
-        if notebook_title == "":  # The notebook with no title is called 'My Notes' in note station
-            return "My Notebook"
-
-        return notebook_title
+        self._notebooks = {notebook_id: Notebook(self, notebook_id) for notebook_id in self._notebook_ids}
 
     def add_recycle_bin_notebook(self):
         self.logger.debug("Creating recycle bin notebook")
-        self._notebooks['recycle-bin'] = Notebook(self, 'recycle-bin', 'recycle-bin')
+        self._notebooks['recycle-bin'] = Notebook(self, 'recycle-bin')
+        self._notebooks['recycle-bin'].title = 'recycle-bin'  # set title as init will set to unknown notebook
 
     def create_export_folder_if_not_exist(self, parents=True):
         self.logger.debug("Creating export folder if it does not exist")
@@ -332,3 +318,7 @@ class NSXFile:
     @property
     def encrypted_notes(self):
         return self._encrypted_notes
+
+    @property
+    def nsx_file_name(self):
+        return self._nsx_file_name
