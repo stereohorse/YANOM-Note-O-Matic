@@ -31,8 +31,7 @@ class NotesConvertor:
     def __init__(self, args, config_data):
         self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.logger_level)
-        self.logger.debug(f"command line ars are - {args}")
-        self.logger.info(f'Program startup')
+        self.logger.info(f'Conversion startup')
         self.command_line_args = args
         self.conversion_settings = None
         self._note_page_count = 0

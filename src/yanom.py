@@ -17,7 +17,7 @@ def what_module_is_this():
     return __name__
 
 
-def command_line_parser(args):
+def command_line_parser(args, logger):
     parser = argparse.ArgumentParser(description="YANOM Note-O-Matic notes convertor")
 
     parser.add_argument('-v', '--version', action='version', version='%(prog)s Version {}'.format(config.VERSION))
@@ -44,7 +44,9 @@ def command_line_parser(args):
                                      help="Use interactive command line interface to choose options and settings. "
                                           "This is the default if no argument is provided.")
 
-    return vars(parser.parse_args(args))
+    command_line_args = vars(parser.parse_args(args))
+    logger.info(f"Commnad line argumenrts used are '{command_line_args}'")
+    return command_line_args
 
 
 def set_logging_level(log_level: str, logger):
@@ -111,16 +113,21 @@ def setup_logging(working_path):
 def main(command_line_sys_argv=sys.argv):
     working_directory, working_directory_message = find_working_directory()
     logger = setup_logging(working_directory)
+    logger.info('\n\n\n\n\n\n')
+    logger.info(f'YANOM startup - version {config.VERSION}\n')
     logger.debug(working_directory_message)
-    args = command_line_parser(command_line_sys_argv[1:])
-    set_logging_level(args['log'], logger)
-    config.set_silent(args['silent'])
-    return args
+    command_line_args = command_line_parser(command_line_sys_argv[1:], logger)
+    set_logging_level(command_line_args['log'], logger)
+    config.set_silent(command_line_args['silent'])
+    run_yanom(command_line_args)
 
 
-if __name__ == '__main__':
-    command_line_args = main()
+def run_yanom(command_line_args):
     config_data = ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
     config_data.parse_config_file()
     notes_converter = NotesConvertor(command_line_args, config_data)
     notes_converter.convert_notes()
+
+
+if __name__ == '__main__':
+    main()

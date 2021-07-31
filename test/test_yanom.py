@@ -1,3 +1,4 @@
+from mock import patch
 from pathlib import Path
 import pytest
 import logging
@@ -45,8 +46,9 @@ def test_set_logging_level_invalid_arg(tmp_path, caplog):
         (['--source', 'Notes'], ('source', 'Notes')),
         ]
 )
-def test_command_line_parser(command_line_args, expected):
-    args = yanom.command_line_parser(command_line_args)
+def test_command_line_parser(command_line_args, expected, tmp_path):
+    logger = yanom.setup_logging(tmp_path)
+    args = yanom.command_line_parser(command_line_args, logger)
     assert args[expected[0]] == expected[1]
 
 
@@ -56,9 +58,10 @@ def test_command_line_parser(command_line_args, expected):
         (['-i', '-c'], '2'),
         ]
 )
-def test_command_line_parser_bad_args(command_line_args, value):
+def test_command_line_parser_bad_args(command_line_args, value, tmp_path):
+    logger = yanom.setup_logging(tmp_path)
     with pytest.raises(SystemExit) as exc:
-        args = yanom.command_line_parser(command_line_args)
+        args = yanom.command_line_parser(command_line_args, logger)
     assert isinstance(exc.type, type(SystemExit))
     assert str(exc.value) == value
 
@@ -107,13 +110,14 @@ def test_setup_logging_loggers_logging(tmp_path, caplog):
 
 
 def test_configure_environment_debug(caplog):
-    command_line_sys_argv = ["pytest", "-l", "debug"]
-    yanom.main(command_line_sys_argv)
-    assert config.logger_level == logging.DEBUG
+    with patch("yanom.run_yanom", autospec=True):
+        yanom.main(["pytest", "-l", "debug"])
+        assert config.logger_level == logging.DEBUG
 
 
 def test_configure_environment(caplog):
-    config.logger_level = logging.DEBUG
-    command_line_sys_argv = ["pytest"]
-    yanom.main(command_line_sys_argv)
-    assert config.logger_level == logging.INFO
+    with patch("yanom.run_yanom", autospec=True):
+        config.logger_level = logging.DEBUG
+        command_line_sys_argv = ["pytest"]
+        yanom.main(command_line_sys_argv)
+        assert config.logger_level == logging.INFO
