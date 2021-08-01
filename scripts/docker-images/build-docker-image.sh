@@ -1,6 +1,6 @@
 #! /bin/bash
 # USAGE
-# Run this script from the root of YANOM project `bash scripts/build-docker-image.sh test 2`
+# Run this script from the root of YANOM project `bash scripts/docker-images/build-docker-image.sh test 2`
 # The script takes two arguments -
 # First argument is either `push` or `test` push pushes built production image to docker hub if already logged in
 # if `test` is used then images are NOT pushed to docker hub and a container is run using a data directory with the
@@ -24,10 +24,6 @@ if [ "$2" ] && [ "$2" -gt 0 ]
 then
   BUILD_NUMBER=$2
 fi
-# refresh requirements.txt  this adds time to build but helps when forget to update requirements!
-echo updating requirements.txt
-pipenv lock --requirements > requirements.txt
-
 # copy in required dockerignore file
 cp $DEV_DOCKERFILE_PATH/.dockerignore .dockerignore
 

@@ -13,6 +13,33 @@ There is a script `scripts/build-docker-image.sh` that will automate the process
 
 ## Additional files in this folder
 `.dockerignore` can be used to minimise the ammount coppied to the image
-`yanom.spec` is a yanom.spec file that is used by pyinstaller inside the docker image.  Note- a generic yanom.spec can not be created on the fly as pyinstaller can not find `pyfiglets` without a path in the `data` entry of the spec file.
+`yanom.spec` is a yanom.spec file that is used by pyinstaller inside the docker image.  
 
-`datas=[('/usr/local/lib/python3.9/site-packages/pyfiglet', './pyfiglet')],`
+Note- a generic yanom.spec can not be created on the fly as pyinstaller can not find `pyfiglets` or 
+
+Modifications are in the dats line and 3 lines related to hidden imports
+
+
+
+
+Add value to `datas` to find the `pyfiglet` fonts
+
+```
+datas=[('/usr/local/lib/python3.9/site-packages/pyfiglet', './pyfiglet')],
+```
+
+# Modification 2
+Add an entry for hidden import.  The module `pandas.plotting._matplotlib` was not located during builds.
+At the top of the spec file add
+
+```
+from PyInstaller.utils.hooks import collect_submodules
+
+hidden_imports_pandas=collect_submodules('pandas.plotting._matplotlib')
+```
+
+And in the analysis section set `hiddenimports` to
+
+```
+hiddenimports=hidden_imports_pandas,
+```

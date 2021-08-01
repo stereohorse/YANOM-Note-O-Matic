@@ -4,15 +4,15 @@
 VERSION="1.3.3"
 #
 cp scripts/mac-osx-build/yanom.spec src/yanom.spec
-pipenv shell
-cd src
+source venv/bin/activate
+cd src || exit
 rm -rf dist
-pyinstaller --clean yanom.spec
+pyinstaller --clean --noconfirm yanom.spec
 mkdir dist/yanom/data
 cp config.ini dist/yanom/data/config.ini
 mkdir dist/yanom/pandoc
 cp /usr/local/bin/pandoc dist/yanom/pandoc/pandoc
-cd dist
+cd dist || exit
 zip -r yanom-v"$VERSION"-osx-10.15.7.zip ./yanom
 cp yanom-v"$VERSION"-osx-10.15.7.zip ../../dist
 cd ../..
