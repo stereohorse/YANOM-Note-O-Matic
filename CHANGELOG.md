@@ -9,7 +9,7 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Increment the major version when significantly overhaul the user interface, or rewrite all internals.
 
 
-## [1.3.3] - 2021-07-31
+## [1.3.3] - 2021-08-01
 
 ### Added
 - Mouse support in the interactive command line questions.
