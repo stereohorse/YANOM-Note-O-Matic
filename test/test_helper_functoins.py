@@ -93,10 +93,12 @@ def test_find_working_directory_when_frozen():
         (" dir1/dir2/file.txt ", True, "dir1-dir2-file.txt"),
         (" .file.txt ", True, "file.txt"),
         (" COM1.txt ", True, "com1.txt"),
-        ("a-directory-with-dot.in_it", True, "a-directory-with-dot.in_it"),
-        ("a-directory-with.three.dots.in_it", True, "a-directory-withthreedots.in_it"),
+        ("a-file-with-dot.in_it", True, "a-file-with-dot.in_it"),
+        ("a-file-with.three.dots.in_it", True, "a-file-withthreedots.in_it"),
         ("1234567890123456789012345678901234567890", True, "1234567890123456789012345678901234567890"),
         ("!!!file.!!!txt", False,'file.txt'),
+        ("123.45 - Probeer : dit eens", False,'123.45-probeer-dit-eens'),
+        ("123.45 - Probeer : dit eens.html", False,'12345-probeer-dit-eens.html'),
     ]
 )
 def test_generate_clean_filename(value, allow_unicode, expected):
