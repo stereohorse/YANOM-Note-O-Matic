@@ -1,5 +1,4 @@
-import os
-from pathlib import Path, PurePosixPath, PureWindowsPath
+from pathlib import Path
 import re
 import sys
 
@@ -129,11 +128,9 @@ def test_generate_clean_filename(value, allow_unicode, expected, tmp_path):
 )
 def test_generate_clean_filename_force_windows_long_name(string_to_test, allow_unicode, expected, monkeypatch):
 
-    with monkeypatch.context() as m:
-        m.setattr(os, 'name', 'nt')
-        result = helper_functions.generate_clean_filename(string_to_test, 32, allow_unicode=allow_unicode, path_class=PureWindowsPath)
+    result = helper_functions.generate_clean_filename(string_to_test, 32, allow_unicode=allow_unicode)
 
-        assert result == expected
+    assert result == expected
 
 @pytest.mark.parametrize(
     'string_to_test, allow_unicode, expected', [
@@ -148,13 +145,11 @@ def test_generate_clean_filename_force_windows_long_name(string_to_test, allow_u
         '12345678901234567890123456789012'),
     ]
 )
-def test_generate_clean_directory_name_force_windows_long_name(string_to_test, allow_unicode, expected, monkeypatch):
+def test_generate_clean_directory_name_force_windows_long_name(string_to_test, allow_unicode, expected):
 
-    with monkeypatch.context() as m:
-        m.setattr(os, 'name', 'nt')
-        result = helper_functions.generate_clean_directory_name(string_to_test, 32, allow_unicode=allow_unicode, path_class=PureWindowsPath)
+    result = helper_functions.generate_clean_directory_name(string_to_test, 32, allow_unicode=allow_unicode)
 
-        assert result == expected
+    assert result == expected
 
 
 @pytest.mark.parametrize(
@@ -169,7 +164,7 @@ def test_generate_clean_directory_name_force_windows_long_name(string_to_test, a
 )
 def test_generate_clean_filename_empty_strings(string_to_test, allow_unicode, expected, monkeypatch):
 
-    result = helper_functions.generate_clean_filename(string_to_test, 64, allow_unicode=allow_unicode)
+    result = helper_functions.generate_clean_directory_name(string_to_test, 64, allow_unicode=allow_unicode)
 
     # replace the generated 6 char value with placeholder text to allow comparison
     regex = r"[a-zA-Z]{6}"
@@ -195,9 +190,8 @@ def test_generate_clean_filename_empty_strings(string_to_test, allow_unicode, ex
         ("COM1.txt", True, "_COM1.txt"),
     ]
 )
-def test_generate_clean_directory_name(string_to_test, allow_unicode, expected, monkeypatch, tmp_path):
-    monkeypatch.setattr(os, 'name', 'posix')
-    result = helper_functions.generate_clean_directory_name(string_to_test, 64, allow_unicode=allow_unicode, path_class=PurePosixPath)
+def test_generate_clean_directory_name(string_to_test, allow_unicode, expected, tmp_path):
+    result = helper_functions.generate_clean_directory_name(string_to_test, 64, allow_unicode=allow_unicode)
 
     assert result == expected
 
@@ -211,11 +205,11 @@ def test_generate_clean_directory_name(string_to_test, allow_unicode, expected, 
         ("???", False, '6-chars-replaced'),
         (".", False, '6-chars-replaced'),
         ("..", False, '6-chars-replaced'),
+        (".hello", False, 'hello'),
     ]
 )
-def test_generate_clean_directory_name_empty_string(string_to_test, allow_unicode, expected, monkeypatch):
-    monkeypatch.setattr(os, 'name', 'posix')
-    result = helper_functions.generate_clean_directory_name(string_to_test, 64, allow_unicode=allow_unicode, path_class=PurePosixPath)
+def test_generate_clean_directory_name_empty_string(string_to_test, allow_unicode, expected):
+    result = helper_functions.generate_clean_directory_name(string_to_test, 64, allow_unicode=allow_unicode)
 
     # replace the generated 6 char value with placeholder text to allow comparison
     regex = r"[a-zA-Z]{6}"

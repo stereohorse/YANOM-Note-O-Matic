@@ -34,7 +34,7 @@ def find_working_directory(is_frozen=getattr(sys, 'frozen', False)) -> Tuple[Pat
     return current_directory_path, message
 
 
-def generate_clean_filename(filename, max_length, allow_unicode=False, path_class=PurePath) -> str:
+def generate_clean_filename(filename, max_length, allow_unicode=True) -> str:
     """
     Clean a file name.
 
@@ -57,34 +57,17 @@ def generate_clean_filename(filename, max_length, allow_unicode=False, path_clas
     max_length: int
         Maximum string length to return.
     allow_unicode: bool
-        If True unicode characters are maintained.  Default = False.
-    path_class: PurePath class PurePath or PureWindowsPath, or PurePosixPath.
+        If True unicode characters are maintained.  Default = True.
 
     Returns
     =======
     str
 
     """
-
-    filename = str(filename)
-
-    if not filename:  # empty string
-        return get_random_string(6)
-
-    filename = filename.lstrip('.')
-    filename = unquote_plus(filename)
-    filename = replace_slashes(filename)
-    parts = split_string_to_file_parts(path_class, filename)
-    parts = clean_path_parts(allow_unicode, parts)
-    parts = prepend_reserved_windows_names(parts)
-    parts = add_random_string_to_any_empty_path_parts(parts)
-    parts = shorten_filename(parts, max_length)
-    clean_filename = join_name_parts(parts)
-
-    return clean_filename
+    return _clean_file_or_directory_name(filename, max_length, allow_unicode, is_file=True)
 
 
-def generate_clean_directory_name(directory_name, max_length, allow_unicode=False, path_class=PurePath) -> str:
+def generate_clean_directory_name(directory_name: str, max_length: int, allow_unicode=True) -> str:
     """
     Clean a directory name.
 
@@ -106,25 +89,37 @@ def generate_clean_directory_name(directory_name, max_length, allow_unicode=Fals
     max_length: int
         Maximum string length to return.
     allow_unicode: bool
-        If True unicode characters are maintained.  Default = False.
-    path_class: PurePath class PurePath or PureWindowsPath, or PurePosixPath.
+        If True unicode characters are maintained.  Default = True.
 
     Returns
     =======
     str
 
     """
-    if not directory_name or directory_name == '.' or directory_name == '..':
+    return _clean_file_or_directory_name(directory_name, max_length, allow_unicode, is_file=False)
+
+
+def _clean_file_or_directory_name(dirty_name: str, max_length: int, allow_unicode=False, is_file=True) -> str:
+    if not dirty_name or dirty_name == '.' or dirty_name == '..':
         return get_random_string(6)
 
-    directory_name = unquote_plus(directory_name)
-    directory_name = replace_slashes(directory_name)
-    parts = [path_class(directory_name).parts[-1]]
+    dirty_name = dirty_name.strip(' ')  # strip leading and trailing spaces
+    dirty_name = dirty_name.lstrip('.')
+    dirty_name = unquote_plus(dirty_name)
+    dirty_name = replace_slashes(dirty_name)
+    parts = dirty_name.split('.')
     parts = clean_path_parts(allow_unicode, parts)
+    parts = prepend_reserved_windows_names(parts)
     parts = add_random_string_to_any_empty_path_parts(parts)
-    parts = shorten_directory_name(parts, max_length)
-    parts = prepend_reserved_windows_names(split_string_to_file_parts(path_class, parts[0]))
-    clean_directory_name = join_name_parts(parts)
+
+    if is_file:
+        parts = shorten_filename(parts, max_length)
+        clean_filename = join_name_parts(parts)
+
+        return clean_filename
+
+    dirty_name = join_name_parts(parts)
+    clean_directory_name = shorten_directory_name(dirty_name, max_length)
 
     return clean_directory_name
 
@@ -132,8 +127,8 @@ def generate_clean_directory_name(directory_name, max_length, allow_unicode=Fals
 def join_name_parts(parts):
 
     if len(parts) > 1:
-        parts[1] = parts[1].lstrip('.')
-        new_path_part_name = f"{parts[0]}.{parts[1]}"
+        parts[-1] = parts[-1].lstrip('.')
+        new_path_part_name = '.'.join(parts)
     else:
         new_path_part_name = f"{parts[0]}"
 
@@ -188,12 +183,10 @@ def add_random_string_to_any_empty_path_parts(parts):
 
 
 def strip_unwanted_chars_from_path_part(raw_part):
-    # Remove any non a-z 0-9 or dash
-    # raw_part = re.sub(r'[^\w\s-]', '', raw_part.lower())
-
     cleaned_part = "".join(character for character in raw_part if character not in r'<>:"/\|?*')
 
-    # Remove spaces and multiple dashes and replace with single dash then srtrip leading and trialing chars and make all lower
+    # Remove spaces and multiple dashes and replace with single dash
+    # then strip leading and trialing chars
     cleaned_part = re.sub(r'[-\s]+', '-', cleaned_part).strip('-_.')
 
     return cleaned_part
@@ -254,8 +247,8 @@ def shorten_filename(parts, max_length):
     return parts
 
 
-def shorten_directory_name(parts, max_length):
-    return [part[:max_length] for part in parts]
+def shorten_directory_name(name, max_length):
+    return name[:max_length]
 
 
 def find_valid_full_file_path(path_to_file: Path) -> Path:

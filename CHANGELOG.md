@@ -12,8 +12,10 @@ and this project follows something close to [Semantic Versioning](https://semver
 ## [1.4.0] - developing
 
 ### Added
-- File and directory name cleaning allows any characters ecept null and windows reserved characters and windows reserved file names.
-- 
+- Updated file and directory name cleaning.
+  - Allows any characters except null and Windows reserved characters 
+  - Windows reserved file names are prepended with underscore on all operating systems.
+  - Spaces are replaced by dash.
 
 ## [1.3.3] - 2021-08-01
 
