@@ -83,8 +83,8 @@ def test_find_working_directory_when_frozen():
         ("-file.txt_", True, "file.txt"),
         (" file.txt ", True, "file.txt"),
         (" file.txt ", True, "file.txt"),
-        (" f¥le.txt ", True, "fle.txt"),
-        (" part1.part2.txt ", True, "part1part2.txt"),
+        (" f¥le.txt ", True, "f¥le.txt"),
+        (" part1.part2.txt ", True, "part1.part2.txt"),
         (" part1 part2.txt ", True, "part1-part2.txt"),
         (" 漢語.txt ", True, "漢語.txt"),
         (" 漢語%20file.txt ", True, "漢語-file.txt"),
@@ -92,20 +92,27 @@ def test_find_working_directory_when_frozen():
         (" 漢語-should ignore the two leading chars.txt ", False, "should-ignore-the-two-leading-chars.txt"),
         (" dir1/dir2/file.txt ", True, "dir1-dir2-file.txt"),
         (" .file.txt ", True, "file.txt"),
-        (" COM1.txt ", True, "com1.txt"),
+        (" COM1.txt ", True, "_COM1.txt"),
+        (" com1.txt ", True, "_com1.txt"),
+        ("com1", True, "_com1"),
         ("a-file-with-dot.in_it", True, "a-file-with-dot.in_it"),
-        ("a-file-with.three.dots.in_it", True, "a-file-withthreedots.in_it"),
+        ("a-file-with.three.dots.in_it", True, "a-file-with.three.dots.in_it"),
         ("1234567890123456789012345678901234567890", True, "1234567890123456789012345678901234567890"),
-        ("!!!file.!!!txt", False,'file.txt'),
-        ("123.45 - Probeer : dit eens", False,'123.45-probeer-dit-eens'),
-        ("123.45 - Probeer : dit eens.html", False,'12345-probeer-dit-eens.html'),
+        ("!!!file.!!!txt", False,'!!!file.!!!txt'),
+        ("123.45 - Probeer : dit eens", True,'123.45-Probeer-dit-eens'),
+        ("123.45 - Probeer : dit eens.html", True,'123.45-Probeer-dit-eens.html'),
     ]
 )
-def test_generate_clean_filename(value, allow_unicode, expected):
+def test_generate_clean_filename(value, allow_unicode, expected, tmp_path):
 
     result = helper_functions.generate_clean_filename(value, 64, allow_unicode=allow_unicode)
 
     assert result == expected
+
+    Path(tmp_path, result).touch()
+
+    assert Path(tmp_path, result).exists()
+
 
 @pytest.mark.parametrize(
     'string_to_test, allow_unicode, expected', [
@@ -135,7 +142,7 @@ def test_generate_clean_filename_force_windows_long_name(string_to_test, allow_u
         '12345678901234567890123456789012'),
         ("12345678901234567890.1234567890123456789012345678901234567890123456789.012345678901234567890",
         False,
-        '12345678901234567890-12345678901'),
+        '12345678901234567890.12345678901'),
         ("123456789012345678901234567890123456789012345678901234567890123456789.0123",
         False,
         '12345678901234567890123456789012'),
@@ -153,9 +160,11 @@ def test_generate_clean_directory_name_force_windows_long_name(string_to_test, a
 @pytest.mark.parametrize(
     'string_to_test, allow_unicode, expected', [
         ("", False, '6-chars-replaced'),
+        (".", False, '6-chars-replaced'),
+        ("..", False, '6-chars-replaced'),
         (".txt", False, 'txt'),  # this is not an empty string as is read as a hidden file name (stem) and dot is stripped off
-        ("file.!!!", False, 'file.6-chars-replaced'),
-        ("!!!.!!!", False, '6-chars-replaced.6-chars-replaced'),
+        ("file.???", False, 'file.6-chars-replaced'),
+        ("???.???", False, '6-chars-replaced.6-chars-replaced'),
     ]
 )
 def test_generate_clean_filename_empty_strings(string_to_test, allow_unicode, expected, monkeypatch):
@@ -179,23 +188,29 @@ def test_generate_clean_filename_empty_strings(string_to_test, allow_unicode, ex
         '1234567890123456789012345678901234567890123456789012345678901234'),
         ("123456789012345678901234567890123456789012345678901234567890.12345678901234",
         False,
-        '123456789012345678901234567890123456789012345678901234567890-123'),
-        (" 漢語-unicode-dir.dir ", True, "漢語-unicode-dir-dir"),
-        (" 漢語%20unicode+dir.dir ", True, "漢語-unicode-dir-dir"),
+        '123456789012345678901234567890123456789012345678901234567890.123'),
+        (" 漢語-unicode-dir.dir ", True, "漢語-unicode-dir.dir"),
+        (" 漢語%20unicode+dir.dir ", True, "漢語-unicode-dir.dir"),
         (" /dir 1/dir 2/dir 3 ", True, "dir-1-dir-2-dir-3"),
+        ("COM1.txt", True, "_COM1.txt"),
     ]
 )
-def test_generate_clean_directory_name(string_to_test, allow_unicode, expected, monkeypatch):
+def test_generate_clean_directory_name(string_to_test, allow_unicode, expected, monkeypatch, tmp_path):
     monkeypatch.setattr(os, 'name', 'posix')
     result = helper_functions.generate_clean_directory_name(string_to_test, 64, allow_unicode=allow_unicode, path_class=PurePosixPath)
 
     assert result == expected
 
+    Path(tmp_path, result).mkdir()
+
+    assert Path(tmp_path, result).exists()
 
 @pytest.mark.parametrize(
     'string_to_test, allow_unicode, expected', [
         ("", False, '6-chars-replaced'),
-        ("!!!", False, '6-chars-replaced'),
+        ("???", False, '6-chars-replaced'),
+        (".", False, '6-chars-replaced'),
+        ("..", False, '6-chars-replaced'),
     ]
 )
 def test_generate_clean_directory_name_empty_string(string_to_test, allow_unicode, expected, monkeypatch):

@@ -40,16 +40,15 @@ def generate_clean_filename(filename, max_length, allow_unicode=False, path_clas
 
     If the string is empty return a 6 letter lower case random string.
     Convert to ASCII if 'allow_unicode' is False.
-    Convert any forward or back slashes to dashes.
+    Replace forward and backslash with dash.
+    Remove any reserved windows characters.
     Convert spaces or repeated dashes to single dashes.
-    Remove characters that aren't alphanumerics, underscores, or hyphens. Convert to lowercase.
-    Strip leading and trailing whitespace, dashes, and underscores.
+    Strip leading and trailing whitespace, dashes, underscores and dots.
+    If the name is a reserved windows name prepend with an underscore.
     If resulting sting is empty generates a 6 letter lower case random string.
-    If final string exceeds the provided max length the file extension is trimmed to max 8 chars plus
+    If final string exceeds the provided max length the file extension is trimmed to max 8 chars
     and the main name (stem) to what ever length is left after removing length of extension from the max length
-    NOTE If a path with directories is passed these discarded. For example "dir1/dir2/file.txt" will be returned
-    as "dir1-dir2-file.txt".
-    Files with a leading '.' like .file.txt will become file.txt with no leading dot.
+    There is no consideration of the total length exceeding the OS max length for a path.
 
     Parameters
     ==========
@@ -72,19 +71,15 @@ def generate_clean_filename(filename, max_length, allow_unicode=False, path_clas
     if not filename:  # empty string
         return get_random_string(6)
 
+    filename = filename.lstrip('.')
     filename = unquote_plus(filename)
-
     filename = replace_slashes(filename)
-
     parts = split_string_to_file_parts(path_class, filename)
-
     parts = clean_path_parts(allow_unicode, parts)
-
+    parts = prepend_reserved_windows_names(parts)
     parts = add_random_string_to_any_empty_path_parts(parts)
-
     parts = shorten_filename(parts, max_length)
-
-    clean_filename = join_file_name_parts(parts)
+    clean_filename = join_name_parts(parts)
 
     return clean_filename
 
@@ -95,11 +90,10 @@ def generate_clean_directory_name(directory_name, max_length, allow_unicode=Fals
 
     If the string is empty return a 6 letter lower case random string.
     Convert to ASCII if 'allow_unicode' is False.
-    Convert any forward or back slashes to dashes.
-    Replace any dots with a dash.
+    Remove any reserved windows characters.
     Convert spaces or repeated dashes to single dashes.
-    Remove characters that aren't alphanumerics, underscores, or hyphens. Convert to lowercase.
     Strip leading and trailing whitespace, dashes, and underscores.
+    If the name is a reserved windows name prepend with an underscore.
     If resulting sting is empty generates a 6 letter lower case random string.
     If any directory exceeds the provided max length it is trimmed to max_length
     There is no consideration of the total length exceeding the OS max length for a path.
@@ -120,23 +114,25 @@ def generate_clean_directory_name(directory_name, max_length, allow_unicode=Fals
     str
 
     """
-    if not directory_name:  # empty string
+    if not directory_name or directory_name == '.' or directory_name == '..':
         return get_random_string(6)
+
     directory_name = unquote_plus(directory_name)
     directory_name = replace_slashes(directory_name)
-    directory_name = directory_name.replace('.', '-')
     parts = [path_class(directory_name).parts[-1]]
     parts = clean_path_parts(allow_unicode, parts)
     parts = add_random_string_to_any_empty_path_parts(parts)
     parts = shorten_directory_name(parts, max_length)
-    clean_directory_name = os.path.join(*parts)
+    parts = prepend_reserved_windows_names(split_string_to_file_parts(path_class, parts[0]))
+    clean_directory_name = join_name_parts(parts)
 
     return clean_directory_name
 
 
-def join_file_name_parts(parts):
+def join_name_parts(parts):
 
     if len(parts) > 1:
+        parts[1] = parts[1].lstrip('.')
         new_path_part_name = f"{parts[0]}.{parts[1]}"
     else:
         new_path_part_name = f"{parts[0]}"
@@ -156,6 +152,33 @@ def clean_path_parts(allow_unicode, parts):
     return parts
 
 
+def prepend_reserved_windows_names(parts: list):
+    """
+    Prepend the first part of a file or directory name with underscore if that name part is a reserved windows name.
+
+    The prepend is applied in all operating systems.
+
+    Parameters
+    ==========
+    parts : list
+        list of parts making up the name.  parts in the list are in order i.e. part[0] is the first part
+
+    Returns
+    =======
+    list:
+        list of parts modified if required
+
+    """
+
+    reserved_names = {'con', 'prn', 'aux', 'nul', 'com1', 'com2', 'com3', 'com4', 'com5', 'com6', 'com7', 'com8',
+                      'com9', 'lpt1', 'lpt2', 'lpt3', 'lpt4', 'lpt5', 'lpt6', 'lpt7', 'lpt8', 'lpt9'}
+
+    if parts[0].lower() in reserved_names:
+        parts[0] = f'_{parts[0]}'
+
+    return parts
+
+
 def add_random_string_to_any_empty_path_parts(parts):
     for i in range(len(parts)):
         if not len(parts[i]):
@@ -165,8 +188,13 @@ def add_random_string_to_any_empty_path_parts(parts):
 
 
 def strip_unwanted_chars_from_path_part(raw_part):
-    raw_part = re.sub(r'[^\w\s-]', '', raw_part.lower())
-    cleaned_part = re.sub(r'[-\s]+', '-', raw_part).strip('-_')
+    # Remove any non a-z 0-9 or dash
+    # raw_part = re.sub(r'[^\w\s-]', '', raw_part.lower())
+
+    cleaned_part = "".join(character for character in raw_part if character not in r'<>:"/\|?*')
+
+    # Remove spaces and multiple dashes and replace with single dash then srtrip leading and trialing chars and make all lower
+    cleaned_part = re.sub(r'[-\s]+', '-', cleaned_part).strip('-_.')
 
     return cleaned_part
 
@@ -175,7 +203,9 @@ def process_path_part_for_unicode(allow_unicode, raw_part):
     if allow_unicode:
         cleaned_part = unicodedata.normalize('NFKC', raw_part)
     else:
-        cleaned_part = unicodedata.normalize('NFKD', raw_part).encode('ascii', 'ignore').decode('ascii')
+        cleaned_part = unicodedata.normalize('NFKD', raw_part)
+        cleaned_part = cleaned_part.encode('ascii', 'ignore')
+        cleaned_part = cleaned_part.decode('ascii')
 
     return cleaned_part
 
@@ -186,6 +216,9 @@ def split_string_to_file_parts(path_class, path_to_clean):
         parts.append(str(path_class(path_to_clean).stem))
     if path_class(path_to_clean).suffix:
         parts.append(str(path_class(path_to_clean).suffix))
+
+    if not parts:
+        parts.append(get_random_string(6))
 
     return parts
 
