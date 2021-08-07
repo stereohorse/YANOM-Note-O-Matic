@@ -7,7 +7,7 @@ import config
 # import yanom
 import helper_functions
 
-logger = logging.getLogger(f'{config.APP_NAME}.{__name__}')
+logger = logging.getLogger(f'{config.yanom_globals.app_name}.{__name__}')
 logger.setLevel(config.yanom_globals.logger_level)
 
 
@@ -74,6 +74,6 @@ def _error_handling(e, target_filename, zip_filename):
 
     logger.error(msg)
     logger.error(traceback_text)
-    if not config.silent:
+    if not config.yanom_globals.is_silent:
         print(msg)
 

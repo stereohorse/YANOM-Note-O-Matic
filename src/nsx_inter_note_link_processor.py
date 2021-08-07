@@ -22,7 +22,7 @@ class NSXInterNoteLinkProcessor:
     """
 
     def __init__(self):
-        self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._raw_note_links = []
         self._replacement_links = []
@@ -35,7 +35,7 @@ class NSXInterNoteLinkProcessor:
         """
 
         def __init__(self, raw_link, source_note):
-            self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
+            self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
             self.logger.setLevel(config.yanom_globals.logger_level)
             self._raw_link = raw_link
             self._text = re.findall(r'<a href="notestation://[^>]*>([^<]*)</a>', raw_link)[0]

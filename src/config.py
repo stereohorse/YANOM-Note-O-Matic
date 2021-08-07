@@ -2,11 +2,6 @@ import logging
 
 import helper_functions
 
-APP_NAME = 'YANOM'
-APP_SUB_NAME = 'Note-O-Matic'
-VERSION = '1.3.3'
-DATA_DIR = 'data'
-
 
 class YanomGlobals:
     def __init__(self):
@@ -15,6 +10,11 @@ class YanomGlobals:
         self._default_attachment_folder = 'attachments'
         self._default_export_folder = 'notes'
         self._logger_level = logging.INFO
+        self._is_silent = False
+        self._data_dir = 'data'
+        self._version = '1.3.3'
+        self._app_sub_name = 'Note-O-Matic'
+        self._app_name = 'YANOM'
 
     @property
     def path_part_max_length(self):
@@ -39,21 +39,30 @@ class YanomGlobals:
     def logger_level(self, value: int):
         self._logger_level = value
 
+    @property
+    def is_silent(self):
+        return self._is_silent
+
+    @is_silent.setter
+    def is_silent(self, value: bool):
+        self._is_silent = value
+
+    @property
+    def data_dir(self):
+        return self._data_dir
+
+    @property
+    def version(self):
+        return self._version
+
+    @property
+    def app_sub_name(self):
+        return self._app_sub_name
+
+    @property
+    def app_name(self):
+        return self._app_name
+
 
 yanom_globals = YanomGlobals()
 
-global logger_level
-logger_level = 20  # INFO
-
-global silent
-silent = False
-
-
-def set_logger_level(level: int):
-    global logger_level
-    logger_level = level
-
-
-def set_silent(silent_mode: bool):
-    global silent
-    silent = silent_mode

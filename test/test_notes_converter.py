@@ -64,7 +64,7 @@ def test_output_results_if_not_silent_mode_when_in_silent_mode(capsys):
     nc._image_count = 3
     nc._attachment_count = 4
 
-    config.set_silent(True)
+    config.yanom_globals.is_silent = True
 
     nc.output_results_if_not_silent_mode()
 
@@ -103,7 +103,7 @@ def test_output_results_if_not_silent_mode(capsys):
     nc._attachment_count = 4
     nc._nsx_backups = [FakeNSXFile()]
 
-    config.set_silent(False)
+    config.yanom_globals.is_silent = False
 
     nc.output_results_if_not_silent_mode()
 
@@ -133,7 +133,7 @@ def test_configure_for_ini_settings(caplog):
 def test_run_interactive_command_line_interface(caplog):
     test_source_path = str(Path(__file__).parent.absolute())
     args = {'source': test_source_path}
-    cd = config_data.ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
 
@@ -153,7 +153,7 @@ def test_evaluate_command_line_arguments_when_wil_be_interactive_command_line_us
     test_source_path = str(Path(__file__).parent.absolute())
     config.yanom_globals.logger_level = logging.DEBUG
     args = {'silent': False, 'ini': False, 'source': test_source_path}
-    cd = config_data.ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
 
     with patch('notes_converter.NotesConvertor.configure_for_ini_settings', spec=True,
@@ -182,7 +182,7 @@ def test_evaluate_command_line_arguments_when_gogin_to_use_ini_file(caplog, sile
     test_source_path = str(Path(__file__).parent.absolute())
     config.yanom_globals.logger_level = logging.DEBUG
     args = {'silent': silent, 'ini': ini, 'source': test_source_path}
-    cd = config_data.ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
 
     with patch('notes_converter.NotesConvertor.configure_for_ini_settings', spec=True,
@@ -201,7 +201,7 @@ def test_evaluate_command_line_arguments_when_gogin_to_use_ini_file(caplog, sile
 def test_update_processing_stats():
     test_source_path = str(Path(__file__).parent.absolute())
     args = {'source': test_source_path}
-    cd = config_data.ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
 
     nc.update_processing_stats(FakeNSXFile())
@@ -214,7 +214,7 @@ def test_update_processing_stats():
 def test_process_nsx_files(capsys):
     test_source_path = str(Path(__file__).parent.absolute())
     args = {'source': test_source_path}
-    cd = config_data.ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
 
     nc._nsx_backups = [FakeNSXFile()]
@@ -237,7 +237,7 @@ def test_generate_file_list_multiple_files(tmp_path, filetype):
     args = {'source': test_source_path}
     touch(Path(tmp_path, f'file1.{filetype}'))
     touch(Path(tmp_path, f'file2.{filetype}'))
-    cd = config_data.ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
     nc.conversion_settings.source = Path(tmp_path)
@@ -253,7 +253,7 @@ def test_generate_file_list_single_file_source(tmp_path):
     test_source_path = tmp_path
     args = {'source': test_source_path}
     touch(Path(tmp_path, 'file1.nsx'))
-    cd = config_data.ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
     nc.conversion_settings.source = Path(tmp_path, 'file1.nsx')
@@ -270,7 +270,7 @@ def test_convert_nsx(tmp_path, capsys):
     test_source_path = tmp_path
     args = {'source': test_source_path}
     touch(Path(tmp_path, 'file1.nsx'))
-    cd = config_data.ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
     nc.conversion_settings.source = Path(tmp_path, 'file1.nsx')
@@ -287,7 +287,7 @@ def test_convert_html(tmp_path, capsys):
     test_source_path = tmp_path
     args = {'source': test_source_path}
     touch(Path(tmp_path, 'file1.html'))
-    cd = config_data.ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
     nc.conversion_settings._source = Path(tmp_path, 'file1.html')
@@ -302,7 +302,7 @@ def test_process_files(tmp_path):
     test_source_path = tmp_path
     args = {'source': test_source_path}
     touch(Path(tmp_path, 'file1.html'))
-    cd = config_data.ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
     nc.conversion_settings._source = Path(tmp_path, 'file1.html')
@@ -323,11 +323,11 @@ def test_process_files(tmp_path):
     ]
 )
 def test_exit_if_no_files_found_with_no_file(tmp_path, caplog, silent_mode, expected_out):
-    config.set_silent(silent_mode)
+    config.yanom_globals.is_silent = silent_mode
     test_source_path = tmp_path
     args = {'source': test_source_path}
     touch(Path(tmp_path, 'file1.html'))
-    cd = config_data.ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
     nc.conversion_settings._source = Path(tmp_path)
@@ -356,7 +356,7 @@ def test_convert_markdown(tmp_path, input_file, file_converter_type, export_form
     test_source_path = tmp_path
     args = {'source': test_source_path}
     touch(Path(tmp_path, input_file))
-    cd = config_data.ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
     nc.conversion_settings._source = Path(tmp_path, input_file)
@@ -407,7 +407,7 @@ def test_convert_notes_nsx_file_type(tmp_path, capsys, caplog):
     input_file = 'file1.md'
     args = {'silent': True, 'ini': False, 'source': test_source_path}
     touch(Path(tmp_path, input_file))
-    cd = config_data.ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
     nc.conversion_settings._source = Path(tmp_path, input_file)

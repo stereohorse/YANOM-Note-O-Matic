@@ -55,6 +55,7 @@ def test_FileNSAttachment_create_file_name(raw_name, expected):
 
     assert file_attachment.file_name == Path(expected)
 
+
 def test_FileNSAttachment_get_content_to_save():
     note = Note()
     attachment_id = '1234'
@@ -73,6 +74,7 @@ def test_ImageNSAttachment_create_html_link():
     image_attachment.create_html_link()
 
     assert image_attachment.html_link == f'<img src="my_file.png" >'
+
 
 @pytest.mark.parametrize(
     'raw_name, expected', [

@@ -109,7 +109,7 @@ def test_add_recycle_bin_notebook(conv_setting, caplog):
 
 def test_create_export_folder_if_not_exist(conv_setting, caplog, tmp_path):
     config.yanom_globals.logger_level = logging.DEBUG
-    Path(tmp_path, config.DATA_DIR).mkdir()
+    Path(tmp_path, config.yanom_globals.data_dir).mkdir()
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
@@ -118,7 +118,7 @@ def test_create_export_folder_if_not_exist(conv_setting, caplog, tmp_path):
 
     nsx_fc.create_export_folder_if_not_exist()
 
-    assert Path(tmp_path, config.DATA_DIR, 'notes').exists()
+    assert Path(tmp_path, config.yanom_globals.data_dir, 'notes').exists()
 
     assert "Creating export folder if it does not exist" in caplog.messages
 
@@ -126,15 +126,15 @@ def test_create_export_folder_if_not_exist(conv_setting, caplog, tmp_path):
 def test_create_export_folder_if_not_exist_force_exception_invalid_path_missing_parent_dir(conv_setting, caplog,
                                                                                            tmp_path):
     config.yanom_globals.logger_level = logging.DEBUG
-    Path(tmp_path, config.DATA_DIR).mkdir()
+    Path(tmp_path, config.yanom_globals.data_dir).mkdir()
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
     nsx_fc.conversion_settings.working_directory = tmp_path
     nsx_fc.conversion_settings.export_folder = 'notes'
-    Path(conv_setting.working_directory, config.DATA_DIR).rmdir()  # remove a directory to
+    Path(conv_setting.working_directory, config.yanom_globals.data_dir).rmdir()  # remove a directory to
 
-    expected_error_log_caplog_message = f"Unable to create the export folder there is a problem with the path.\n[Errno 2] No such file or directory: '{Path(conv_setting.working_directory, config.DATA_DIR, nsx_fc.conversion_settings.export_folder)}'"
+    expected_error_log_caplog_message = f"Unable to create the export folder there is a problem with the path.\n[Errno 2] No such file or directory: '{Path(conv_setting.working_directory, config.yanom_globals.data_dir, nsx_fc.conversion_settings.export_folder)}'"
 
     with pytest.raises(SystemExit):
         nsx_fc.create_export_folder_if_not_exist(parents=False)  # use parents false to force error
@@ -145,16 +145,16 @@ def test_create_export_folder_if_not_exist_force_exception_invalid_path_missing_
 
 def test_create_export_folder_if_not_exist_force_exception_directory_already_exists(conv_setting, caplog, tmp_path):
     config.yanom_globals.logger_level = logging.DEBUG
-    Path(tmp_path, config.DATA_DIR).mkdir()
+    Path(tmp_path, config.yanom_globals.data_dir).mkdir()
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
     nsx_fc.conversion_settings.working_directory = tmp_path
     nsx_fc.conversion_settings.export_folder = 'notes'
 
-    Path(conv_setting.working_directory, config.DATA_DIR, 'notes').mkdir()  # make exist
+    Path(conv_setting.working_directory, config.yanom_globals.data_dir, 'notes').mkdir()  # make exist
 
-    expected_error_log_caplog_message = f"Export folder already exists - '{Path(conv_setting.working_directory, config.DATA_DIR, 'notes')}'"
+    expected_error_log_caplog_message = f"Export folder already exists - '{Path(conv_setting.working_directory, config.yanom_globals.data_dir, 'notes')}'"
 
     nsx_fc.create_export_folder_if_not_exist()  # use parents false to force error
 
@@ -169,17 +169,17 @@ def test_create_export_folder_if_not_exist_force_exception_directory_already_exi
 )
 def test_create_export_folder_if_not_exist_force_exception_path_is_to_existing_file(silent, expected_out, conv_setting, caplog, capsys, tmp_path):
     config.yanom_globals.logger_level = logging.DEBUG
-    config.set_silent(silent)
-    Path(tmp_path, config.DATA_DIR).mkdir()
+    config.yanom_globals.is_silent = silent
+    Path(tmp_path, config.yanom_globals.data_dir).mkdir()
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
     nsx_fc.conversion_settings.working_directory = tmp_path
     nsx_fc.conversion_settings.export_folder = 'notes'
 
-    Path(conv_setting.working_directory, config.DATA_DIR, 'notes').touch()  # make exist as a file
+    Path(conv_setting.working_directory, config.yanom_globals.data_dir, 'notes').touch()  # make exist as a file
 
-    expected_error_log_caplog_message = f"Unable to create the export folder because path is to an existing file not a directory.\n[Errno 17] File exists: '{Path(conv_setting.working_directory, config.DATA_DIR, 'notes')}'"
+    expected_error_log_caplog_message = f"Unable to create the export folder because path is to an existing file not a directory.\n[Errno 17] File exists: '{Path(conv_setting.working_directory, config.yanom_globals.data_dir, 'notes')}'"
 
     with pytest.raises(SystemExit):
         nsx_fc.create_export_folder_if_not_exist()
@@ -202,12 +202,12 @@ def test_create_notebook_folders(conv_setting, caplog, tmp_path, nsx):
 
     assert "Creating folders for notebooks" in caplog.messages
     assert nsx_fc.notebooks['1234'].folder_name == Path('Unknown Notebook')
-    assert Path(tmp_path, config.DATA_DIR, conv_setting.export_folder, 'Unknown Notebook').exists()
-    assert Path(tmp_path, config.DATA_DIR, conv_setting.export_folder, 'Unknown Notebook',
+    assert Path(tmp_path, config.yanom_globals.data_dir, conv_setting.export_folder, 'Unknown Notebook').exists()
+    assert Path(tmp_path, config.yanom_globals.data_dir, conv_setting.export_folder, 'Unknown Notebook',
                 conv_setting.attachment_folder_name).exists()
 
 
-def test_create_notebook_folders_force_fail_to_create_attachment_folder(conv_setting, caplog, capsys, tmp_path, nsx, monkeypatch):
+def test_create_notebook_folders_force_fail_to_create_attachment_folder(conv_setting, caplog, nsx, monkeypatch):
     config.yanom_globals.logger_level = logging.DEBUG
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
@@ -224,12 +224,12 @@ def test_create_notebook_folders_force_fail_to_create_attachment_folder(conv_set
     assert "Creating folders for notebooks" in caplog.messages
     # confirm notebook folder was created
     assert Path(conv_setting.working_directory,
-                config.DATA_DIR,
+                config.yanom_globals.data_dir,
                 nsx_fc.conversion_settings.export_folder,
                 nsx_fc._notebooks['1234'].folder_name).exists()
     # confirm the attachment folder was not created
     assert not Path(conv_setting.working_directory,
-                    config.DATA_DIR,
+                    config.yanom_globals.data_dir,
                     nsx_fc.conversion_settings.export_folder,
                     nsx_fc._notebooks['1234'].folder_name,
                     nsx_fc.conversion_settings.attachment_folder_name).exists()
@@ -255,7 +255,7 @@ def test_remove_notebooks_to_be_skipped(conv_setting, nsx):
 )
 def test_add_note_pages(conv_setting, caplog, silent_mode):
     config.yanom_globals.logger_level = logging.DEBUG
-    config.set_silent(silent_mode)
+    config.yanom_globals.is_silent = silent_mode
 
     nsx_fc = nsx_file_converter.NSXFile(Path('fake_file'), conv_setting, 'fake_pandoc_converter')
 
@@ -285,7 +285,7 @@ def test_add_note_pages(conv_setting, caplog, silent_mode):
 )
 def test_add_note_pages_missing_data_in_nsx_file(conv_setting, caplog, silent_mode):
     config.yanom_globals.logger_level = logging.DEBUG
-    config.set_silent(silent_mode)
+    config.yanom_globals.is_silent = silent_mode
 
     nsx_fc = nsx_file_converter.NSXFile(Path('fake_file'), conv_setting, 'fake_pandoc_converter')
 
@@ -432,7 +432,7 @@ def test_get_note_page_ids(conv_setting):
     ]
 )
 def test_get_note_page_ids_no_ids(nsx_json_data, conv_setting, silent, expected, capsys, caplog):
-    config.set_silent(silent)
+    config.yanom_globals.is_silent = silent
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
     nsx_fc._nsx_json_data = nsx_json_data
@@ -448,7 +448,7 @@ def test_get_note_page_ids_no_ids(nsx_json_data, conv_setting, silent, expected,
     'silent_mode', [True, False]
 )
 def test_save_note_pages(notebooks, all_notes_dict, conv_setting, silent_mode):
-    config.set_silent(silent_mode)
+    config.yanom_globals.is_silent = silent_mode
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
     nsx_fc._notebooks = notebooks
     nsx_fc._note_pages = all_notes_dict
@@ -468,7 +468,7 @@ def test_save_note_pages(notebooks, all_notes_dict, conv_setting, silent_mode):
 )
 def test_store_attachments(notebooks, all_notes_dict, conv_setting, silent_mode, expected, capsys):
     with capsys.disabled():
-        config.set_silent(silent_mode)
+        config.yanom_globals.is_silent = silent_mode
         pc = pandoc_converter.PandocConverter(conv_setting)
         nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, pc)
         nsx_fc._notebooks = notebooks
@@ -512,7 +512,7 @@ def test_store_attachments_attachment_paths_are_exiting_directory(notebooks, all
             assert len(caplog.records) == 4
 
 
-def test_process_nsx_file_no_config_json(conv_setting, caplog, tmp_path):
+def test_process_nsx_file_no_config_json(conv_setting, caplog):
     pc = pandoc_converter.PandocConverter(conv_setting)
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, pc)
     with patch('nsx_file_converter.NSXFile.fetch_json_data', autospec=True, return_value=None):
@@ -521,7 +521,7 @@ def test_process_nsx_file_no_config_json(conv_setting, caplog, tmp_path):
     assert f"No config.json found in nsx file '{nsx_fc._nsx_file_name}'. Skipping nsx file" in caplog.messages
 
 
-def test_process_nsx_file_no_notebook_ids(conv_setting, caplog, tmp_path):
+def test_process_nsx_file_no_notebook_ids(conv_setting, caplog):
     pc = pandoc_converter.PandocConverter(conv_setting)
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, pc)
     with patch('nsx_file_converter.NSXFile.fetch_json_data', autospec=True, return_value={'tag': 'tag1'}):
@@ -530,7 +530,7 @@ def test_process_nsx_file_no_notebook_ids(conv_setting, caplog, tmp_path):
     assert f"No notebook ids found in nsx file '{nsx_fc._nsx_file_name}'. Skipping nsx file" in caplog.messages
 
 
-def test_process_nsx_file_no_note_page_ids(conv_setting, caplog, tmp_path):
+def test_process_nsx_file_no_note_page_ids(conv_setting, caplog):
     pc = pandoc_converter.PandocConverter(conv_setting)
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, pc)
     with patch('nsx_file_converter.NSXFile.fetch_json_data', autospec=True, return_value={'notebook': '1234', 'tag': 'tag1'}):

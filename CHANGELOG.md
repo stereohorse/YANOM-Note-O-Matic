@@ -29,6 +29,7 @@ and this project follows something close to [Semantic Versioning](https://semver
 
 ### Other Changes
 - Improved error handling around directory creation with additional messages on Windows systems where long path names are not enabled.
+- Moved global variables into a global class and use the instance object and properties for the fields.
 
 ## [1.3.3] - 2021-08-01
 

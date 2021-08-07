@@ -111,7 +111,7 @@ def test_read_json_data_bad_file_name(tmp_path, caplog, capfd):
 
 
 def test_read_json_data_bad_zip_file_name_in_silent_mode(tmp_path, caplog, capfd):
-    config.set_silent(True)
+    config.yanom_globals.is_silent = True
     zip_filename = Path(tmp_path, 'test_zip.zip')
     expected = {'key': 'value'}
     target_filename = 'file.txt'
@@ -129,7 +129,7 @@ def test_read_json_data_bad_zip_file_name_in_silent_mode(tmp_path, caplog, capfd
 
 
 def test_read_json_data_bad_file_name_in_silent_mode(tmp_path, caplog, capfd):
-    config.set_silent(True)
+    config.yanom_globals.is_silent = True
     zip_filename = Path(tmp_path, 'test_zip.zip')
     expected = {'key': 'value'}
     target_filename = 'file.txt'

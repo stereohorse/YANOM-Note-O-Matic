@@ -29,7 +29,7 @@ class NotesConvertor:
     """
 
     def __init__(self, args, config_data):
-        self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self.logger.info(f'Conversion startup')
         self.command_line_args = args
@@ -57,7 +57,7 @@ class NotesConvertor:
         self.logger.info("Processing Completed - exiting normally")
 
     def convert_markdown(self):
-        with Timer(name="md_conversion", logger=self.logger.info, silent=bool(config.silent)):
+        with Timer(name="md_conversion", logger=self.logger.info, silent=bool(config.yanom_globals.is_silent)):
             file_extension = 'md'
             md_files_to_convert = self.generate_file_list(file_extension)
             self.exit_if_no_files_found(md_files_to_convert, file_extension)
@@ -80,25 +80,25 @@ class NotesConvertor:
     def exit_if_no_files_found(self, files_to_convert, file_extension):
         if not files_to_convert:
             self.logger.info(f"No .{file_extension} files found at path {self.conversion_settings.source}. Exiting program")
-            if not config.silent:
+            if not config.yanom_globals.is_silent:
                 print(f'No .{file_extension} files found at {self.conversion_settings.source}')
             sys.exit(0)
 
     def process_files(self, files_to_convert, file_converter):
         file_count = 0
-        if not config.silent:
+        if not config.yanom_globals.is_silent:
             print(f"Processing note pages")
         with alive_bar(len(files_to_convert), bar='blocks') as bar:
             for file in files_to_convert:
                 file_converter.convert(file)
                 file_count += 1
-                if not config.silent:
+                if not config.yanom_globals.is_silent:
                     bar()
 
         self._note_page_count = file_count
 
     def convert_html(self):
-        with Timer(name="html_conversion", logger=self.logger.info, silent=bool(config.silent)):
+        with Timer(name="html_conversion", logger=self.logger.info, silent=bool(config.yanom_globals.is_silent)):
             file_extension = 'html'
             html_files_to_convert = self.generate_file_list(file_extension)
             self.exit_if_no_files_found(html_files_to_convert, file_extension)
@@ -114,7 +114,7 @@ class NotesConvertor:
         self.process_nsx_files()
 
     def process_nsx_files(self):
-        with Timer(name="nsx_conversion", logger=self.logger.info, silent=bool(config.silent)):
+        with Timer(name="nsx_conversion", logger=self.logger.info, silent=bool(config.yanom_globals.is_silent)):
             for nsx_file in self._nsx_backups:
                 nsx_file.process_nsx_file()
                 self.update_processing_stats(nsx_file)
@@ -147,7 +147,7 @@ class NotesConvertor:
         self.conversion_settings = self.config_data.conversion_settings
 
     def output_results_if_not_silent_mode(self):
-        if not config.silent:
+        if not config.yanom_globals.is_silent:
             self.print_result_if_any(self._note_book_count, 'Note book')
             self.print_result_if_any(self._note_page_count, 'Note page')
             self.print_result_if_any(self._image_count, 'Image')

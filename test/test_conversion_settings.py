@@ -24,7 +24,7 @@ def test_read_settings_from_dictionary():
 )
 def test_read_invalid_settings_from_dictionary(caplog, silent):
     cs = conversion_settings.ConversionSettings()
-    config.set_silent(silent)
+    config.yanom_globals.is_silent = silent
     cs.set_from_dictionary({'invalid': True})
 
     assert len(caplog.records) > 0
@@ -79,7 +79,7 @@ def test_quick_setting_when_not_nsx(quick_setting, expected):
 )
 def test_invalid_quick_setting(caplog, silent):
     cs = conversion_settings.ConversionSettings()
-    config.set_silent(silent)
+    config.yanom_globals.is_silent = silent
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         cs.set_quick_setting('invalid')
 
@@ -97,8 +97,8 @@ def test_source_setting_empty_string(tmp_path):
     cs.working_directory = tmp_path
     cs.source = ''
 
-    assert cs.source == Path(tmp_path, config.DATA_DIR)
-    assert cs._source_absolute_path == Path(tmp_path, config.DATA_DIR)
+    assert cs.source == Path(tmp_path, config.yanom_globals.data_dir)
+    assert cs._source_absolute_path == Path(tmp_path, config.yanom_globals.data_dir)
 
 
 @pytest.mark.parametrize(
@@ -110,7 +110,7 @@ def test_source_setting_empty_string(tmp_path):
 def test_source_setting_sub_directory_not_existing(tmp_path, caplog, capsys, silent, expected_screen_output):
     cs = conversion_settings.ConversionSettings()
     cs.working_directory = tmp_path
-    config.set_silent(silent)
+    config.yanom_globals.is_silent = silent
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         cs.source = 'source-dir'
 
@@ -128,11 +128,11 @@ def test_source_setting_sub_directory_not_existing(tmp_path, caplog, capsys, sil
 def test_source_setting_valid_sub_directory(tmp_path):
     cs = conversion_settings.ConversionSettings()
     cs.working_directory = tmp_path
-    Path(tmp_path, config.DATA_DIR, "my-source").mkdir(parents=True)
+    Path(tmp_path, config.yanom_globals.data_dir, "my-source").mkdir(parents=True)
     cs.source = 'my-source'
 
     assert cs.source == Path("my-source")
-    assert cs._source_absolute_path == Path(tmp_path, config.DATA_DIR, "my-source")
+    assert cs._source_absolute_path == Path(tmp_path, config.yanom_globals.data_dir, "my-source")
 
 
 @pytest.mark.parametrize(
@@ -142,7 +142,7 @@ def test_source_setting_valid_sub_directory(tmp_path):
     ]
 )
 def test_export_folder_setting_provide_a_file_not_directory(tmp_path, caplog, capsys, silent, expected_screen_output):
-    config.set_silent(silent)
+    config.yanom_globals.is_silent = silent
     cs = conversion_settings.ConversionSettings()
     cs.working_directory = tmp_path
     Path(tmp_path, "my-target-file.txt").touch()

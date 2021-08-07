@@ -25,7 +25,7 @@ Attachment = namedtuple('Attachment', 'attachment, note_title')
 class NSXFile:
 
     def __init__(self, file, conversion_settings, pandoc_converter):
-        self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._conversion_settings = conversion_settings
         self._nsx_file_name = file
@@ -88,7 +88,7 @@ class NSXFile:
 
     def report_json_missing_ids(self, msg):
         self.logger.warning(msg)
-        if not config.silent:
+        if not config.yanom_globals.is_silent:
             print(msg)
 
     def build_list_of_attachments(self) -> list[Attachment]:
@@ -143,7 +143,7 @@ class NSXFile:
     def create_export_folder_if_not_exist(self, parents=True):
         self.logger.debug("Creating export folder if it does not exist")
 
-        target_path = Path(self.conversion_settings.working_directory, config.DATA_DIR,
+        target_path = Path(self.conversion_settings.working_directory, config.yanom_globals.data_dir,
                            self._conversion_settings.export_folder)
 
         try:
@@ -169,7 +169,7 @@ class NSXFile:
     def _report_create_export_folder_errors(self, msg, e):
         self.logger.error(f'{msg}')
         self.logger.error(helper_functions.log_traceback(e))
-        if not config.silent:
+        if not config.yanom_globals.is_silent:
             print(f'{msg}')
 
     def create_notebook_and_attachment_folders(self) -> list:
@@ -194,7 +194,7 @@ class NSXFile:
     def add_note_pages(self):
         self.logger.debug(f"Creating note page objects")
 
-        if not config.silent:
+        if not config.yanom_globals.is_silent:
             print(f"Finding note pages in {self._nsx_file_name.name}")
         with alive_bar(len(self._note_page_ids), bar='blocks') as bar:
             for note_id in self._note_page_ids:
@@ -211,7 +211,7 @@ class NSXFile:
 
                 note_page = NotePage(self, note_id, note_data)
                 self._note_pages[note_id] = note_page
-                if not config.silent:
+                if not config.yanom_globals.is_silent:
                     bar()
 
             self._note_page_count += len(self._note_pages)
@@ -224,7 +224,7 @@ class NSXFile:
                   f"than note page id's in the nsx file.\nPlease review log file as there may be issues " \
                   f"with the nsx file."
             self.logger.warning(msg)
-            if not config.silent:
+            if not config.yanom_globals.is_silent:
                 print(msg)
 
     def is_note_encrypted(self, note_data):
@@ -249,7 +249,7 @@ class NSXFile:
                 self._notebooks['recycle-bin'].pair_up_note_pages_and_notebooks(self._note_pages[note_page_id])
 
     def store_attachments(self, attachments: list[Attachment]):
-        if not config.silent:
+        if not config.yanom_globals.is_silent:
             print("Saving attachments")
 
         with alive_bar(len(attachments), bar='blocks') as bar:
@@ -258,13 +258,13 @@ class NSXFile:
                     message = f'Unable to save attachment for the note {attachment.note_title}.  ' \
                               f'Attachment path is to existing dir not file - {attachment.attachment.full_path}'
                     self.logger.warning(message)
-                    if not config.silent:
+                    if not config.yanom_globals.is_silent:
                         print(message)
                         bar()
                     continue
 
                 file_writer.store_file(attachment.attachment.full_path, attachment.attachment.get_content_to_save())
-                if not config.silent:
+                if not config.yanom_globals.is_silent:
                     bar()
 
     def process_notebooks(self):
@@ -274,13 +274,13 @@ class NSXFile:
             self._notebooks[notebooks_id].process_notebook_pages()
 
     def save_note_pages(self):
-        if not config.silent:
+        if not config.yanom_globals.is_silent:
             print("Saving note pages")
         with alive_bar(len(self._note_pages), bar='blocks') as bar:
             for note_page_id in self._note_pages:
                 file_writer.store_file(self._note_pages[note_page_id].full_path,
                                        self._note_pages[note_page_id].converted_content)
-                if not config.silent:
+                if not config.yanom_globals.is_silent:
                     bar()
 
     @property

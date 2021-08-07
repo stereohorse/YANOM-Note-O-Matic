@@ -115,7 +115,7 @@ def test_generate_filenames_and_paths(export_format, extension, note_page):
     note_page.generate_filenames_and_paths([''])
 
     assert note_page.file_name == Path(f'Page 8 title.{extension}')
-    assert note_page.full_path == Path(note_page.conversion_settings.working_directory, config.DATA_DIR,
+    assert note_page.full_path == Path(note_page.conversion_settings.working_directory, config.yanom_globals.data_dir,
                                        note_page.conversion_settings.export_folder, note_page.notebook_folder_name,
                                        note_page.file_name)
 
@@ -271,7 +271,7 @@ def test_get_json_parent_notebook(note_page_1, caplog):
     ]
 )
 def test_get_json_parent_notebook_key_missing_in_json(note_page_1, silent, expected_out, caplog, capsys):
-    config.set_silent(silent)
+    config.yanom_globals.is_silent = silent
     note_page_1._note_json = {'tag': 'tag1'}
     note_page_1.get_json_parent_notebook()
     expected_caplog_msg = f"No parent notebook ID was found in note id '{note_page_1._note_id}'.  Using a placeholder id of '{note_page_1._parent_notebook_id}'.  Notes will be in the Recycle bin notebook"

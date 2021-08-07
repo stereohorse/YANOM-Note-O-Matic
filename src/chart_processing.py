@@ -45,7 +45,7 @@ class ChartProcessor(ABC):
 
     """
     def __init__(self, note, html, create_image=True, create_csv=True, create_data_table=True):
-        self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._note = note
         self._raw_html = html
@@ -152,7 +152,7 @@ class ChartProcessor(ABC):
 
     class Chart(ABC):
         def __init__(self):
-            self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
+            self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
             self.logger.setLevel(config.yanom_globals.logger_level)
             self._chart_type = str
             self._title = str

@@ -69,10 +69,10 @@ def test_command_line_parser_bad_args(command_line_args, value, tmp_path):
 
 def test_setup_logging(tmp_path):
     _ = yanom.setup_logging(tmp_path)
-    normal_log_path = Path(tmp_path, f'{config.DATA_DIR}/logs/normal.log')
-    error_log_path = Path(tmp_path, f'{config.DATA_DIR}/logs/error.log')
-    warning_log_path = Path(tmp_path, f'{config.DATA_DIR}/logs/warning.log')
-    debug_log_path = Path(tmp_path, f'{config.DATA_DIR}/logs/debug.log')
+    normal_log_path = Path(tmp_path, f'{config.yanom_globals.data_dir}/logs/normal.log')
+    error_log_path = Path(tmp_path, f'{config.yanom_globals.data_dir}/logs/error.log')
+    warning_log_path = Path(tmp_path, f'{config.yanom_globals.data_dir}/logs/warning.log')
+    debug_log_path = Path(tmp_path, f'{config.yanom_globals.data_dir}/logs/debug.log')
     assert normal_log_path.is_file()
     assert error_log_path.is_file()
     assert warning_log_path.is_file()

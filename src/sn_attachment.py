@@ -13,7 +13,7 @@ def what_module_is_this():
 
 class NSAttachment(ABC):
     def __init__(self, note, attachment_id):
-        self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._attachment_id = attachment_id
         self._nsx_file = note.nsx_file
@@ -50,7 +50,7 @@ class NSAttachment(ABC):
         self._path_relative_to_notebook = Path(self._conversion_settings.attachment_folder_name, self._file_name)
 
     def generate_absolute_path(self):
-        self._full_path = Path(self._conversion_settings.working_directory, config.DATA_DIR,
+        self._full_path = Path(self._conversion_settings.working_directory, config.yanom_globals.data_dir,
                                self._conversion_settings.export_folder,
                                self._notebook_folder_name,
                                self._path_relative_to_notebook)

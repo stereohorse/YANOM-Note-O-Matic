@@ -20,7 +20,7 @@ def what_module_is_this():
 def command_line_parser(args, logger):
     parser = argparse.ArgumentParser(description="YANOM Note-O-Matic notes convertor")
 
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s Version {}'.format(config.VERSION))
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s Version {}'.format(config.yanom_globals.version))
     parser.add_argument("-s", "--silent", action="store_true",
                         help="No output to console. WILL also use ini file settings.")
     parser.add_argument('--source', nargs='?', default='',
@@ -68,12 +68,12 @@ def set_logging_level(log_level: str, logger):
 
 
 def setup_logging(working_path):
-    Path(working_path, config.DATA_DIR, 'logs').mkdir(parents=True, exist_ok=True)
+    Path(working_path, config.yanom_globals.data_dir, 'logs').mkdir(parents=True, exist_ok=True)
 
-    log_filename = f"{working_path}/{config.DATA_DIR}/logs/normal.log"
-    error_log_filename = f"{working_path}/{config.DATA_DIR}/logs/error.log"
-    debug_log_filename = f"{working_path}/{config.DATA_DIR}/logs/debug.log"
-    warning_log_filename = f"{working_path}/{config.DATA_DIR}/logs/warning.log"
+    log_filename = f"{working_path}/{config.yanom_globals.data_dir}/logs/normal.log"
+    error_log_filename = f"{working_path}/{config.yanom_globals.data_dir}/logs/error.log"
+    debug_log_filename = f"{working_path}/{config.yanom_globals.data_dir}/logs/debug.log"
+    warning_log_filename = f"{working_path}/{config.yanom_globals.data_dir}/logs/warning.log"
 
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
@@ -105,7 +105,7 @@ def setup_logging(working_path):
     root_logger.addHandler(errorLogHandler)
     root_logger.addHandler(warningLogHandler)
 
-    logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}')
+    logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}')
 
     return logger
 
@@ -114,16 +114,16 @@ def main(command_line_sys_argv=sys.argv):
     working_directory, working_directory_message = find_working_directory()
     logger = setup_logging(working_directory)
     logger.info('\n\n\n\n\n\n')
-    logger.info(f'YANOM startup - version {config.VERSION}\n')
+    logger.info(f'YANOM startup - version {config.yanom_globals.version}\n')
     logger.debug(working_directory_message)
     command_line_args = command_line_parser(command_line_sys_argv[1:], logger)
     set_logging_level(command_line_args['log'], logger)
-    config.set_silent(command_line_args['silent'])
+    config.yanom_globals.is_silent = command_line_args['silent']
     run_yanom(command_line_args)
 
 
 def run_yanom(command_line_args):
-    config_data = ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
+    config_data = ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     config_data.parse_config_file()
     notes_converter = NotesConvertor(command_line_args, config_data)
     notes_converter.convert_notes()

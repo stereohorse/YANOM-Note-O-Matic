@@ -16,7 +16,7 @@ def what_module_is_this():
 
 class Notebook:
     def __init__(self, nsx_file, notebook_id):
-        self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self.nsx_file = nsx_file
         self.notebook_id = notebook_id
@@ -32,12 +32,12 @@ class Notebook:
     def process_notebook_pages(self):
         self.logger.info(f"Processing note book {self.title} - {self.notebook_id}")
 
-        if not config.silent:
+        if not config.yanom_globals.is_silent:
             print(f"Processing '{self.title}' Notebook")
         with alive_bar(len(self.note_pages), bar='blocks') as bar:
             for note_page in self.note_pages:
                 note_page.process_note()
-                if not config.silent:
+                if not config.yanom_globals.is_silent:
                     bar()
 
     def fetch_notebook_json(self, notebook_id):
@@ -87,14 +87,14 @@ class Notebook:
 
         n = 0
         target_path = Path(self.conversion_settings.working_directory,
-                           config.DATA_DIR,
+                           config.yanom_globals.data_dir,
                            self.nsx_file.conversion_settings.export_folder,
                            self.folder_name)
 
         while target_path.exists():
             n += 1
             target_path = Path(self.conversion_settings.working_directory,
-                               config.DATA_DIR,
+                               config.yanom_globals.data_dir,
                                self.nsx_file.conversion_settings.export_folder,
                                f"{self.folder_name}-{n}")
         try:
@@ -107,13 +107,13 @@ class Notebook:
                 msg = f"{msg}\n Windows long path names are not enabled check path length"
             self.logger.error(f'{msg}')
             self.logger.error(helper_functions.log_traceback(e))
-            if not config.silent:
+            if not config.yanom_globals.is_silent:
                 print(f'{msg}')
         except OSError as e:
             msg = f'Unable to create note book folder\n{e}'
             self.logger.error(f'{msg}')
             self.logger.error(helper_functions.log_traceback(e))
-            if not config.silent:
+            if not config.yanom_globals.is_silent:
                 print(f'{msg}')
 
     def create_attachment_folder(self):
@@ -127,13 +127,13 @@ class Notebook:
                     msg = f"{msg}\n Windows long path names are not enabled check path length"
                 self.logger.error(f'{msg}')
                 self.logger.error(helper_functions.log_traceback(e))
-                if not config.silent:
+                if not config.yanom_globals.is_silent:
                     print(f'{msg}')
             except OSError as e:
                 msg = f'Unable to create attachment folder\n{e}'
                 self.logger.error(f'{msg}')
                 self.logger.error(helper_functions.log_traceback(e))
-                if not config.silent:
+                if not config.yanom_globals.is_silent:
                     print(f'{msg}')
 
             return

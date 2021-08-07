@@ -14,7 +14,7 @@ def what_module_is_this():
 
 class PandocConverter:
     def __init__(self, conversion_settings):
-        self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self.conversion_settings = conversion_settings
         self.output_file_format = self.conversion_settings.export_format
@@ -64,14 +64,14 @@ class PandocConverter:
         try:
             self._pandoc_version = subprocess.run([self._pandoc_path, '-v'], capture_output=True, text=True, timeout=3)
             self._pandoc_version = self._pandoc_version.stdout[7:].split('\n', 1)[0].strip()
-            if not config.silent:
+            if not config.yanom_globals.is_silent:
                 print('Found pandoc ' + str(self._pandoc_version))
             self.logger.debug(f"Found pandoc version {str(self._pandoc_version)} at {self._pandoc_path}")
 
         except subprocess.CalledProcessError as e:
             self.logger.error(f"Exiting as unable to get pandoc version")
             self.logger.error(helper_functions.log_traceback(e))
-            if not config.silent:
+            if not config.yanom_globals.is_silent:
                 print("Unable to fetch pandoc version please check log files for additional information.")
                 print("Exiting.")
             sys.exit(1)
@@ -114,7 +114,7 @@ class PandocConverter:
         except subprocess.CalledProcessError as e:
             self.logger.error(f"Unable to convert note '{note_title}'.")
             self.logger.error(helper_functions.log_traceback(e))
-            if not config.silent:
+            if not config.yanom_globals.is_silent:
                 print(f"Error converting note {note_title} with pandoc please check log file and pandoc installation.")
                 print("Attempting to continue...")
 

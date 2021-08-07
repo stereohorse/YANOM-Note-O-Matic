@@ -17,7 +17,7 @@ def what_module_is_this():
 
 class FileConverter(ABC):
     def __init__(self, conversion_settings, files_to_convert):
-        self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._file = None
         self._files_to_convert = files_to_convert

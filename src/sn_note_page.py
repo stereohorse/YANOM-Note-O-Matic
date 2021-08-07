@@ -16,7 +16,7 @@ def what_module_is_this():
 
 class NotePage:
     def __init__(self, nsx_file, note_id, note_json):
-        self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._title = None
         self._raw_content = None
@@ -75,7 +75,7 @@ class NotePage:
             self.logger.info(f"No parent notebook ID was found in note id '{self._note_id}'.  "
                              f"Using a placeholder id of '{self._parent_notebook_id}'.  "
                              f"Notes will be in the Recycle bin notebook")
-            if not config.silent:
+            if not config.yanom_globals.is_silent:
                 print(f"No parent notebook ID was found in '{self._note_id}'.  Note will be in the Recycle Bin notebook")
 
     def _format_ctime_and_mtime_if_required(self):
@@ -117,7 +117,7 @@ class NotePage:
         return f"{self._title}.md"
 
     def _generate_absolute_path(self):
-        path_to_file = Path(self._conversion_settings.working_directory, config.DATA_DIR,
+        path_to_file = Path(self._conversion_settings.working_directory, config.yanom_globals.data_dir,
                             self._conversion_settings.export_folder, self._notebook_folder_name, self._file_name)
 
         absolute_file_path = helper_functions.find_valid_full_file_path(path_to_file)

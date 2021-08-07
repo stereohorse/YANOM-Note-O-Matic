@@ -195,7 +195,7 @@ def test_read_config_file_file_missing(tmp_path, caplog):
 )
 def test_read_config_missing_file(tmp_path, good_config_ini, caplog, capsys, silent, expected):
 
-    config.set_silent(silent)
+    config.yanom_globals.is_silent = silent
 
     cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'gfm', allow_no_value=True)
 
@@ -534,7 +534,7 @@ def test_generate_conversion_settings_using_quick_settings_string_to_forced_bad_
                                                                                           expected):
     """Force a bad directory into the config.ini save method to check it is handled and logged"""
 
-    config.set_silent(silent)
+    config.yanom_globals.is_silent = silent
 
     Path(tmp_path, 'config.ini').write_text(good_config_ini, encoding="utf-8")
 

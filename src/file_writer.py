@@ -5,7 +5,7 @@ from pathlib import Path
 import config
 import helper_functions
 
-logger = logging.getLogger(f'{config.APP_NAME}.{__name__}')
+logger = logging.getLogger(f'{config.yanom_globals.app_name}.{__name__}')
 logger.setLevel(config.yanom_globals.logger_level)
 
 

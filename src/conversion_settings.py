@@ -141,7 +141,7 @@ class ConversionSettings:
     def __init__(self):
         # if you change any of the following values changes are likely to affect the quick settings method
         # and the validation_values class variable
-        self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._valid_conversion_inputs = list(self.validation_values['conversion_inputs']['conversion_input'])
         self._valid_markdown_conversion_inputs = list(
@@ -214,7 +214,7 @@ class ConversionSettings:
                 continue
             msg = f'Invalid key value of {key} provided in dictionary of conversion settings'
             self.logger.warning(msg)
-            if not config.silent:
+            if not config.yanom_globals.is_silent:
                 print(msg)
 
     lit_valid_quick_setting = Literal['html', 'pandoc_markdown_strict', 'multimarkdown', 'pandoc_markdown',
@@ -248,7 +248,7 @@ class ConversionSettings:
 
         msg = f"Invalid quick setting key '{quick_setting}' used"
         self.logger.error(msg)
-        if not config.silent:
+        if not config.yanom_globals.is_silent:
             print(msg)
         sys.exit(1)
 
@@ -505,19 +505,19 @@ class ConversionSettings:
         if isinstance(provided_source, str):
             provided_source = provided_source.strip()
         if provided_source == '':
-            self.logger.debug(f"Using relative path {config.DATA_DIR} as source directory")
-            self._source = Path(self._working_directory, config.DATA_DIR)
-            self._source_absolute_path = Path(self._working_directory, config.DATA_DIR)
+            self.logger.debug(f"Using relative path {config.yanom_globals.data_dir} as source directory")
+            self._source = Path(self._working_directory, config.yanom_globals.data_dir)
+            self._source_absolute_path = Path(self._working_directory, config.yanom_globals.data_dir)
             return
 
-        if Path(self._working_directory, config.DATA_DIR, provided_source).exists():
+        if Path(self._working_directory, config.yanom_globals.data_dir, provided_source).exists():
             self._source = Path(provided_source)
             self.logger.debug(f"Using relative path {self._source} as source")
-            self._source_absolute_path = Path(self._working_directory, config.DATA_DIR, provided_source)
+            self._source_absolute_path = Path(self._working_directory, config.yanom_globals.data_dir, provided_source)
             return
 
         msg = f"Invalid source location - {provided_source} - Check command line argument OR config.ini entry - Exiting program"
-        if not config.silent:
+        if not config.yanom_globals.is_silent:
             print(msg)
         self.logger.error(msg)
         sys.exit(1)
@@ -634,7 +634,7 @@ class ConversionSettings:
         if Path(value).is_file():
             msg = f"Invalid path provided. Path is to existing file not a directory '{value}'"
             self.logger.error(msg)
-            if not config.silent:
+            if not config.yanom_globals.is_silent:
                 print(msg)
             sys.exit(1)
 

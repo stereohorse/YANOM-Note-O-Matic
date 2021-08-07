@@ -11,7 +11,7 @@ def what_module_is_this():
 
 class NoteStationPostProcessing:
     def __init__(self, note):
-        self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._note = note
         self._conversion_settings = note.conversion_settings

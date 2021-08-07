@@ -34,7 +34,7 @@ class ConfigData(ConfigParser):
     def __init__(self, config_file, default_quick_setting, **kwargs):
         super().__init__(**kwargs)
         # Note: allow_no_value=True  allows for #comments in the ini file
-        self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._config_file = config_file
         self._default_quick_setting = default_quick_setting
@@ -169,19 +169,19 @@ class ConfigData(ConfigParser):
                           f"is not a directory.\n{e}"
                 self.logger.error(message)
                 self.logger.error(helper_functions.log_traceback(e))
-                if not config.silent:
+                if not config.yanom_globals.is_silent:
                     print(message)
             else:
                 message = f"Unable to save config.ini file.\n{e}"
                 self.logger.error(message)
                 self.logger.error(helper_functions.log_traceback(e))
-                if not config.silent:
+                if not config.yanom_globals.is_silent:
                     print(message)
         except IOError as e:
             message = f"Unable to save config.ini file `{self.conversion_settings.working_directory}`.\n{e}"
             self.logger.error(message)
             self.logger.error(helper_functions.log_traceback(e))
-            if not config.silent:
+            if not config.yanom_globals.is_silent:
                 print(message)
 
     def read_config_file(self):
@@ -200,7 +200,7 @@ class ConfigData(ConfigParser):
             self.logger.info(f'Data read from INI file is {self.__repr__()}')
         else:
             self.logger.warning(f'config.ini missing at {path}, generating new file and settings set to default.')
-            if not config.silent:
+            if not config.yanom_globals.is_silent:
                 print("config.ini missing, generating new file.")
             self.conversion_settings = self._default_quick_setting
 

@@ -17,9 +17,9 @@ def what_module_is_this():
 
 
 def show_app_title():
-    print(Figlet().renderText(config.APP_NAME))
+    print(Figlet().renderText(config.yanom_globals.app_name))
     f = Figlet(font='slant')
-    print(f.renderText(config.APP_SUB_NAME))
+    print(f.renderText(config.yanom_globals.app_sub_name))
 
 
 def _exit_if_keyboard_interrupt(answer):
@@ -64,7 +64,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
     """
     def __init__(self, config_ini_conversion_settings):
         super(StartUpCommandLineInterface, self).__init__()
-        self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._default_settings = config_ini_conversion_settings
         self._current_conversion_settings = copy.deepcopy(self._default_settings)
@@ -127,7 +127,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
 
     def _nothing_to_convert(self):
         self.logger.warning('Input and output formats are the same nothing to convert. Exiting.')
-        if not config.silent:
+        if not config.yanom_globals.is_silent:
             print('Input and output formats are the same nothing to convert. Exiting.')
         exit(0)
 

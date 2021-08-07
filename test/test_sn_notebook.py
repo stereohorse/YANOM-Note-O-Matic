@@ -17,14 +17,14 @@ def test_create_notebook_folder_folder_does_not_already_exist(tmp_path, nsx, cap
         notebook.conversion_settings.export_folder = 'export-folder'
         notebook.folder_name = Path('notebook1')
 
-        Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder).mkdir(parents=True, exist_ok=True)
+        Path(tmp_path, config.yanom_globals.data_dir, notebook.conversion_settings.export_folder).mkdir(parents=True, exist_ok=True)
 
         notebook.create_notebook_folder()
 
-    assert Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, notebook.folder_name).exists()
+    assert Path(tmp_path, config.yanom_globals.data_dir, notebook.conversion_settings.export_folder, notebook.folder_name).exists()
 
     assert notebook.folder_name == Path('notebook1')
-    assert notebook._full_path_to_notebook == Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, notebook.folder_name)
+    assert notebook._full_path_to_notebook == Path(tmp_path, config.yanom_globals.data_dir, notebook.conversion_settings.export_folder, notebook.folder_name)
 
     assert f'Creating notebook folder for {notebook_title}' in caplog.messages
 
@@ -38,16 +38,16 @@ def test_create_notebook_folder_folder_already_exist(tmp_path, nsx, caplog):
         notebook.conversion_settings.export_folder = 'export-folder'
         notebook.folder_name = 'notebook1'
 
-        Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, notebook.folder_name).mkdir(parents=True, exist_ok=True)
+        Path(tmp_path, config.yanom_globals.data_dir, notebook.conversion_settings.export_folder, notebook.folder_name).mkdir(parents=True, exist_ok=True)
         expected_folder_name = Path('notebook1-1')
 
         notebook.create_notebook_folder()
 
-    assert Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder,
+    assert Path(tmp_path, config.yanom_globals.data_dir, notebook.conversion_settings.export_folder,
                 expected_folder_name).exists()
 
     assert notebook.folder_name == expected_folder_name
-    assert notebook._full_path_to_notebook == Path(tmp_path, config.DATA_DIR,
+    assert notebook._full_path_to_notebook == Path(tmp_path, config.yanom_globals.data_dir,
                                                    notebook.conversion_settings.export_folder, expected_folder_name)
 
     assert f'Creating notebook folder for {notebook_title}' in caplog.messages
@@ -69,7 +69,7 @@ def test_create_notebook_folder_folder_unable_to_create_folder(tmp_path, nsx, ca
     assert notebook.folder_name == 'notebook1'
     assert notebook._full_path_to_notebook is None
 
-    assert f"Unable to create notebook folder there is a problem with the path.\n[Errno 2] No such file or directory: '{Path(tmp_path, config.DATA_DIR, 'export-folder', 'notebook1')}'" in caplog.messages
+    assert f"Unable to create notebook folder there is a problem with the path.\n[Errno 2] No such file or directory: '{Path(tmp_path, config.yanom_globals.data_dir, 'export-folder', 'notebook1')}'" in caplog.messages
 
 
 def test_create_attachment_folder(tmp_path, nsx, caplog):
@@ -77,13 +77,16 @@ def test_create_attachment_folder(tmp_path, nsx, caplog):
     notebook_title = 'notebook1'
     with patch('zip_file_reader.read_json_data', autospec=True, return_value={'title': notebook_title}):
         notebook = sn_notebook.Notebook(nsx, 'abcd')
-        notebook._full_path_to_notebook = Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, 'notebook1')
+        notebook._full_path_to_notebook = Path(tmp_path, config.yanom_globals.data_dir,
+                                               notebook.conversion_settings.export_folder, 'notebook1')
         notebook._full_path_to_notebook.mkdir(parents=True, exist_ok=True)
         notebook.conversion_settings.attachment_folder_name = 'attachments'
 
         notebook.create_attachment_folder()
 
-    assert Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, 'notebook1', 'attachments').exists()
+    assert Path(tmp_path, config.yanom_globals.data_dir,
+                notebook.conversion_settings.export_folder,
+                'notebook1', 'attachments').exists()
 
     assert f'Creating attachment folder' in caplog.messages
 
@@ -98,7 +101,7 @@ def test_create_attachment_folder_when_note_book_folder_not_created(tmp_path, ns
 
         notebook.create_attachment_folder()
 
-    assert not Path(tmp_path, config.DATA_DIR, notebook.conversion_settings.export_folder, 'notebook1', 'attachments').exists()
+    assert not Path(tmp_path, config.yanom_globals.data_dir, notebook.conversion_settings.export_folder, 'notebook1', 'attachments').exists()
 
     assert f"Attachment folder for '{notebook_title}' was not created as the notebook folder has not been created" in caplog.messages
     assert f'Creating attachment folder' not in caplog.messages
@@ -152,7 +155,7 @@ def test_pair_up_note_pages_and_notebooks_note_title_already_exists(nsx):
     ]
 )
 def test_process_notebook_pages(all_notes, tmp_path, nsx, silent_mode, expected, capsys, caplog):
-    config.set_silent(silent_mode)
+    config.yanom_globals.is_silent = silent_mode
     notebook_title = 'notebook1'
     with patch('zip_file_reader.read_json_data', autospec=True, return_value={'title': notebook_title}):
         notebook = sn_notebook.Notebook(nsx, 'notebook_id_abcd')

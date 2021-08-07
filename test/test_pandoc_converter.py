@@ -51,7 +51,7 @@ def test_check_and_set_up_pandoc_if_required_nsx_and_html(conversion_input, mark
 )
 def test_find_pandoc_version(caplog, capsys, silent_mode, expected_capture_out):
     config.yanom_globals.logger_level = logging.DEBUG
-    config.set_silent(silent_mode)
+    config.yanom_globals.is_silent = silent_mode
     cs = conversion_settings.ConversionSettings()
     pandoc_processor = pandoc_converter.PandocConverter(cs)
     caplog.clear()
@@ -73,7 +73,7 @@ def test_find_pandoc_version_invalid_path_check_sys_exit(caplog):
     pandoc_processor = pandoc_converter.PandocConverter(cs)
     pandoc_processor._pandoc_path = 'invalid-path'
     caplog.clear()
-    with pytest.raises(FileNotFoundError) as exc:
+    with pytest.raises(FileNotFoundError):
         pandoc_processor.find_pandoc_version()
 
     for record in caplog.records:
@@ -90,11 +90,11 @@ def test_find_pandoc_version_force_subprocess_error(caplog, capsys, monkeypatch,
     def mock_run(ignored, capture_output, text, timeout):
         raise subprocess.CalledProcessError(3, "a_command'")
 
-    config.set_silent(silent_mode)
+    config.yanom_globals.is_silent = silent_mode
     cs = conversion_settings.ConversionSettings()
     pandoc_processor = pandoc_converter.PandocConverter(cs)
     caplog.clear()
-    with pytest.raises(SystemExit) as pytest_wrapped_e:
+    with pytest.raises(SystemExit):
         monkeypatch.setattr(subprocess, 'run', mock_run)
         pandoc_processor.find_pandoc_version()
 
@@ -102,6 +102,7 @@ def test_find_pandoc_version_force_subprocess_error(caplog, capsys, monkeypatch,
 
     captured = capsys.readouterr()
     assert expected_capture_out in captured.out
+
 
 @pytest.mark.parametrize(
     'version, conversion_input, input_file_format, output_file_format, expected', [
@@ -174,7 +175,7 @@ def test_generate_pandoc_options_check_pandoc_version_conversion_settings(caplog
 def test_convert_using_strings_forcing_non_zero_return_code_from_pandoc(caplog):
     cs = conversion_settings.ConversionSettings()
     pandoc_processor = pandoc_converter.PandocConverter(cs)
-    pandoc_processor.pandoc_options = [pandoc_processor._pandoc_path, '-fqwe', 'html', '-s', '-t','gfm']
+    pandoc_processor.pandoc_options = [pandoc_processor._pandoc_path, '-fqwe', 'html', '-s', '-t', 'gfm']
     caplog.clear()
 
     result = pandoc_processor.convert_using_strings('hello world', 'my_note')
@@ -196,7 +197,7 @@ def test_convert_using_strings_forcing_subprocess_error(caplog, capsys, monkeypa
     def mock_run(ingored1, input, capture_output, encoding, text, timeout):
         raise subprocess.CalledProcessError(3, "a_command'")
 
-    config.set_silent(silent_mode)
+    config.yanom_globals.is_silent = silent_mode
     cs = conversion_settings.ConversionSettings()
     pandoc_processor = pandoc_converter.PandocConverter(cs)
     pandoc_processor.pandoc_options = [pandoc_processor._pandoc_path, '-fqwe', 'html', '-s', '-t','gfm']
@@ -212,17 +213,17 @@ def test_convert_using_strings_forcing_subprocess_error(caplog, capsys, monkeypa
     assert expected_capture_out in captured.out
 
 
-def test_convert_using_strings_forcing_pandoc_not_installed(caplog, capsys, monkeypatch):
+def test_convert_using_strings_forcing_pandoc_not_installed():
 
     cs = conversion_settings.ConversionSettings()
     pandoc_processor = pandoc_converter.PandocConverter(cs)
     pandoc_processor.pandoc_options = ['fake_path', '-fqwe', 'html', '-s', '-t','gfm']
-    caplog.clear()
 
-    with pytest.raises(FileNotFoundError) as pytest_wrapped_e:
+    with pytest.raises(FileNotFoundError):
         result = pandoc_processor.convert_using_strings('hello world', 'my_note')
 
         assert result == 'Error converting data'
+
 
 @pytest.mark.parametrize(
     'is_linux, if_frozen, expected_ends_with', [
