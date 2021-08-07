@@ -64,7 +64,7 @@ def set_logging_level(log_level: str, logger):
         logger.warning(f'Invalid log level on command line: "{log_level}".  Using INFO level')
         new_level = logging.INFO
 
-    config.set_logger_level(new_level)
+    config.yanom_globals.logger_level = new_level
 
 
 def setup_logging(working_path):

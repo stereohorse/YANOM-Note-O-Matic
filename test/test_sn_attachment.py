@@ -41,7 +41,7 @@ def test_FileNSAttachment_create_html_link():
 @pytest.mark.parametrize(
     'raw_name, expected', [
         ('my_file.png', 'my_file.png'),
-        ('my file.png', 'my-file.png'),
+        ('my file.png', 'my file.png'),
         ],
     ids=['clean-file-name', 'file-name-to-clean']
 )
@@ -77,7 +77,7 @@ def test_ImageNSAttachment_create_html_link():
 @pytest.mark.parametrize(
     'raw_name, expected', [
         ('ns_attach_image_my_file.png', 'my_file.png'),
-        ('ns_attach_image_my file.png', 'my-file.png'),
+        ('ns_attach_image_my file.png', 'my file.png'),
         ],
     ids=['clean-file-name', 'file-name-to-clean']
 )

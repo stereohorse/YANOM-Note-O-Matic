@@ -26,7 +26,7 @@ class NSXFile:
 
     def __init__(self, file, conversion_settings, pandoc_converter):
         self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
-        self.logger.setLevel(config.logger_level)
+        self.logger.setLevel(config.yanom_globals.logger_level)
         self._conversion_settings = conversion_settings
         self._nsx_file_name = file
         self._nsx_json_data = {}

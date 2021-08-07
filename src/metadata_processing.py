@@ -13,7 +13,7 @@ def what_module_is_this():
 class MetaDataProcessor:
     def __init__(self, conversion_settings):
         self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
-        self.logger.setLevel(config.logger_level)
+        self.logger.setLevel(config.yanom_globals.logger_level)
         self._conversion_settings = conversion_settings
         self._split_tags = conversion_settings.split_tags
         self._spaces_in_tags = conversion_settings.split_tags

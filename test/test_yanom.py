@@ -22,15 +22,15 @@ import yanom
 def test_set_logging_level(log_level, expected, tmp_path):
     logger = yanom.setup_logging(tmp_path)
     yanom.set_logging_level(log_level, logger)
-    assert config.logger_level == expected
-    config.set_logger_level(11)
+    assert config.yanom_globals.logger_level == expected
+    config.yanom_globals.logger_level = 11
 
 
 def test_set_logging_level_invalid_arg(tmp_path, caplog):
     logger = yanom.setup_logging(tmp_path)
-    config.set_logger_level(logging.INFO)
+    config.yanom_globals.logger_level = logging.INFO
     yanom.set_logging_level('bad-value', logger)
-    assert config.logger_level == logging.INFO
+    assert config.yanom_globals.logger_level == logging.INFO
     assert f'Invalid log level on command line: "bad-value".  Using INFO level' in caplog.messages
 
 
@@ -80,7 +80,7 @@ def test_setup_logging(tmp_path):
 
 
 def test_setup_logging_loggers_logging(tmp_path, caplog):
-    config.set_logger_level(logging.DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
     yanom.setup_logging(tmp_path)
     logger = logging.getLogger(f'From pytest')
     logger.info("logging info")
@@ -110,18 +110,18 @@ def test_setup_logging_loggers_logging(tmp_path, caplog):
     assert "From pytest" in caplog.text
 
 
-def test_configure_environment_debug(caplog):
+def test_configure_environment_debug():
     with patch("yanom.run_yanom", autospec=True):
         yanom.main(["pytest", "-l", "debug"])
-        assert config.logger_level == logging.DEBUG
+        assert config.yanom_globals.logger_level == logging.DEBUG
 
 
-def test_configure_environment(caplog):
+def test_configure_environment():
     with patch("yanom.run_yanom", autospec=True):
-        config.logger_level = logging.DEBUG
+        config.yanom_globals.logger_level = logging.DEBUG
         command_line_sys_argv = ["pytest"]
         yanom.main(command_line_sys_argv)
-        assert config.logger_level == logging.INFO
+        assert config.yanom_globals.logger_level == logging.INFO
 
 
 def test_handle_unhandled_exception(caplog):

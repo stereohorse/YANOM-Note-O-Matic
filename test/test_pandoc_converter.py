@@ -1,5 +1,5 @@
+import logging
 import subprocess
-from logging import DEBUG
 from unittest.mock import patch
 
 import pytest
@@ -50,7 +50,7 @@ def test_check_and_set_up_pandoc_if_required_nsx_and_html(conversion_input, mark
     ], ids=['is_silent', 'not_silent']
 )
 def test_find_pandoc_version(caplog, capsys, silent_mode, expected_capture_out):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
     config.set_silent(silent_mode)
     cs = conversion_settings.ConversionSettings()
     pandoc_processor = pandoc_converter.PandocConverter(cs)
@@ -68,7 +68,7 @@ def test_find_pandoc_version(caplog, capsys, silent_mode, expected_capture_out):
 
 
 def test_find_pandoc_version_invalid_path_check_sys_exit(caplog):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
     cs = conversion_settings.ConversionSettings()
     pandoc_processor = pandoc_converter.PandocConverter(cs)
     pandoc_processor._pandoc_path = 'invalid-path'

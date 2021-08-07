@@ -14,6 +14,7 @@ class YanomGlobals:
         self._posix_path_part_max_length = 255
         self._default_attachment_folder = 'attachments'
         self._default_export_folder = 'notes'
+        self._logger_level = logging.INFO
 
     @property
     def path_part_max_length(self):
@@ -29,6 +30,14 @@ class YanomGlobals:
     @property
     def default_export_folder(self):
         return self._default_export_folder
+
+    @property
+    def logger_level(self):
+        return self._logger_level
+
+    @logger_level.setter
+    def logger_level(self, value: int):
+        self._logger_level = value
 
 
 yanom_globals = YanomGlobals()

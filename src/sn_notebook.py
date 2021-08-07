@@ -17,7 +17,7 @@ def what_module_is_this():
 class Notebook:
     def __init__(self, nsx_file, notebook_id):
         self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
-        self.logger.setLevel(config.logger_level)
+        self.logger.setLevel(config.yanom_globals.logger_level)
         self.nsx_file = nsx_file
         self.notebook_id = notebook_id
         self.conversion_settings = self.nsx_file.conversion_settings

@@ -15,7 +15,7 @@ def what_module_is_this():
 class PandocConverter:
     def __init__(self, conversion_settings):
         self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
-        self.logger.setLevel(config.logger_level)
+        self.logger.setLevel(config.yanom_globals.logger_level)
         self.conversion_settings = conversion_settings
         self.output_file_format = self.conversion_settings.export_format
         self._pandoc_version = None

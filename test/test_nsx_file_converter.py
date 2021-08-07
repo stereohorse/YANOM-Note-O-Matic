@@ -1,4 +1,4 @@
-from logging import DEBUG, INFO
+import logging
 from mock import patch
 from pathlib import Path
 import pytest
@@ -38,7 +38,7 @@ def test_generate_note_page_filename_and_path(nsx, conv_setting):
     nsx_fc.generate_note_page_filename_and_path()
 
     for note in nsx_fc._note_pages.values():
-        assert note.file_name == Path('page-1-title.md')
+        assert note.file_name == Path('Page 1 title.md')
 
 
 def test_generate_note_page_filename_and_path_duplicate_titles(nsx, conv_setting):
@@ -63,8 +63,8 @@ def test_generate_note_page_filename_and_path_duplicate_titles(nsx, conv_setting
 
     nsx_fc.generate_note_page_filename_and_path()
 
-    assert nsx_fc._note_pages[id(note_page_1)]._file_name == Path('page-1-title.md')
-    assert nsx_fc._note_pages[id(note_page_2)]._file_name == Path('page-1-title-1.md')
+    assert nsx_fc._note_pages[id(note_page_1)]._file_name == Path('Page 1 title.md')
+    assert nsx_fc._note_pages[id(note_page_2)]._file_name == Path('Page 1 title-1.md')
 
 
 def test_fetch_json_data(conv_setting):
@@ -96,7 +96,7 @@ def test_add_notebooks(conv_setting):
 
 
 def test_add_recycle_bin_notebook(conv_setting, caplog):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
     with patch('zip_file_reader.read_json_data', autospec=True, return_value=None):
         nsx_fc.add_recycle_bin_notebook()
@@ -108,7 +108,7 @@ def test_add_recycle_bin_notebook(conv_setting, caplog):
 
 
 def test_create_export_folder_if_not_exist(conv_setting, caplog, tmp_path):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
     Path(tmp_path, config.DATA_DIR).mkdir()
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
@@ -125,7 +125,7 @@ def test_create_export_folder_if_not_exist(conv_setting, caplog, tmp_path):
 
 def test_create_export_folder_if_not_exist_force_exception_invalid_path_missing_parent_dir(conv_setting, caplog,
                                                                                            tmp_path):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
     Path(tmp_path, config.DATA_DIR).mkdir()
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
@@ -144,7 +144,7 @@ def test_create_export_folder_if_not_exist_force_exception_invalid_path_missing_
 
 
 def test_create_export_folder_if_not_exist_force_exception_directory_already_exists(conv_setting, caplog, tmp_path):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
     Path(tmp_path, config.DATA_DIR).mkdir()
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
@@ -168,7 +168,7 @@ def test_create_export_folder_if_not_exist_force_exception_directory_already_exi
     ]
 )
 def test_create_export_folder_if_not_exist_force_exception_path_is_to_existing_file(silent, expected_out, conv_setting, caplog, capsys, tmp_path):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
     config.set_silent(silent)
     Path(tmp_path, config.DATA_DIR).mkdir()
 
@@ -191,7 +191,7 @@ def test_create_export_folder_if_not_exist_force_exception_path_is_to_existing_f
 
 
 def test_create_notebook_folders(conv_setting, caplog, tmp_path, nsx):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
     with patch('zip_file_reader.read_json_data', autospec=True, return_value=None):
@@ -201,14 +201,14 @@ def test_create_notebook_folders(conv_setting, caplog, tmp_path, nsx):
         nsx_fc.create_notebook_and_attachment_folders()
 
     assert "Creating folders for notebooks" in caplog.messages
-    assert nsx_fc.notebooks['1234'].folder_name == Path('unknown-notebook')
-    assert Path(tmp_path, config.DATA_DIR, conv_setting.export_folder, 'unknown-notebook').exists()
-    assert Path(tmp_path, config.DATA_DIR, conv_setting.export_folder, 'unknown-notebook',
+    assert nsx_fc.notebooks['1234'].folder_name == Path('Unknown Notebook')
+    assert Path(tmp_path, config.DATA_DIR, conv_setting.export_folder, 'Unknown Notebook').exists()
+    assert Path(tmp_path, config.DATA_DIR, conv_setting.export_folder, 'Unknown Notebook',
                 conv_setting.attachment_folder_name).exists()
 
 
 def test_create_notebook_folders_force_fail_to_create_attachment_folder(conv_setting, caplog, capsys, tmp_path, nsx, monkeypatch):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
@@ -254,7 +254,7 @@ def test_remove_notebooks_to_be_skipped(conv_setting, nsx):
     'silent_mode', [True, False]
 )
 def test_add_note_pages(conv_setting, caplog, silent_mode):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
     config.set_silent(silent_mode)
 
     nsx_fc = nsx_file_converter.NSXFile(Path('fake_file'), conv_setting, 'fake_pandoc_converter')
@@ -284,7 +284,7 @@ def test_add_note_pages(conv_setting, caplog, silent_mode):
     'silent_mode', [True, False]
 )
 def test_add_note_pages_missing_data_in_nsx_file(conv_setting, caplog, silent_mode):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
     config.set_silent(silent_mode)
 
     nsx_fc = nsx_file_converter.NSXFile(Path('fake_file'), conv_setting, 'fake_pandoc_converter')
@@ -308,7 +308,7 @@ def test_add_note_pages_missing_data_in_nsx_file(conv_setting, caplog, silent_mo
 
 
 def test_add_note_pages_encrypted_note(conv_setting, caplog):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
 
     nsx_fc = nsx_file_converter.NSXFile(Path('fake_file'), conv_setting, 'fake_pandoc_converter')
 
@@ -331,7 +331,7 @@ def test_add_note_pages_encrypted_note(conv_setting, caplog):
 
 
 def test_add_note_pages_encrypted_note_no_encrypt_key_in_note_data(conv_setting, caplog):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
 
     nsx_fc = nsx_file_converter.NSXFile(Path('fake_file'), conv_setting, 'fake_pandoc_converter')
 
@@ -365,7 +365,7 @@ def notebooks(nsx):
 
 
 def test_add_note_pages_to_notebooks(conv_setting, caplog, note_pages, notebooks):
-    config.set_logger_level(INFO)
+    config.yanom_globals.logger_level = logging.DEBUG
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
     nsx_fc._notebooks = notebooks
@@ -380,8 +380,7 @@ def test_add_note_pages_to_notebooks(conv_setting, caplog, note_pages, notebooks
     assert "Add note pages to notebooks" in caplog.records[0].message
 
 
-def test_process_notebooks(conv_setting, caplog, notebooks):
-    config.set_logger_level(DEBUG)
+def test_process_notebooks(conv_setting, notebooks):
 
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
     nsx_fc._notebooks = notebooks

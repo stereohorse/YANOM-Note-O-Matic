@@ -1,3 +1,5 @@
+import logging
+
 from mock import patch
 import os
 from pathlib import Path
@@ -149,7 +151,7 @@ def test_run_interactive_command_line_interface(caplog):
 
 def test_evaluate_command_line_arguments_when_wil_be_interactive_command_line_used(caplog):
     test_source_path = str(Path(__file__).parent.absolute())
-    config.set_logger_level("DEBUG")
+    config.yanom_globals.logger_level = logging.DEBUG
     args = {'silent': False, 'ini': False, 'source': test_source_path}
     cd = config_data.ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
@@ -178,7 +180,7 @@ def test_evaluate_command_line_arguments_when_wil_be_interactive_command_line_us
 )
 def test_evaluate_command_line_arguments_when_gogin_to_use_ini_file(caplog, silent, ini):
     test_source_path = str(Path(__file__).parent.absolute())
-    config.set_logger_level("DEBUG")
+    config.yanom_globals.logger_level = logging.DEBUG
     args = {'silent': silent, 'ini': ini, 'source': test_source_path}
     cd = config_data.ConfigData(f"{config.DATA_DIR}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)

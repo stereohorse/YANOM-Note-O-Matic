@@ -35,7 +35,7 @@ class ConfigData(ConfigParser):
         super().__init__(**kwargs)
         # Note: allow_no_value=True  allows for #comments in the ini file
         self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
-        self.logger.setLevel(config.logger_level)
+        self.logger.setLevel(config.yanom_globals.logger_level)
         self._config_file = config_file
         self._default_quick_setting = default_quick_setting
         self._conversion_settings = ConversionSettings()

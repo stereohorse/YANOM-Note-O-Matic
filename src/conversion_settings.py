@@ -142,7 +142,7 @@ class ConversionSettings:
         # if you change any of the following values changes are likely to affect the quick settings method
         # and the validation_values class variable
         self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
-        self.logger.setLevel(config.logger_level)
+        self.logger.setLevel(config.yanom_globals.logger_level)
         self._valid_conversion_inputs = list(self.validation_values['conversion_inputs']['conversion_input'])
         self._valid_markdown_conversion_inputs = list(
             self.validation_values['markdown_conversion_inputs']['markdown_conversion_input'])

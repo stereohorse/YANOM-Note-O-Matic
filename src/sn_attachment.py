@@ -14,7 +14,7 @@ def what_module_is_this():
 class NSAttachment(ABC):
     def __init__(self, note, attachment_id):
         self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
-        self.logger.setLevel(config.logger_level)
+        self.logger.setLevel(config.yanom_globals.logger_level)
         self._attachment_id = attachment_id
         self._nsx_file = note.nsx_file
         self._json = note.note_json

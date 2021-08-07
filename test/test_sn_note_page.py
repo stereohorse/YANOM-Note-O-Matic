@@ -1,4 +1,4 @@
-from logging import DEBUG
+import logging
 from mock import patch
 from pathlib import Path
 
@@ -114,7 +114,7 @@ def test_generate_filenames_and_paths(export_format, extension, note_page):
 
     note_page.generate_filenames_and_paths([''])
 
-    assert note_page.file_name == Path(f'page-8-title.{extension}')
+    assert note_page.file_name == Path(f'Page 8 title.{extension}')
     assert note_page.full_path == Path(note_page.conversion_settings.working_directory, config.DATA_DIR,
                                        note_page.conversion_settings.export_folder, note_page.notebook_folder_name,
                                        note_page.file_name)
@@ -189,9 +189,9 @@ def test_increment_duplicated_title(note_page, title_list, expected_new_title):
 @pytest.mark.parametrize(
     'export_format, expected', [
         ('gfm',
-         """Below is a hyperlink to the internet\n\n<https://github.com/kevindurston21/YANOM-Note-O-Matic>\n\n###### Attachments\n\n[record-2021-02-15-160013.webm](attachments/record-2021-02-15-160013.webm)\n\n[example-attachment.pdf](attachments/example-attachment.pdf)\n\n[test-page.pdf](attachments/test-page.pdf)\n\n"""),
+         """Below is a hyperlink to the internet\n\n<https://github.com/kevindurston21/YANOM-Note-O-Matic>\n\n###### Attachments\n\n[Record 2021-02-15 16-00-13.webm](attachments/Record%202021-02-15%2016-00-13.webm)\n\n[example-attachment.pdf](attachments/example-attachment.pdf)\n\n[test page.pdf](attachments/test%20page.pdf)\n\n"""),
         ('html',
-         """<p>Below is a hyperlink to the internet</p><p><a href="https://github.com/kevindurston21/YANOM-Note-O-Matic">https://github.com/kevindurston21/YANOM-Note-O-Matic</a></p><h6>Attachments</h6><p><a href="attachments/record-2021-02-15-160013.webm">record-2021-02-15-160013.webm</a></p><p><a href="attachments/example-attachment.pdf">example-attachment.pdf</a></p><p><a href="attachments/test-page.pdf">test-page.pdf</a></p>"""),
+         """<p>Below is a hyperlink to the internet</p><p><a href="https://github.com/kevindurston21/YANOM-Note-O-Matic">https://github.com/kevindurston21/YANOM-Note-O-Matic</a></p><h6>Attachments</h6><p><a href="attachments/Record 2021-02-15 16-00-13.webm">Record 2021-02-15 16-00-13.webm</a></p><p><a href="attachments/example-attachment.pdf">example-attachment.pdf</a></p><p><a href="attachments/test page.pdf">test page.pdf</a></p>"""),
     ]
 )
 def test_process_note(nsx, note_page_1, export_format, expected):
@@ -205,8 +205,8 @@ def test_process_note(nsx, note_page_1, export_format, expected):
 
 
 def test_get_json_note_title(note_page_1, caplog):
-    config.set_logger_level(DEBUG)
-    note_page_1.logger.setLevel(config.logger_level)
+    config.yanom_globals.logger_level = logging.DEBUG
+    note_page_1.logger.setLevel(config.yanom_globals.logger_level)
     note_page_1._note_json = {'title': 'Note Title Testing Get'}
     expected = 'Note Title Testing Get'
     note_page_1.get_json_note_title()
@@ -215,8 +215,8 @@ def test_get_json_note_title(note_page_1, caplog):
 
 
 def test_get_json_note_title_key_missing_in_json(note_page_1, caplog):
-    config.set_logger_level(DEBUG)
-    note_page_1.logger.setLevel(config.logger_level)
+    config.yanom_globals.logger_level = logging.DEBUG
+    note_page_1.logger.setLevel(config.yanom_globals.logger_level)
     note_page_1._note_json = {'tag': 'tag1'}
     note_page_1.get_json_note_title()
 

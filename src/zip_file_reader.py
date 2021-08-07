@@ -8,7 +8,7 @@ import config
 import helper_functions
 
 logger = logging.getLogger(f'{config.APP_NAME}.{__name__}')
-logger.setLevel(config.logger_level)
+logger.setLevel(config.yanom_globals.logger_level)
 
 
 def read_json_data(zip_filename, target_filename):

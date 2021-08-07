@@ -17,7 +17,7 @@ def what_module_is_this():
 class NotePage:
     def __init__(self, nsx_file, note_id, note_json):
         self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
-        self.logger.setLevel(config.logger_level)
+        self.logger.setLevel(config.yanom_globals.logger_level)
         self._title = None
         self._raw_content = None
         self._attachments_json = None

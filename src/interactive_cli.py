@@ -65,7 +65,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
     def __init__(self, config_ini_conversion_settings):
         super(StartUpCommandLineInterface, self).__init__()
         self.logger = logging.getLogger(f'{config.APP_NAME}.{what_module_is_this()}.{self.__class__.__name__}')
-        self.logger.setLevel(config.logger_level)
+        self.logger.setLevel(config.yanom_globals.logger_level)
         self._default_settings = config_ini_conversion_settings
         self._current_conversion_settings = copy.deepcopy(self._default_settings)
         self._current_conversion_settings.set_quick_setting('manual')

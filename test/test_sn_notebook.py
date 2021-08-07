@@ -1,4 +1,4 @@
-from logging import DEBUG
+import logging
 from mock import patch
 from pathlib import Path
 import pytest
@@ -9,7 +9,7 @@ import sn_notebook
 
 
 def test_create_notebook_folder_folder_does_not_already_exist(tmp_path, nsx, caplog):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
     notebook_title = 'notebook1'
     with patch('zip_file_reader.read_json_data', autospec=True, return_value={'title': notebook_title}):
         notebook = sn_notebook.Notebook(nsx, 'abcd')
@@ -30,7 +30,7 @@ def test_create_notebook_folder_folder_does_not_already_exist(tmp_path, nsx, cap
 
 
 def test_create_notebook_folder_folder_already_exist(tmp_path, nsx, caplog):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
     notebook_title = 'notebook1'
     with patch('zip_file_reader.read_json_data', autospec=True, return_value={'title': notebook_title}):
         notebook = sn_notebook.Notebook(nsx, 'abcd')
@@ -54,7 +54,7 @@ def test_create_notebook_folder_folder_already_exist(tmp_path, nsx, caplog):
 
 
 def test_create_notebook_folder_folder_unable_to_create_folder(tmp_path, nsx, caplog):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
     notebook_title = 'notebook1'
     with patch('zip_file_reader.read_json_data', autospec=True, return_value={'title': notebook_title}):
         notebook = sn_notebook.Notebook(nsx, 'abcd')
@@ -73,7 +73,7 @@ def test_create_notebook_folder_folder_unable_to_create_folder(tmp_path, nsx, ca
 
 
 def test_create_attachment_folder(tmp_path, nsx, caplog):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
     notebook_title = 'notebook1'
     with patch('zip_file_reader.read_json_data', autospec=True, return_value={'title': notebook_title}):
         notebook = sn_notebook.Notebook(nsx, 'abcd')
@@ -89,7 +89,7 @@ def test_create_attachment_folder(tmp_path, nsx, caplog):
 
 
 def test_create_attachment_folder_when_note_book_folder_not_created(tmp_path, nsx, caplog):
-    config.set_logger_level(DEBUG)
+    config.yanom_globals.logger_level = logging.DEBUG
     notebook_title = 'notebook1'
     with patch('zip_file_reader.read_json_data', autospec=True, return_value={'title': notebook_title}):
         notebook = sn_notebook.Notebook(nsx, 'abcd')
