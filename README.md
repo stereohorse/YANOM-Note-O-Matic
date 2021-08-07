@@ -56,7 +56,8 @@ Future versions will support conversion from additional proprietary file formats
 - Convert Note-Station `.nsx` export files to Markdown or HTML
 - Convert HTML to Markdown
 - Convert Markdown to HTML
-- Convert Markdown to a different format of Markdown
+- Convert Markdown to a different format of Markdown 
+- User selectable filename and directory name cleaning options (file name cleaning only for nsx files)
 - List of available Markdown formats that can be used as inputs or outputs
   - CommonMark  (Used by Joplin)
   - GFM - Git Flavoured Markdown  (Typora, Git Hub, Haroopad) 
@@ -73,7 +74,7 @@ Future versions will support conversion from additional proprietary file formats
   - Tables
   - Images 
   - Image width where supported in Markdown 
-  - IFrames 
+  - IFrames
   - Metadata - support JSON, TOML or YAML front matter, and `meta` tags in HTML.  
     - It is also possible include the metadata as plain text at the top of the exported file
     - Option to discard metadata
@@ -88,6 +89,7 @@ Future versions will support conversion from additional proprietary file formats
       - For Note-Station most of the time this will be successful.  However, there are some limitations and the [Synology Note-Station Links to Other Note Pages](https://github.com/kevindurston21/YANOM-Note-O-Matic/wiki/Synology-Note-Station-Links-to-Other-Note-Pages) wiki page has examples of the possible issues and solutions for them.
     - Note-Station audio notes - are attached as an attachment
     - Option to include creation time in file name
+
 
 The formatting for QOwnNotes and Obsidian are variations on common Markdown formats optimised for those note systems.
 

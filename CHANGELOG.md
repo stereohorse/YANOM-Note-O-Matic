@@ -12,10 +12,23 @@ and this project follows something close to [Semantic Versioning](https://semver
 ## [1.4.0] - developing
 
 ### Added
-- Updated file and directory name cleaning.
-  - Allows any characters except null and Windows reserved characters 
+- Options to select file and directory name cleaning
+  - Quick setting selections will keep most characters, spaces and uppercase characters.
+  - Manual option allows selection of cleaning options
+    - Allow unicode
+    - Allow uppercase
+    - Allow spaces
+    - Allow non-alphanumeric
+    - Enter a space replacement character
+    - Enter a maximum length for file names or directories.  Limit set to 255 for non-Windows and Windows where long file paths is enabled.  64 for Windows where long file paths are not enabled
   - Windows reserved file names are prepended with underscore on all operating systems.
-  - Spaces are replaced by dash.
+
+### Fixed
+- Command line interface may not ask user to accept a changed directory name for export and attachment folders.  Now when name cleaned will always ask to accept new file name.
+- When asking if user wished to accept the new attachment folder name if the user chose 'no' the export folder question would display not the attachment folder question.
+
+### Other Changes
+- Improved error handling around directory creation with additional messages on Windows systems where long path names are not enabled.
 
 ## [1.3.3] - 2021-08-01
 
