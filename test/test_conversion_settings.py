@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 import pytest
@@ -7,16 +6,17 @@ import config
 import conversion_settings
 
 
+
 def test_read_settings_from_dictionary():
     cs = conversion_settings.ConversionSettings()
     cs.attachment_folder_name = 'old_folder_name'
-    cs.creation_time_in_exported_file_name = False
+    cs._creation_time_in_exported_file_name = False
     settings_dict = {'attachment_folder_name': 'new_folder_name', 'creation_time_in_exported_file_name': True}
 
     cs.set_from_dictionary(settings_dict)
 
     assert cs.attachment_folder_name == Path('new_folder_name')
-    assert cs.creation_time_in_exported_file_name
+    assert cs._creation_time_in_exported_file_name
 
 
 @pytest.mark.parametrize(
@@ -155,7 +155,6 @@ def test_export_folder_setting_provide_a_file_not_directory(tmp_path, caplog, ca
     assert expected_screen_output in captured.out
 
 
-
 def test_front_matter_setter_invalid(caplog):
     cs = conversion_settings.ConversionSettings()
     cs.front_matter_format = 'toml'
@@ -263,21 +262,28 @@ def test_markdown_conversion_input_setter_invalid_value():
 
 
 @pytest.mark.parametrize(
-    'string_to_test, allow_unicode, expected', [
-        ("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
-         False,
-         Path('1234567890123456789012345678901234567890123456789012345678901234')),
-        ("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
-         False,
-         Path('1234567890123456789012345678901234567890123456789012345678901234')),
-        ("12345678901234567890123456789012345678901234567890123456789012345678901234",
-         False,
-         Path('1234567890123456789012345678901234567890123456789012345678901234')),
+    'string_to_test, expected', [
+        ("!?hello", Path('!-hello')),
+        ("", Path(config.yanom_globals.default_attachment_folder)),
     ]
 )
-def test_attachment_folder_name_setter(string_to_test, allow_unicode, expected, monkeypatch):
+def test_attachment_folder_name_setter(string_to_test, expected):
     cs = conversion_settings.ConversionSettings()
-    monkeypatch.setattr(os, 'name', 'posix')
+
     cs.attachment_folder_name = string_to_test
 
     assert cs.attachment_folder_name == expected
+
+
+@pytest.mark.parametrize(
+    'string_to_test, expected', [
+        ("!?hello", Path('!-hello')),
+        ("", Path(config.yanom_globals.default_export_folder)),
+    ]
+)
+def test_attachment_export_folder_setter(string_to_test, expected):
+    cs = conversion_settings.ConversionSettings()
+
+    cs.export_folder = string_to_test
+
+    assert cs.export_folder == expected

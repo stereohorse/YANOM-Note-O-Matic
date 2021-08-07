@@ -1,7 +1,7 @@
-import sys
 from collections import namedtuple
 import logging
 from pathlib import Path
+import sys
 
 from alive_progress import alive_bar
 
@@ -157,6 +157,8 @@ class NSXFile:
                 sys.exit(1)
         except FileNotFoundError as e:
             msg = f'Unable to create the export folder there is a problem with the path.\n{e}'
+            if helper_functions.are_windows_long_paths_disabled():
+                msg = f"{msg}\n Windows long path names are not enabled check path length"
             self._report_create_export_folder_errors(msg, e)
             sys.exit(1)
         except OSError as e:

@@ -80,7 +80,7 @@ class NotePage:
 
     def _format_ctime_and_mtime_if_required(self):
         if self._conversion_settings.front_matter_format != 'none' \
-                or self._conversion_settings.creation_time_in_exported_file_name is True:
+                or self._conversion_settings._creation_time_in_exported_file_name is True:
             if 'ctime' in self._note_json:
                 self._note_json['ctime'] = time.strftime('%Y%m%d%H%M', time.localtime(self._note_json['ctime']))
             if 'mtime' in self._note_json:
@@ -99,8 +99,7 @@ class NotePage:
     def _create_file_name(self, used_filenames):
         dirty_filename = self._append_file_extension()
         cleaned_filename = Path(helper_functions.generate_clean_filename(dirty_filename,
-                                                                         yanom_globals.path_part_max_length,
-                                                                         allow_unicode=True))
+                                                                         self.conversion_settings.filename_options))
 
         new_filename = cleaned_filename
         n = 0

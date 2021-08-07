@@ -1,5 +1,7 @@
+from collections import namedtuple
+import ctypes
 import os
-from pathlib import Path, PurePath
+from pathlib import Path
 import random
 import re
 import string
@@ -8,6 +10,11 @@ import traceback
 from typing import Tuple
 import unicodedata
 from urllib.parse import unquote_plus
+
+FileNameOptions = namedtuple('FileNameOptions',
+                             'max_length allow_unicode allow_uppercase allow_non_alphanumeric allow_spaces '
+                             'space_replacement',
+                             )
 
 
 def find_working_directory(is_frozen=getattr(sys, 'frozen', False)) -> Tuple[Path, str]:
@@ -34,7 +41,7 @@ def find_working_directory(is_frozen=getattr(sys, 'frozen', False)) -> Tuple[Pat
     return current_directory_path, message
 
 
-def generate_clean_filename(filename, max_length, allow_unicode=True) -> str:
+def generate_clean_filename(filename: str, name_options: FileNameOptions) -> str:
     """
     Clean a file name.
 
@@ -54,20 +61,18 @@ def generate_clean_filename(filename, max_length, allow_unicode=True) -> str:
     ==========
     filename: str
         A file name.
-    max_length: int
-        Maximum string length to return.
-    allow_unicode: bool
-        If True unicode characters are maintained.  Default = True.
+    name_options: FileNameOptions
+        FileNameOptions namedtuple containing the options to aply to the name cleaning process
 
     Returns
     =======
     str
 
     """
-    return _clean_file_or_directory_name(filename, max_length, allow_unicode, is_file=True)
+    return _clean_file_or_directory_name(filename, name_options, is_file=True)
 
 
-def generate_clean_directory_name(directory_name: str, max_length: int, allow_unicode=True) -> str:
+def generate_clean_directory_name(directory_name: str, name_options: FileNameOptions) -> str:
     """
     Clean a directory name.
 
@@ -86,20 +91,18 @@ def generate_clean_directory_name(directory_name: str, max_length: int, allow_un
     ==========
     directory_name: str
         A single directory name.
-    max_length: int
-        Maximum string length to return.
-    allow_unicode: bool
-        If True unicode characters are maintained.  Default = True.
+    name_options: FileNameOptions
+        FileNameOptions namedtuple containing the options to aply to the name cleaning process
 
     Returns
     =======
     str
 
     """
-    return _clean_file_or_directory_name(directory_name, max_length, allow_unicode, is_file=False)
+    return _clean_file_or_directory_name(directory_name, name_options, is_file=False)
 
 
-def _clean_file_or_directory_name(dirty_name: str, max_length: int, allow_unicode=False, is_file=True) -> str:
+def _clean_file_or_directory_name(dirty_name: str, name_options: FileNameOptions, is_file=True) -> str:
     if not dirty_name or dirty_name == '.' or dirty_name == '..':
         return get_random_string(6)
 
@@ -108,24 +111,23 @@ def _clean_file_or_directory_name(dirty_name: str, max_length: int, allow_unicod
     dirty_name = unquote_plus(dirty_name)
     dirty_name = replace_slashes(dirty_name)
     parts = dirty_name.split('.')
-    parts = clean_path_parts(allow_unicode, parts)
+    parts = clean_path_parts(name_options, parts)
     parts = prepend_reserved_windows_names(parts)
     parts = add_random_string_to_any_empty_path_parts(parts)
 
     if is_file:
-        parts = shorten_filename(parts, max_length)
+        parts = shorten_filename(parts, name_options.max_length)
         clean_filename = join_name_parts(parts)
 
         return clean_filename
 
     dirty_name = join_name_parts(parts)
-    clean_directory_name = shorten_directory_name(dirty_name, max_length)
+    clean_directory_name = shorten_directory_name(dirty_name, name_options.max_length)
 
     return clean_directory_name
 
 
 def join_name_parts(parts):
-
     if len(parts) > 1:
         parts[-1] = parts[-1].lstrip('.')
         new_path_part_name = '.'.join(parts)
@@ -135,14 +137,14 @@ def join_name_parts(parts):
     return new_path_part_name
 
 
-def clean_path_parts(allow_unicode, parts):
+def clean_path_parts(name_options: FileNameOptions, parts: list):
     for i in range(len(parts)):
         if not len(parts[i]):
             continue
 
-        parts[i] = process_path_part_for_unicode(allow_unicode, parts[i])
+        parts[i] = process_path_part_for_unicode(name_options.allow_unicode, parts[i])
 
-        parts[i] = strip_unwanted_chars_from_path_part(parts[i])
+        parts[i] = strip_unwanted_chars_from_path_part(name_options, parts[i])
 
     return parts
 
@@ -182,12 +184,26 @@ def add_random_string_to_any_empty_path_parts(parts):
     return parts
 
 
-def strip_unwanted_chars_from_path_part(raw_part):
-    cleaned_part = "".join(character for character in raw_part if character not in r'<>:"/\|?*')
+def strip_unwanted_chars_from_path_part(name_options: FileNameOptions, raw_part):
+    # Always clean windows reserved characters
+    raw_part = re.sub(r'[<>:"/\\|?*]', '-', raw_part)
 
-    # Remove spaces and multiple dashes and replace with single dash
-    # then strip leading and trialing chars
-    cleaned_part = re.sub(r'[-\s]+', '-', cleaned_part).strip('-_.')
+    if not name_options.allow_non_alphanumeric:
+        # remove anything not a alpha numeric, white, space or dash
+        raw_part = re.sub(r'[^\w\s-]', '', raw_part)
+
+    if not name_options.allow_spaces:
+        # replace spaces
+        raw_part = re.sub(r'[\s]+', name_options.space_replacement, raw_part)
+
+    # replace multiple dashes
+    raw_part = re.sub(r'[-]+', '-', raw_part)
+
+    # strip leading and trailing dash or underscore
+    cleaned_part = raw_part.strip('-_.')
+
+    if not name_options.allow_uppercase:
+        cleaned_part = cleaned_part.lower()
 
     return cleaned_part
 
@@ -330,7 +346,7 @@ def add_strong_between_tags(front_tag, rear_tag, old_html):
     old_values = _find_tags(front_tag, rear_tag, old_html)
     new_values = [f'<strong>{item}</strong>' for item in old_values]
     return _update_html_with_changed_tags(front_tag, rear_tag, front_tag, rear_tag,
-                                           old_html, old_values, new_values)
+                                          old_html, old_values, new_values)
 
 
 def change_html_tags(front_tag, rear_tag, new_front_tag, new_rear_tag, old_html):
@@ -360,11 +376,11 @@ def change_html_tags(front_tag, rear_tag, new_front_tag, new_rear_tag, old_html)
     """
     values = _find_tags(front_tag, rear_tag, old_html)
     return _update_html_with_changed_tags(front_tag, rear_tag, new_front_tag, new_rear_tag,
-                                           old_html, values)
+                                          old_html, values)
 
 
 def _update_html_with_changed_tags(front_tag, rear_tag, new_front_tag, new_rear_tag,
-                                    html, old_values, new_values=None):
+                                   html, old_values, new_values=None):
     if new_values is None:
         new_values = old_values
     for i in range(len(old_values)):
@@ -382,3 +398,27 @@ def log_traceback(e):
     traceback_text = ''.join(traceback_lines)
 
     return traceback_text
+
+
+def are_windows_long_paths_disabled():
+    """
+    On a windows system check registry to see if long file names are enabled or disabled
+
+    Returns
+    =======
+    None: if not a windows system
+    Bool: False if long names ARE enabled. True if not enabled i.e. disabled
+    """
+
+    if os.name != 'nt':
+        return
+
+    ntdll = ctypes.WinDLL('ntdll')
+
+    if hasattr(ntdll, 'RtlAreLongPathsEnabled'):
+        ntdll.RtlAreLongPathsEnabled.restype = ctypes.c_ubyte
+        ntdll.RtlAreLongPathsEnabled.argtypes = ()
+
+        return not bool(ntdll.RtlAreLongPathsEnabled())
+
+    return True

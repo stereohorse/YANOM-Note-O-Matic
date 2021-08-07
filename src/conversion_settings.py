@@ -9,6 +9,7 @@ import sys
 from typing import Literal
 
 import config
+import helper_functions
 from config import yanom_globals
 from helper_functions import generate_clean_directory_name, find_working_directory
 
@@ -56,8 +57,22 @@ class ConversionSettings:
         Path object for the sub-directory name to place exported notes into
     _attachment_folder_name: pathlib.Path
         Path object for the sub-directory name within the export folder to place images and attachments
-    creation_time_in_exported_file_name: bool
+    _creation_time_in_exported_file_name: bool
         Include the note creation time on the end of the file name
+    _allow_spaces_in_file_names: bool
+        Allow spaces in file and directory names
+    _allow_unicode_in_file_names: bool
+        Allow unicode characters in file and directory names
+    _allow_uppercase_in_file_names: bool
+        Allow uppercase characters in file and directory names
+    _allow_non_alphanumeric_in_file_names: bool
+        Allow characters other than a-z, A-Z,0-9 characters in file and directory names.  Windows reserved
+        characters will not be allowed.
+    _filename_spaces_replaced_by: str
+        String containing the replacement for any spaces in file and directory names.  Empty string is allowed
+     _maximum_file_or_directory_name_length: int
+        Integer of maximum length for a directory or file name.  Maximums are set as global variable Windows 32,
+        everything else 64. Can be set to maximum or smaller value
     _working_directory: Path
         The base working directory for the program execution. This is not stored in ini files it is used for program
         execution only
@@ -113,7 +128,13 @@ class ConversionSettings:
             'source': '',
             'export_folder': '',
             'attachment_folder_name': '',
-            'creation_time_in_exported_file_name': ('True', 'False')
+            'allow_spaces_in_filenames': ('True', 'False'),
+            'filename_spaces_replaced_by': '',
+            'allow_unicode_in_filenames': ('True', 'False'),
+            'allow_uppercase_in_filenames': ('True', 'False'),
+            'allow_non_alphanumeric_in_filenames': ('True', 'False'),
+            'creation_time_in_exported_file_name': ('True', 'False'),
+            'maximum_file_or_directory_name_length': '',
         }
     }
 
@@ -146,7 +167,13 @@ class ConversionSettings:
         self.chart_data_table = True
         self._export_folder_name = 'notes'
         self._attachment_folder_name = 'attachments'
-        self.creation_time_in_exported_file_name = False
+        self._allow_spaces_in_file_names = True
+        self._filename_spaces_replaced_by = '-'
+        self._allow_unicode_in_file_names = True
+        self._allow_uppercase_in_file_names = True
+        self._allow_non_alphanumeric_in_file_names = True
+        self._creation_time_in_exported_file_name = False
+        self._maximum_file_or_directory_name_length = yanom_globals.path_part_max_length
         self._working_directory, environment_message = find_working_directory()
         self.logger.debug(environment_message)
         self._source_absolute_path = None
@@ -166,24 +193,10 @@ class ConversionSettings:
                f"spaces_in_tags={self.spaces_in_tags}, split_tags={self.split_tags}, " \
                f"export_folder='{self.export_folder}', " \
                f"attachment_folder_name='{self.attachment_folder_name}', " \
-               f"creation_time_in_exported_file_name='{self.creation_time_in_exported_file_name})'"
+               f"creation_time_in_exported_file_name='{self._creation_time_in_exported_file_name})'"
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(valid_conversion_inputs={self.valid_conversion_inputs}, " \
-               f"valid_markdown_conversion_inputs='{self.valid_markdown_conversion_inputs}', " \
-               f"valid_quick_settings='{self.valid_quick_settings}', " \
-               f"valid_export_formats='{self.valid_export_formats}', " \
-               f"valid_front_matter_formats]'{self.valid_front_matter_formats}', " \
-               f"markdown_conversion_input='{self._markdown_conversion_input}, quick_setting='{self.quick_setting}', " \
-               f"export_format='{self.export_format}', " \
-               f"yaml_front_matter={self.front_matter_format}, metadata_schema='{self.metadata_schema}', " \
-               f"tag_prefix='{self.tag_prefix}', " \
-               f"first_row_as_header={self.first_row_as_header}, " \
-               f"first_column_as_header={self.first_column_as_header}" \
-               f"spaces_in_tags={self.spaces_in_tags}, split_tags={self.split_tags}, " \
-               f"export_folder='{self.export_folder}', " \
-               f"attachment_folder_name='{self.attachment_folder_name}', " \
-               f"creation_time_in_exported_file_name='{self.creation_time_in_exported_file_name})'"
+        return repr(self.__dict__)
 
     def set_from_dictionary(self, settings):
         """Set conversion settings from a dictionary
@@ -258,6 +271,11 @@ class ConversionSettings:
         self.chart_image = True
         self.chart_csv = True
         self.chart_data_table = True
+        self._allow_spaces_in_file_names = True
+        self._allow_unicode_in_file_names = True
+        self._allow_uppercase_in_file_names = True
+        self._allow_non_alphanumeric_in_file_names = True
+        self._filename_spaces_replaced_by = '-'
 
     def quick_set_qownnotes_settings(self):
         """
@@ -277,6 +295,11 @@ class ConversionSettings:
         self.chart_image = True
         self.chart_csv = True
         self.chart_data_table = True
+        self._allow_spaces_in_file_names = True
+        self._allow_unicode_in_file_names = True
+        self._allow_uppercase_in_file_names = True
+        self._allow_non_alphanumeric_in_file_names = True
+        self._filename_spaces_replaced_by = '-'
 
     def quick_set_gfm_settings(self):
         """
@@ -295,6 +318,11 @@ class ConversionSettings:
         self.chart_image = True
         self.chart_csv = True
         self.chart_data_table = True
+        self._allow_spaces_in_file_names = True
+        self._allow_unicode_in_file_names = True
+        self._allow_uppercase_in_file_names = True
+        self._allow_non_alphanumeric_in_file_names = True
+        self._filename_spaces_replaced_by = '-'
 
     def quick_set_obsidian_settings(self):
         """
@@ -314,6 +342,11 @@ class ConversionSettings:
         self.chart_image = True
         self.chart_csv = True
         self.chart_data_table = True
+        self._allow_spaces_in_file_names = True
+        self._allow_unicode_in_file_names = True
+        self._allow_uppercase_in_file_names = True
+        self._allow_non_alphanumeric_in_file_names = True
+        self._filename_spaces_replaced_by = '-'
 
     def quick_set_commonmark_settings(self):
         """
@@ -333,6 +366,11 @@ class ConversionSettings:
         self.chart_image = True
         self.chart_csv = True
         self.chart_data_table = True
+        self._allow_spaces_in_file_names = True
+        self._allow_unicode_in_file_names = True
+        self._allow_uppercase_in_file_names = True
+        self._allow_non_alphanumeric_in_file_names = True
+        self._filename_spaces_replaced_by = '-'
 
     def quick_set_pandoc_markdown_settings(self):
         """
@@ -352,6 +390,11 @@ class ConversionSettings:
         self.chart_image = True
         self.chart_csv = True
         self.chart_data_table = True
+        self._allow_spaces_in_file_names = True
+        self._allow_unicode_in_file_names = True
+        self._allow_uppercase_in_file_names = True
+        self._allow_non_alphanumeric_in_file_names = True
+        self._filename_spaces_replaced_by = '-'
 
     def quick_set_multimarkdown_settings(self):
         """
@@ -370,6 +413,11 @@ class ConversionSettings:
         self.chart_image = True
         self.chart_csv = True
         self.chart_data_table = True
+        self._allow_spaces_in_file_names = True
+        self._allow_unicode_in_file_names = True
+        self._allow_uppercase_in_file_names = True
+        self._allow_non_alphanumeric_in_file_names = True
+        self._filename_spaces_replaced_by = '-'
 
     def quick_set_pandoc_markdown_strict_settings(self):
         """
@@ -388,6 +436,11 @@ class ConversionSettings:
         self.chart_image = True
         self.chart_csv = True
         self.chart_data_table = True
+        self._allow_spaces_in_file_names = True
+        self._allow_unicode_in_file_names = True
+        self._allow_uppercase_in_file_names = True
+        self._allow_non_alphanumeric_in_file_names = True
+        self._filename_spaces_replaced_by = '-'
 
     def quick_set_html_conversion_settings(self):
         """
@@ -407,6 +460,21 @@ class ConversionSettings:
         self.chart_image = True
         self.chart_csv = True
         self.chart_data_table = True
+        self._allow_spaces_in_file_names = True
+        self._allow_unicode_in_file_names = True
+        self._allow_uppercase_in_file_names = True
+        self._allow_non_alphanumeric_in_file_names = True
+        self._filename_spaces_replaced_by = '-'
+
+    @property
+    def filename_options(self):
+
+        return helper_functions.FileNameOptions(self.maximum_file_or_directory_name_length,
+                                                self.allow_unicode_in_filenames,
+                                                self.allow_uppercase_in_filenames,
+                                                self.allow_non_alphanumeric_in_filenames,
+                                                self.allow_spaces_in_filenames,
+                                                self.filename_spaces_replaced_by)
 
     @property
     def valid_conversion_inputs(self):
@@ -561,21 +629,22 @@ class ConversionSettings:
         return self._export_folder_name
 
     @export_folder.setter
-    def export_folder(self, provided_export_folder):
-        provided_export_folder = provided_export_folder.strip()
-        if Path(provided_export_folder).is_file():
-            msg = f"Invalid path provided. Path is to existing file not a directory '{provided_export_folder}'"
+    def export_folder(self, value):
+        if value == '':
+            value = yanom_globals.default_export_folder
+        value = value.strip()
+        if Path(value).is_file():
+            msg = f"Invalid path provided. Path is to existing file not a directory '{value}'"
             self.logger.error(msg)
             if not config.silent:
                 print(msg)
             sys.exit(1)
 
-        self._export_folder_name = Path(generate_clean_directory_name(provided_export_folder,
-                                                                      yanom_globals.path_part_max_length,
-                                                                      allow_unicode=True))
+        self._export_folder_name = Path(generate_clean_directory_name(value,
+                                                                      self.filename_options))
 
         self.logger.info(
-            f'For the provided attachment folder name of "{provided_export_folder}" the cleaned name used is {self._export_folder_name}')
+            f'For the provided attachment folder name of "{value}" the cleaned name used is {self._export_folder_name}')
 
     @property
     def attachment_folder_name(self):
@@ -583,8 +652,9 @@ class ConversionSettings:
 
     @attachment_folder_name.setter
     def attachment_folder_name(self, value):
-        self._attachment_folder_name = Path(generate_clean_directory_name(value, yanom_globals.path_part_max_length,
-                                                                          allow_unicode=True))
+        if value == '':
+            value = yanom_globals.default_attachment_folder
+        self._attachment_folder_name = Path(generate_clean_directory_name(value, self.filename_options))
         self.logger.info(
             f'For the provided attachment folder name of "{value}" the cleaned name used is {self._attachment_folder_name}')
 
@@ -599,3 +669,61 @@ class ConversionSettings:
     @property
     def source_absolute_path(self):
         return self._source_absolute_path
+
+    @property
+    def allow_spaces_in_filenames(self):
+        return self._allow_spaces_in_file_names
+
+    @allow_spaces_in_filenames.setter
+    def allow_spaces_in_filenames(self, value: bool):
+        self._allow_spaces_in_file_names = value
+
+    @property
+    def allow_unicode_in_filenames(self):
+        return self._allow_unicode_in_file_names
+
+    @allow_unicode_in_filenames.setter
+    def allow_unicode_in_filenames(self, value: bool):
+        self._allow_unicode_in_file_names = value
+
+    @property
+    def allow_uppercase_in_filenames(self):
+        return self._allow_uppercase_in_file_names
+
+    @allow_uppercase_in_filenames.setter
+    def allow_uppercase_in_filenames(self, value: bool):
+        self._allow_uppercase_in_file_names = value
+
+    @property
+    def allow_non_alphanumeric_in_filenames(self):
+        return self._allow_non_alphanumeric_in_file_names
+
+    @allow_non_alphanumeric_in_filenames.setter
+    def allow_non_alphanumeric_in_filenames(self, value: bool):
+        self._allow_non_alphanumeric_in_file_names = value
+
+    @property
+    def filename_spaces_replaced_by(self):
+        return self._filename_spaces_replaced_by
+
+    @filename_spaces_replaced_by.setter
+    def filename_spaces_replaced_by(self, value: str):
+        self._filename_spaces_replaced_by = value
+
+    @property
+    def creation_time_in_exported_file_name(self):
+        return self._creation_time_in_exported_file_name
+
+    @creation_time_in_exported_file_name.setter
+    def creation_time_in_exported_file_name(self, value: bool):
+        self._creation_time_in_exported_file_name = value
+
+    @property
+    def maximum_file_or_directory_name_length(self):
+        return self._maximum_file_or_directory_name_length
+
+    @maximum_file_or_directory_name_length.setter
+    def maximum_file_or_directory_name_length(self, value: int):
+        value = min(int(value), yanom_globals.path_part_max_length)
+        self._maximum_file_or_directory_name_length = value
+

@@ -1,4 +1,6 @@
-import os
+import logging
+
+import helper_functions
 
 APP_NAME = 'YANOM'
 APP_SUB_NAME = 'Note-O-Matic'
@@ -8,21 +10,32 @@ DATA_DIR = 'data'
 
 class YanomGlobals:
     def __init__(self):
-        self._windows_path_part_max_length = 32
-        self._posix_path_part_max_length = 64
+        self._windows_path_part_max_length = 64
+        self._posix_path_part_max_length = 255
+        self._default_attachment_folder = 'attachments'
+        self._default_export_folder = 'notes'
 
     @property
     def path_part_max_length(self):
-        if os.name == 'nt':
+        if helper_functions.are_windows_long_paths_disabled():
             return self._windows_path_part_max_length
 
         return self._posix_path_part_max_length
+
+    @property
+    def default_attachment_folder(self):
+        return self._default_attachment_folder
+
+    @property
+    def default_export_folder(self):
+        return self._default_export_folder
 
 
 yanom_globals = YanomGlobals()
 
 global logger_level
 logger_level = 20  # INFO
+
 global silent
 silent = False
 

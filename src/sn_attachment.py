@@ -104,8 +104,7 @@ class FileNSAttachment(NSAttachment):
 
     def create_file_name(self):
         self._file_name = Path(helper_functions.generate_clean_filename(self._name,
-                                                                        yanom_globals.path_part_max_length,
-                                                                        allow_unicode=True))
+                                                                        self._conversion_settings.filename_options))
         if not self._name == str(self._file_name):
             self.logger.info(f'Original attachment name was "{self._name}" the cleaned name used is "{self._file_name}"')
 
@@ -129,8 +128,7 @@ class ImageNSAttachment(FileNSAttachment):
     def create_file_name(self):
         self._name = self._name.replace('ns_attach_image_', '')
         self._file_name = Path(helper_functions.generate_clean_filename(self._name,
-                                                                        yanom_globals.path_part_max_length,
-                                                                        allow_unicode=True))
+                                                                        self._conversion_settings.filename_options))
         if self._name != str(self._file_name):
             self.logger.info(f'Original attachment name was "{self._name}" the cleaned name used is "{self._file_name}"')
 
@@ -151,8 +149,7 @@ class ChartNSAttachment(NSAttachment):
 
     def create_file_name(self):
         self._file_name = Path(helper_functions.generate_clean_filename(self._attachment_id,
-                                                                        yanom_globals.path_part_max_length,
-                                                                        allow_unicode=True))
+                                                                        self._conversion_settings.filename_options))
 
     @property
     def chart_file_like_object(self):

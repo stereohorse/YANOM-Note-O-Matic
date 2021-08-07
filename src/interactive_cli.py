@@ -1,3 +1,4 @@
+import os
 from abc import ABC, abstractmethod
 import copy
 import logging
@@ -6,7 +7,9 @@ from pyfiglet import Figlet
 from PyInquirer.prompt import prompt
 import PyInquirer
 from prompt_toolkit.styles import Style
+
 import config
+import helper_functions
 
 
 def what_module_is_this():
@@ -167,7 +170,9 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             self._ask_and_set_chart_options()
             self._ask_and_set_export_folder_name()
             self._ask_and_set_attachment_folder_name()
-            self._ask_and_set_creation_time_in_file_name()
+            self._ask_and_set_file_name_options()
+            self._ask_and_set_space_replacement_character()
+            self._ask_and_set_maximum_filename_length()
 
     def _ask_markdown_metadata_questions(self):
         self._ask_and_set_front_matter_format()
@@ -381,8 +386,88 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
 
         answer = prompt(questions, style=self.style)
         _exit_if_keyboard_interrupt(answer)
+
         if not answer['accept_change']:
-            self._ask_and_set_export_folder_name()
+            not_accept_change_function()
+
+    def _ask_and_set_file_name_options(self):
+        questions = [
+            {
+                'type': 'checkbox',
+                'message': 'Select file and directory naming options',
+                'name': 'filename_options',
+                'choices': [
+                    {
+                        'name': 'Allow spaces in file and directory names',
+                        'checked': self._default_settings.allow_spaces_in_filenames
+                    },
+                    {
+                        'name': 'Allow unicode characters',
+                        'checked': self._default_settings.allow_unicode_in_filenames
+                    },
+                    {
+                        'name': 'Allow uppercase characters',
+                        'checked': self._default_settings.allow_uppercase_in_filenames
+                    },
+                    {
+                        'name': 'Allow non-alphanumeric characters',
+                        'checked': self._default_settings.allow_non_alphanumeric_in_filenames
+                    },
+                    {
+                        'name': 'Include creation time in the file name',
+                        'checked': self._default_settings.creation_time_in_exported_file_name
+                    },
+                ],
+            },
+        ]
+
+        answers = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answers)
+        self._current_conversion_settings.allow_spaces_in_filenames = \
+            'Allow spaces in file and directory names' in answers['filename_options']
+        self._current_conversion_settings.allow_spaces_in_filenames = \
+            'Allow unicode characters' in answers['filename_options']
+        self._current_conversion_settings.allow_uppercase_in_filenames = \
+            'Allow uppercase characters' in answers['filename_options']
+        self._current_conversion_settings.allow_non_alphanumeric_in_filenames = \
+            'Allow non-alphanumeric characters' in answers['filename_options']
+        self._current_conversion_settings._creation_time_in_exported_file_name = \
+            'Include creation time in the file name' in answers['filename_options']
+
+    def _ask_and_set_space_replacement_character(self):
+        questions = [
+            {
+                'type': 'input',
+                'name': 'filename_spaces_replaced_by',
+                'message': 'Enter character(s) to replace spaces with',
+                'default': self._default_settings.filename_spaces_replaced_by
+            },
+        ]
+        answer = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
+        self._current_conversion_settings.filename_spaces_replaced_by = answer['filename_spaces_replaced_by']
+
+    def _ask_and_set_maximum_filename_length(self):
+        msg = 'Enter the maximum length for file and directory names (max 255)'
+        if os.name == 'nt':
+            windows_long_names_text = 'Windows long path names are enabled on this computer'
+            if helper_functions.are_windows_long_paths_disabled():
+                windows_long_names_text = 'Windows long path names are NOT enabled on this computer'
+
+            msg = f'Enter the maximum length for file and directory names\n{windows_long_names_text}\n(max 64 for windows without long file names enabled else, 255)'
+
+        questions = [
+            {
+                'type': 'input',
+                'name': 'maximum_file_or_directory_name_length',
+                'message': msg,
+                'default': str(self._default_settings.maximum_file_or_directory_name_length)
+            },
+        ]
+        answer = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
+        if 'maximum_file_or_directory_name_length' in answer:
+            self._current_conversion_settings.maximum_file_or_directory_name_length = answer['maximum_file_or_directory_name_length']
 
     def _ask_and_set_creation_time_in_file_name(self):
         questions = [

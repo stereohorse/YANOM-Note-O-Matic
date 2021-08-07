@@ -20,7 +20,7 @@ conversion_input = nsx
 
 [markdown_conversion_inputs]
     # valid entries are obsidian, gfm, commonmark, q_own_notes, pandoc_markdown_strict, pandoc_markdown, multimarkdown
-markdown_conversion_input = obsidian
+markdown_conversion_input = gfm
 
 [quick_settings]
     # valid entries are q_own_notes, obsidian, gfm, pandoc_markdown, commonmark, pandoc_markdown_strict, multimarkdown, html
@@ -50,7 +50,8 @@ front_matter_format = yaml
     # the useful available keys in an nsx file are title, ctime, mtime, tag
 metadata_schema = title,ctime,mtime,tag
     # tag prefix is a character you wish to be added to the front of any tag values 
-    # retrieved from metadata.  note this is only used if front_matter_format is none
+    # retrieved from metadata.  note use this if using front matter format "text" 
+    # or use is your markdown system uses a prefix in a front matter section (most wil not use a prefix) 
 tag_prefix = #
     # spaces_in_tags if true will maintain spaces in tag words, if false spaces are replaced by a dash -
 spaces_in_tags = False
@@ -71,12 +72,18 @@ chart_csv = True
 chart_data_table = True
 
 [file_options]
-source = my_source
+source = 
 export_folder = notes
 attachment_folder_name = attachments
+    # the following options currently only apply to nsx files.
+allow_spaces_in_filenames = True
+filename_spaces_replaced_by = -
+allow_unicode_in_filenames = True
+allow_uppercase_in_filenames = True
+allow_non_alphanumeric_in_filenames = True
 creation_time_in_exported_file_name = False
-    # creation time in file name only applies to nsx files.
     # if true creation time as `yyyymmddhhmm-` will be added as prefix to file name
+maximum_file_or_directory_name_length = 255
 
 """
 
@@ -92,7 +99,7 @@ conversion_input = nsx
 
 [markdown_conversion_inputs]
     # valid entries are obsidian, gfm, commonmark, q_own_notes, pandoc_markdown_strict, pandoc_markdown, multimarkdown
-markdown_conversion_input = obsidian
+markdown_conversion_input = gfm
 
 [quick_settings]
     # valid entries are q_own_notes, obsidian, gfm, pandoc_markdown, commonmark, pandoc_markdown_strict, multimarkdown, html
@@ -122,7 +129,8 @@ front_matter_format = yaml
     # the useful available keys in an nsx file are title, ctime, mtime, tag
 metadata_schema = title,ctime,mtime,tag
     # tag prefix is a character you wish to be added to the front of any tag values 
-    # retrieved from metadata.  note this is only used if front_matter_format is none
+    # retrieved from metadata.  note use this if using front matter format "text" 
+    # or use is your markdown system uses a prefix in a front matter section (most wil not use a prefix) 
 tag_prefix = #
     # spaces_in_tags if true will maintain spaces in tag words, if false spaces are replaced by a dash -
 spaces_in_tags = False
@@ -146,10 +154,15 @@ chart_data_table = True
 source = my_source
 export_folder = 
 attachment_folder_name = 
+    # the following options currently only apply to nsx files.
+allow_spaces_in_filenames = True
+filename_spaces_replaced_by = -
+allow_unicode_in_filenames = True
+allow_uppercase_in_filenames = True
+allow_non_alphanumeric_in_filenames = True
 creation_time_in_exported_file_name = False
-    # creation time in file name only applies to nsx files.
     # if true creation time as `yyyymmddhhmm-` will be added as prefix to file name
-
+maximum_file_or_directory_name_length = 255
 """
 
 def test_initialisation(tmp_path):
@@ -479,10 +492,20 @@ def test_str(good_config_ini, tmp_path):
     cd.parse_config_file()
 
     result = str(cd)
-    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'obsidian'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes', 'attachment_folder_name': 'attachments', 'creation_time_in_exported_file_name': 'False'}}"
+    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'False', 'maximum_file_or_directory_name_length': '255'}}"
 
 
-def test_generate_conversion_settings_using_quick_settings_string(good_config_ini, tmp_path, caplog):
+def test_repr(good_config_ini, tmp_path):
+    good_config_ini = good_config_ini.replace('source = my_source', 'source = ')
+    Path(f'{str(tmp_path)}/config.ini').write_text(good_config_ini, encoding="utf-8")
+    cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'gfm', allow_no_value=True)
+    cd.parse_config_file()
+
+    result = repr(cd)
+    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'False', 'maximum_file_or_directory_name_length': '255'}}"
+
+
+def test_generate_conversion_settings_using_quick_settings_string(good_config_ini, tmp_path):
     Path(f'{str(tmp_path)}/config.ini').write_text(good_config_ini, encoding="utf-8")
 
     cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'obsidian', allow_no_value=True)

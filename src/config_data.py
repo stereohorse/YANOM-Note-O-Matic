@@ -145,8 +145,18 @@ class ConfigData(ConfigParser):
         if self['file_options']['attachment_folder_name'] == '':
             self['file_options']['attachment_folder_name'] = 'attachments'
         self._conversion_settings.attachment_folder_name = self['file_options']['attachment_folder_name']
-        self._conversion_settings.creation_time_in_exported_file_name = \
+        self._conversion_settings._creation_time_in_exported_file_name = \
             self.getboolean('file_options', 'creation_time_in_exported_file_name')
+        self._conversion_settings.allow_spaces_in_filenames = \
+            self.getboolean('file_options', 'allow_spaces_in_filenames')
+        self._conversion_settings.allow_unicode_in_filenames = \
+            self.getboolean('file_options', 'allow_unicode_in_filenames')
+        self._conversion_settings.allow_uppercase_in_filenames = \
+            self.getboolean('file_options', 'allow_uppercase_in_filenames')
+        self._conversion_settings.allow_non_alphanumeric_in_filenames = \
+            self.getboolean('file_options', 'allow_non_alphanumeric_in_filenames')
+        self._conversion_settings.filename_spaces_replaced_by = self['file_options']['filename_spaces_replaced_by']
+        self._conversion_settings.maximum_file_or_directory_name_length = self['file_options']['maximum_file_or_directory_name_length']
 
     def _write_config_file(self):
         try:
@@ -294,10 +304,15 @@ class ConfigData(ConfigParser):
                 'source': self._conversion_settings.source,
                 'export_folder': self._conversion_settings.export_folder,
                 'attachment_folder_name': self._conversion_settings.attachment_folder_name,
-
-                'creation_time_in_exported_file_name': self._conversion_settings.creation_time_in_exported_file_name,
-                '    # creation time in file name only applies to NSX files.': None,
-                '    # If True creation time as `yyyymmddhhmm-` will be added as prefix to file name': None
+                '    # The following options apply to directory names, and currently only apply filenames in NSX conversions.': None,
+                'allow_spaces_in_filenames': self._conversion_settings.allow_spaces_in_filenames,
+                'filename_spaces_replaced_by': self._conversion_settings.filename_spaces_replaced_by,
+                'allow_unicode_in_filenames': self._conversion_settings.allow_unicode_in_filenames,
+                'allow_uppercase_in_filenames': self._conversion_settings.allow_uppercase_in_filenames,
+                'allow_non_alphanumeric_in_filenames': self._conversion_settings.allow_non_alphanumeric_in_filenames,
+                'creation_time_in_exported_file_name': self._conversion_settings.allow_uppercase_in_filenames,
+                '    # If True creation time as `yyyymmddhhmm-` will be added as prefix to file name': None,
+                'maximum_file_or_directory_name_length': self._conversion_settings.maximum_file_or_directory_name_length,
             }
         }
 

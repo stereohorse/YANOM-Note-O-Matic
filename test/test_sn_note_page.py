@@ -86,7 +86,7 @@ def note_page_1(nsx):
 )
 def test_init_note_page(nsx, front_matter_format, creation_time_in_exported_file_name, expected_ctime, expected_mtime):
     nsx.conversion_settings.front_matter_format = front_matter_format
-    nsx.conversion_settings.creation_time_in_exported_file_name = creation_time_in_exported_file_name
+    nsx.conversion_settings._creation_time_in_exported_file_name = creation_time_in_exported_file_name
     note_jason = {'parent_id': 'note_book2', 'title': 'Page 8 title',
                   'mtime': 1619298640, 'ctime': 1619298559, 'attachment': {'test': 'test_value'}, 'content': 'content',
                   'tag': [9]}

@@ -21,7 +21,7 @@ def store_file(absolute_path, content_to_save):
         return
 
     if isinstance(content_to_save, BytesIO):
-        write_bytes_IO(absolute_path, content_to_save)
+        write_bytes_io(absolute_path, content_to_save)
         return
 
     logger.warning(f"content type {type(content_to_save)} was not recognised for path {absolute_path}")
@@ -41,7 +41,7 @@ def write_bytes(absolute_path, content_to_save):
         error_handling(e, 'bytes file')
 
 
-def write_bytes_IO(absolute_path, content_to_save):
+def write_bytes_io(absolute_path, content_to_save):
     try:
         Path(absolute_path).write_bytes(content_to_save.getbuffer())
     except Exception as e:
@@ -51,6 +51,8 @@ def write_bytes_IO(absolute_path, content_to_save):
 def error_handling(e, write_type):
     if isinstance(e, FileNotFoundError):
         logger.error(f"Attempting to write {write_type} to invalid path - {e}")
+        if helper_functions.are_windows_long_paths_disabled():
+            logger.error("Windows long file paths are not enabled check path length is not too long.")
         logger.error(helper_functions.log_traceback(e))
         return
 

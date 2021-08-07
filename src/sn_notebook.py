@@ -4,7 +4,6 @@ from pathlib import Path
 from alive_progress import alive_bar
 
 import config
-from config import yanom_globals
 import helper_functions
 from helper_functions import generate_clean_directory_name
 from sn_note_page import NotePage
@@ -57,7 +56,8 @@ class Notebook:
     def fetch_notebook_title(self):
         notebook_title = self._notebook_json.get('title', None)
         if notebook_title is None:
-            self.logger.warning(f"The data for notebook id '{self.notebook_id}' does not have a key for 'title' using 'Unknown Notebook'")
+            self.logger.warning(f"The data for notebook id '{self.notebook_id}' "
+                                f"does not have a key for 'title' using 'Unknown Notebook'")
             return 'Unknown Notebook'
         if notebook_title == "":  # The notebook with no title is called 'My Notebook' in note station
             return "My Notebook"
@@ -79,8 +79,7 @@ class Notebook:
 
     def create_folder_name(self):
         self.folder_name = Path(generate_clean_directory_name(self.title,
-                                                              yanom_globals.path_part_max_length,
-                                                              allow_unicode=True))
+                                                              self.conversion_settings.filename_options))
         self.logger.info(f'For the notebook "{self.title}" the folder name used is is {self.folder_name }')
 
     def create_notebook_folder(self, parents=True):
@@ -104,6 +103,8 @@ class Notebook:
             self._full_path_to_notebook = target_path
         except FileNotFoundError as e:
             msg = f'Unable to create notebook folder there is a problem with the path.\n{e}'
+            if helper_functions.are_windows_long_paths_disabled():
+                msg = f"{msg}\n Windows long path names are not enabled check path length"
             self.logger.error(f'{msg}')
             self.logger.error(helper_functions.log_traceback(e))
             if not config.silent:
@@ -116,12 +117,13 @@ class Notebook:
                 print(f'{msg}')
 
     def create_attachment_folder(self):
-        if self.full_path_to_notebook:   #if full path is still None then the fodler was not created and we can skip
+        if self.full_path_to_notebook:   # if full path is still None then the folder was not created and we can skip
             self.logger.debug(f"Creating attachment folder")
             Path(self.full_path_to_notebook, self.conversion_settings.attachment_folder_name).mkdir()
             return
 
-        self.logger.warning(f"Attachment folder for '{self.title}' was not created as the notebook folder has not been created")
+        self.logger.warning(f"Attachment folder for '{self.title}' "
+                            f"was not created as the notebook folder has not been created")
 
     @property
     def full_path_to_notebook(self):
