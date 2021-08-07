@@ -338,7 +338,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             {
                 'type': 'input',
                 'name': 'export_folder',
-                'message': 'Enter a directory name for notes to be exported to (blank entry "notes" will bw used)',
+                'message': 'Enter a directory name for notes to be exported to (blank entry "notes" will be used)',
                 'default': default_folder_name
             }
         ]
@@ -348,8 +348,9 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             answer['export_folder'] = 'notes'
         self._current_conversion_settings.export_folder = answer['export_folder']
 
-        if default_folder_name != answer['export_folder']:
-            self._ask_to_confirm_changed_path_name(self._current_conversion_settings.export_folder)
+        if str(self._current_conversion_settings.export_folder) != answer['export_folder']:
+            self._ask_to_confirm_changed_path_name(self._current_conversion_settings.export_folder,
+                                                   self._ask_and_set_export_folder_name)
 
     def _ask_and_set_attachment_folder_name(self):
         default_folder_name = str(self._default_settings.attachment_folder_name)
@@ -360,7 +361,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             {
                 'type': 'input',
                 'name': 'attachment_folder_name',
-                'message': 'Enter a directory name for notes to be exported to (blank entry "attachments" will bw used)',
+                'message': 'Enter a directory name for notes to be exported to (blank entry "attachments" will be used)',
                 'default': default_folder_name
             },
         ]
@@ -370,10 +371,11 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             answer['attachment_folder_name'] = 'attachments'
         self._current_conversion_settings.attachment_folder_name = answer['attachment_folder_name']
 
-        if default_folder_name != answer['attachment_folder_name']:
-            self._ask_to_confirm_changed_path_name(self._current_conversion_settings.attachment_folder_name)
+        if not str(self._current_conversion_settings.attachment_folder_name) == answer['attachment_folder_name']:
+            self._ask_to_confirm_changed_path_name(self._current_conversion_settings.attachment_folder_name,
+                                                   self._ask_and_set_attachment_folder_name)
 
-    def _ask_to_confirm_changed_path_name(self, new_path):
+    def _ask_to_confirm_changed_path_name(self, new_path, not_accept_change_function):
         message = f"Your submitted folder name has been changed to {new_path}. Do you accept this change?"
         questions = [
             {
