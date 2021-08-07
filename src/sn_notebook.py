@@ -119,7 +119,23 @@ class Notebook:
     def create_attachment_folder(self):
         if self.full_path_to_notebook:   # if full path is still None then the folder was not created and we can skip
             self.logger.debug(f"Creating attachment folder")
-            Path(self.full_path_to_notebook, self.conversion_settings.attachment_folder_name).mkdir()
+            try:
+                Path(self.full_path_to_notebook, self.conversion_settings.attachment_folder_name).mkdir()
+            except FileNotFoundError as e:
+                msg = f'Unable to create attcahment folder there is a problem with the path.\n{e}'
+                if helper_functions.are_windows_long_paths_disabled():
+                    msg = f"{msg}\n Windows long path names are not enabled check path length"
+                self.logger.error(f'{msg}')
+                self.logger.error(helper_functions.log_traceback(e))
+                if not config.silent:
+                    print(f'{msg}')
+            except OSError as e:
+                msg = f'Unable to create attachment folder\n{e}'
+                self.logger.error(f'{msg}')
+                self.logger.error(helper_functions.log_traceback(e))
+                if not config.silent:
+                    print(f'{msg}')
+
             return
 
         self.logger.warning(f"Attachment folder for '{self.title}' "

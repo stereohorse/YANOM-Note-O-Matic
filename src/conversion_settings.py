@@ -505,10 +505,8 @@ class ConversionSettings:
         if isinstance(provided_source, str):
             provided_source = provided_source.strip()
         if provided_source == '':
-            provided_source = Path(self._working_directory, config.DATA_DIR)
-            provided_source.mkdir(parents=True, exist_ok=True)
             self.logger.debug(f"Using relative path {config.DATA_DIR} as source directory")
-            self._source = provided_source
+            self._source = Path(self._working_directory, config.DATA_DIR)
             self._source_absolute_path = Path(self._working_directory, config.DATA_DIR)
             return
 
