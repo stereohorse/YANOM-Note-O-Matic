@@ -147,6 +147,7 @@ class NotePage:
 
     def pre_process_content(self):
         self._pre_processor = NoteStationPreProcessing(self)
+        self._pre_processor.pre_process_note_page()
         self._pre_processed_content = self._pre_processor.pre_processed_content
 
     def convert_data(self):

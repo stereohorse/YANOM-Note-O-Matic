@@ -168,6 +168,7 @@ def test_post_process_content(note_page, tmp_path):
     note_page._pandoc_converter = pandoc_converter.PandocConverter(note_page.conversion_settings)
     note_page._converted_content = 'content\n'
     note_page._pre_processor = nsx_pre_processing.NoteStationPreProcessing(note_page)
+    note_page._pre_processor.pre_process_note_page()
     note_page.conversion_settings.front_matter_format = 'none'
     note_page.post_process_content()
 

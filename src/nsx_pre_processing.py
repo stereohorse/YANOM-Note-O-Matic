@@ -37,7 +37,7 @@ class NoteStationPreProcessing:
         self._checklist_processor = None
         self._charts = []
         self._metadata_processor = None
-        self.pre_process_note_page()
+        # self.pre_process_note_page()
         pass
 
     @property
@@ -54,7 +54,7 @@ class NoteStationPreProcessing:
 
     def pre_process_note_page(self):
         self.logger.debug(f"Pre processing of note page {self._note.title}")
-        self._create_image_tag_processors()
+        self.create_image_tag_processors()
         self._update_content_with_new_img_tags()
         if self._note.conversion_settings.export_format != 'pandoc_markdown_strict' \
                 and self._note.conversion_settings.export_format != 'html':
@@ -77,9 +77,9 @@ class NoteStationPreProcessing:
     def _process_iframes(self):
         self.pre_processed_content, self._iframes_dict = pre_process_iframes_from_html(self.pre_processed_content)
 
-    def _create_image_tag_processors(self):
+    def create_image_tag_processors(self):
         self.logger.debug(f"Cleaning image tags")
-        raw_image_tags = re.findall('<img class=[^>]*syno-notestation-image-object[^>]*src=[^>]*ref=[^>]*>',
+        raw_image_tags = re.findall('<img.*class=[^>]*syno-notestation-image-object[^>]*>',
                                     self.pre_processed_content)
         self._image_tag_processors = [ImageTag(tag, self._attachments) for tag in raw_image_tags]
 
