@@ -9,7 +9,7 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Increment the major version when significantly overhaul the user interface, or rewrite all internals.
 
 
-## [1.4.0] - developing
+## [1.4.0]
 
 ### Added
 - Options to select file and directory name cleaning
@@ -26,6 +26,7 @@ and this project follows something close to [Semantic Versioning](https://semver
 ### Fixed
 - Command line interface may not ask user to accept a changed directory name for export and attachment folders.  Now when name cleaned will always ask to accept new file name.
 - When asking if user wished to accept the new attachment folder name if the user chose 'no' the export folder question would display not the attachment folder question.
+- For nsx file updated image tag algorithm for new image tag format sene in nsx files
 
 ### Other Changes
 - Improved error handling around directory creation with additional messages on Windows systems where long path names are not enabled.
