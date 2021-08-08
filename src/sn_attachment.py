@@ -98,6 +98,8 @@ class FileNSAttachment(NSAttachment):
         super().__init__(note, attachment_id)
         self._name = self._json['attachment'][attachment_id]['name']
         self._filename_inside_nsx = f"file_{self._json['attachment'][attachment_id]['md5']}"
+        self.logger.debug(f'Attachment name is "{self._name}"')
+        self.logger.debug(f'Attachment md5 is "{self._filename_inside_nsx}"')
 
     def create_html_link(self):
         self._html_link = f'<a href="{self._path_relative_to_notebook}">{self.file_name}</a>'
@@ -117,6 +119,7 @@ class ImageNSAttachment(FileNSAttachment):
     def __init__(self, note, attachment_id):
         super().__init__(note, attachment_id)
         self._image_ref = self._json['attachment'][attachment_id]['ref']
+        self.logger.debug(f'Image reference is "{self._image_ref}"')
 
     @property
     def image_ref(self):
