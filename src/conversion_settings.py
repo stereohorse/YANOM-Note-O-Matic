@@ -307,6 +307,7 @@ class ConversionSettings:
         """
         self.logger.debug("GFM conversion settings")
         self.quick_setting = 'gfm'
+        self.export_format = 'gfm'
         self.front_matter_format = 'yaml'
         self.metadata_schema = []
         if self.conversion_input == 'nsx':
