@@ -1,25 +1,9 @@
-from mock import patch
+from bs4 import BeautifulSoup
 from pathlib import Path
 
 import pytest
 
 import image_processing
-
-
-@pytest.mark.parametrize(
-    'content, generate_format, expected', [
-        ("""![|600](attachments/787491613404344687.png)""",
-         """gfm""",
-         """<img src="attachments/787491613404344687.png" width="600">"""),
-        ("""<img src="attachments/787491613404344687.png" width="600">""",
-         """obsidian""",
-         """![|600](attachments/787491613404344687.png)""")
-    ], ids=['obsidian-gfm', 'nsx-obsidian']
-)
-def test_obsidian_image_tag_formatter_class(content, generate_format, expected):
-    obsidian_tag_formatter = image_processing.ObsidianImageTagFormatter(content, generate_format)
-
-    assert obsidian_tag_formatter.processed_content == expected
 
 
 class ImageNSAttachment:
@@ -31,51 +15,199 @@ class ImageNSAttachment:
 
 
 @pytest.mark.parametrize(
-    'raw_tag, expected', [
-        ("""<img class=\" syno-notestation-image-object\" src=\"webman/3rdparty/NoteStation/images/transparent.gif\" border=\"0\" width=\"600\" ref=\"MTYxMzQwNDM0NDczN25zX2F0dGFjaF9pbWFnZV83ODc0OTE2MTM0MDQzNDQ2ODcucG5n\" adjust=\"true\" />""",
-         """<img src="attachments/12345678.png" width="600">"""),
-        ("""<img class=\" syno-notestation-image-object\" src=\"webman/3rdparty/NoteStation/images/transparent.gif\" border=\"0\" ref=\"MTYxMzQwNDM0NDczN25zX2F0dGFjaF9pbWFnZV83ODc0OTE2MTM0MDQzNDQ2ODcucG5n\" adjust=\"true\" />""",
-         """<img src="attachments/12345678.png">""")
-    ], ids=['tag-with-width', 'tag-without-width']
+    'raw_html, proved_path, expected', [
+        ("""<div><img class=\" syno-notestation-image-object\" src=\"webman/3rdparty/NoteStation/images/transparent.gif\" border=\"0\" width=\"600\" ref=\"MTYxMzQwNDM0NDczN25zX2F0dGFjaF9pbWFnZV83ODc0OTE2MTM0MDQzNDQ2ODcucG5n\" adjust=\"true\" /></div>""",
+         'attachments/12345678.png',
+         {'src': 'attachments/12345678.png', 'width': '600'},
+         ),
+        ("""<div><img class=\" syno-notestation-image-object\" src=\"webman/3rdparty/NoteStation/images/transparent.gif\" border=\"0\" ref=\"MTYxMzQwNDM0NDczN25zX2F0dGFjaF9pbWFnZV83ODc0OTE2MTM0MDQzNDQ2ODcucG5n\" adjust=\"true\" /></div>""",
+         'attachments/12345678.png',
+         {'src': 'attachments/12345678.png'},
+         ),
+        ("""<div><img alt=\"Some alt text\" class=\" syno-notestation-image-object\" src=\"webman/3rdparty/NoteStation/images/transparent.gif\" border=\"0\" ref=\"MTYxMzQwNDM0NDczN25zX2F0dGFjaF9pbWFnZV83ODc0OTE2MTM0MDQzNDQ2ODcucG5n\" adjust=\"true\" /></div>""",
+         'attachments/12345678.png',
+         {'alt': 'Some alt text', 'src': 'attachments/12345678.png'},
+         ),
+        ("""<div><img class=\" syno-notestation-image-object\" alt=\"Some alt text\" src=\"webman/3rdparty/NoteStation/images/transparent.gif\" border=\"0\" width=\"600\" ref=\"MTYxMzQwNDM0NDczN25zX2F0dGFjaF9pbWFnZV83ODc0OTE2MTM0MDQzNDQ2ODcucG5n\" adjust=\"true\" /></div>""",
+         'attachments/12345678.png',
+         {'alt': 'Some alt text', 'src': 'attachments/12345678.png', 'width': '600'},
+         ),
+        ("""<div><img src="my_image.gif" alt="Some alt text" width="600"/></div>""",
+         'attachments/12345678.png',
+         {'alt': 'Some alt text', 'src': 'attachments/12345678.png', 'width': '600'},
+         ),
+        ("""<div><img src="" alt="Some alt text" width="600"/></div>""",
+         None,
+         {'alt': 'Some alt text', 'src': '', 'width': '600'},
+         ),
+        ("""<div><img alt="Some alt text" width="600"/></div>""",
+         None,
+         {'alt': 'Some alt text', 'src': '', 'width': '600'},
+         ),
+        ("""<div><img width="600"/></div>""",
+         None,
+         {'src': '', 'width': '600'},
+         ),
+        ("""<div><img /></div>""",
+         None,
+         {'src': ''},
+         ),
+        ("""<div><img /></div>""",
+         'attachments/12345678.png',
+         {'src': 'attachments/12345678.png'},
+         ),
+    ],
 )
-def test_image_tag_class(raw_tag, expected):
-    attachments = {'key': ImageNSAttachment()}
+def test_clean_html_image_tag(raw_html, proved_path, expected):
+    soup = BeautifulSoup(raw_html, 'html.parser')
 
-    attachments['key'].image_ref = 'MTYxMzQwNDM0NDczN25zX2F0dGFjaF9pbWFnZV83ODc0OTE2MTM0MDQzNDQ2ODcucG5n'
-    attachments['key'].path_relative_to_notebook = Path('attachments/12345678.png')
+    image_tag = soup.findAll('img')
 
-    with patch('image_processing.isinstance', return_value=True):
-        image_tag_processor = image_processing.ImageTag(raw_tag, attachments)
+    result = image_processing.clean_html_image_tag(image_tag[0], proved_path)
 
-    assert image_tag_processor.processed_tag == expected
-    assert image_tag_processor._ref == 'MTYxMzQwNDM0NDczN25zX2F0dGFjaF9pbWFnZV83ODc0OTE2MTM0MDQzNDQ2ODcucG5n'
-    assert str(image_tag_processor._relative_path) == 'attachments/12345678.png'
+    assert result == expected
 
 
 @pytest.mark.parametrize(
-    'raw_tag, expected', [
-        ("""<img src="hello.jpg"/>""",
-         """<img src="">""")
+    'raw_html, expected', [
+        ("""<div><img src="attachments/12345678.png" width="600"/></div>""",
+         """![|600](attachments/12345678.png)""",
+         ),
+        ("""<div><img alt="Some alt text" src="attachments/12345678.png"/></div>""",
+         None,
+         ),
+        ("""<div><img alt="Some alt text" src="attachments/12345678.png" width="600"/></div>""",
+         """![Some alt text|600](attachments/12345678.png)""",
+         ),
+        ("""<div><img src="my_image.gif" alt="Some alt text" width="600"/></div>""",
+         """![Some alt text|600](my_image.gif)""",
+         ),
+        ("""<div><img src="" alt="Some alt text" width="600"/></div>""",
+         """![Some alt text|600]()""",
+         ),
+        ("""<div><img alt="Some alt text" width="600"/></div>""",
+         """![Some alt text|600]()""",
+         ),
+        ("""<div><img width="600"/></div>""",
+         """![|600]()""",
+         ),
+        ("""<div><img /></div>""",
+         None,
+         ),
+        ("""<div><img width=''/></div>""",
+         None,
+         ),
+        ("""<div><img alt=''/></div>""",
+         None,
+         ),
+        ("""<div><img src=''/></div>""",
+         None,
+         ),
     ],
 )
-def test_image_tag_class_non_nsx_image(raw_tag, expected):
-    attachments = {'key': ImageNSAttachment()}
+def test_generate_obsidian_image_markdown_link(raw_html, expected):
+    soup = BeautifulSoup(raw_html, 'html.parser')
 
-    attachments['key'].image_ref = 'MTYxMzQwNDM0NDczN25zX2F0dGFjaF9pbWFnZV83ODc0OTE2MTM0MDQzNDQ2ODcucG5n'
-    attachments['key'].path_relative_to_notebook = Path('hello.jpg')
+    image_tag = soup.findAll('img')
 
-    with patch('image_processing.isinstance', return_value=True):
-        image_tag_processor = image_processing.ImageTag(raw_tag, attachments)
+    result = image_processing.generate_obsidian_image_markdown_link(image_tag[0])
 
-    assert image_tag_processor.processed_tag == expected
-    assert image_tag_processor._ref == ''
-    assert str(image_tag_processor._relative_path) == ''
+    assert result == expected
 
 
-def test_raw_tag_property():
-    attachments = {'key': ImageNSAttachment()}
+@pytest.mark.parametrize(
+    'expected, obsidian', [
+        ("""<img src="attachments/12345678.png" width="600" />""",
+         """![|600](attachments/12345678.png)""",
+         ),
+        ("""<img alt="alt text [with] brackets" src="attachments/12345678.png" width="600" />""",
+         """![alt text [with] brackets|600](attachments/12345678.png)""",
+         ),
+        ("""![Some alt text](attachments/12345678.png)""",
+         """![Some alt text](attachments/12345678.png)""",
+         ),
+        ("""![Some alt text with | a pipe](attachments/12345678.png)""",
+         """![Some alt text with | a pipe](attachments/12345678.png)""",
+         ),
+        ("""<img alt="Some alt text with | a pipe and a width" src="attachments/12345678.png" width="400" />""",
+         """![Some alt text with | a pipe and a width|400](attachments/12345678.png)""",
+         ),
+        (
+                """<img alt="Some alt text with | a pipe and a width [and] brackets" src="attachments/12345678.png" width="400" />""",
+                """![Some alt text with | a pipe and a width [and] brackets|400](attachments/12345678.png)""",
+        ),
+        ("""<img alt="Some alt text" src="attachments/12345678.png" width="600" />""",
+         """![Some alt text|600](attachments/12345678.png)""",
+         ),
+        ("""<img alt="Some alt text" src="my_image.gif" width="600" />""",
+         """![Some alt text|600](my_image.gif)""",
+         ),
+        ("""<img alt="Some alt text" src="" width="600" />""",
+         """![Some alt text|600]()""",
+         ),
+        ("""<img alt="Some alt text" src="" width="600" />""",
+         """![Some alt text|600]()""",
+         ),
+        ("""<img src="" width="600" />""",
+         """![|600]()""",
+         ),
+        ("""![]()""",
+         """![]()""",
+         ),
+        ("""hello world""",
+         """hello world""",
+         ),
 
-    with patch('image_processing.isinstance', return_value=True):
-        image_tag_processor = image_processing.ImageTag('raw_tag', attachments)
+    ],
+)
+def test_replace_obsidian_image_links_with_html_img_tag(expected, obsidian):
+    result = image_processing.replace_obsidian_image_links_with_html_img_tag(obsidian)
 
-    assert image_tag_processor.raw_tag == 'raw_tag'
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    'html, expected', [
+        ("""<img src="attachments/12345678.png" width="600" />""",
+         """![|600](attachments/12345678.png)""",
+         ),
+        ("""<img alt="alt text [with] brackets" src="attachments/12345678.png" width="600" />""",
+         """![alt text [with] brackets|600](attachments/12345678.png)""",
+         ),
+        ("""<img alt="Some alt text" src="attachments/12345678.png" />""",
+         """<img alt="Some alt text" src="attachments/12345678.png"/>""",
+         ),
+        ("""<img alt="Some alt text with | a pipe" src="attachments/12345678.png" />""",
+         """<img alt="Some alt text with | a pipe" src="attachments/12345678.png"/>""",
+         ),
+        ("""<img alt="Some alt text with | a pipe and a width" src="attachments/12345678.png" width="400" />""",
+         """![Some alt text with | a pipe and a width|400](attachments/12345678.png)""",
+         ),
+        (
+                """<img alt="Some alt text with | a pipe and a width [and] brackets" src="attachments/12345678.png" width="400" />""",
+                """![Some alt text with | a pipe and a width [and] brackets|400](attachments/12345678.png)""",
+        ),
+        ("""<img alt="Some alt text" src="attachments/12345678.png" width="600"/>""",
+         """![Some alt text|600](attachments/12345678.png)""",
+         ),
+        ("""<img alt="Some alt text" src="my_image.gif" width="600"/>""",
+         """![Some alt text|600](my_image.gif)""",
+         ),
+        ("""<img alt="Some alt text" src="" width="600"/>""",
+         """![Some alt text|600]()""",
+         ),
+        ("""<img alt="Some alt text" src="" width="600"/>""",
+         """![Some alt text|600]()""",
+         ),
+        ("""<img src="" width="600"/>""",
+         """![|600]()""",
+         ),
+        ("""![]()""",
+         """![]()""",
+         ),
+    ],
+)
+def test_replace_markdown_html_img_tag_with_obsidian_image_links(html, expected):
+    result = image_processing.replace_markdown_html_img_tag_with_obsidian_image_links(html)
+
+    assert result == expected

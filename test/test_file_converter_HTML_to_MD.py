@@ -36,8 +36,12 @@ class TestHTMLToMDConverter(unittest.TestCase):
         self.file_converter.convert_content()
         self.file_converter._metadata_processor._conversion_settings.front_matter_format = 'toml'  # set toml and confirm content is forced back into yaml
         self.file_converter.post_process_content()
-        self.assertEqual('---\ntitle: this is test2\n---\n\n- [x] Check 1\n- [ ] Check 2\n<img src="filepath/image.png" width="600" />\n\n\n<iframe allowfullscreen="" anchorhref="https://www.youtube.com/watch?v=SqdxNUMO2cg" frameborder="0" height="315" src="https://www.youtube.com/embed/SqdxNUMO2cg" width="420" youtube="true"> </iframe>\n\n', self.file_converter._post_processed_content, 'post processing failed')
+        self.assertEqual('---\ntitle: this is test2\n---\n\n- [x] Check 1\n- [ ] Check 2\n<img src="filepath/image.png" width="600" />\n\n\n<iframe allowfullscreen="" anchorhref="https://www.youtube.com/watch?v=SqdxNUMO2cg" frameborder="0" height="315" src="https://www.youtube.com/embed/SqdxNUMO2cg" width="420" youtube="true"> </iframe>\n\n',
+                         self.file_converter._post_processed_content,
+                         'post processing failed'
+                         )
 
+    def test_post_process_content3(self):
         self.file_converter._file_content = '<head><meta title="this is test2"/><meta not_valid="not_in_schema"/></head><p><input checked="" type="checkbox"/>Check 1</p><p><input type="checkbox"/>Check 2</p><img src="filepath/image.png" width="600">'
         self.file_converter._metadata_schema = ['title']
         self.file_converter._file = Path('a-file.html')
@@ -45,8 +49,7 @@ class TestHTMLToMDConverter(unittest.TestCase):
         self.file_converter.pre_process_content()
         self.file_converter.convert_content()
         self.file_converter.post_process_content()
-        self.assertEqual('---\ntitle: this is test2\n---\n\n- [x] Check 1\n- [ ] Check 2\n![|600](filepath/image.png)\n', self.file_converter._post_processed_content, 'post processing failed')
-
+        assert self.file_converter._post_processed_content == '---\ntitle: this is test2\n---\n\n- [x] Check 1\n- [ ] Check 2\n![|600](filepath/image.png)\n'
 
     def test_parse_metadata_if_required(self):
         self.file_converter._conversion_settings.export_format = 'obsidian'
@@ -54,13 +57,19 @@ class TestHTMLToMDConverter(unittest.TestCase):
         self.file_converter._metadata_processor._metadata_schema = ['title', 'creation_time']
         self.file_converter._pre_processed_content = '<head><meta title="this is test2"/><meta creation_time="test-meta-content"/></head>'
         self.file_converter.parse_metadata_if_required()
-        self.assertEqual({'title': 'this is test2'}, self.file_converter._metadata_processor.metadata, 'meta data not parsed correctly')
+        self.assertEqual({'title': 'this is test2'},
+                         self.file_converter._metadata_processor.metadata,
+                         'meta data not parsed correctly'
+                         )
 
         self.file_converter._metadata_processor._metadata = {}
         self.file_converter._metadata_processor._metadata_schema = ['title']
         self.file_converter._pre_processed_content = '<meta title="this is test2"/><meta creation_time="test-meta-content"/>'
         self.file_converter.parse_metadata_if_required()
-        self.assertEqual({}, self.file_converter._metadata_processor.metadata, 'meta data not ignored if no head section')
+        self.assertEqual({},
+                         self.file_converter._metadata_processor.metadata,
+                         'meta data not ignored if no head section'
+                         )
 
         self.file_converter._metadata_processor._metadata = {}
         self.file_converter._metadata_processor._metadata_schema = ['title']
@@ -74,4 +83,7 @@ class TestHTMLToMDConverter(unittest.TestCase):
         self.file_converter._metadata_processor._metadata_schema = ['title', 'creation_time']
         self.file_converter._pre_processed_content = '<head><meta title="this is test2"/><meta creation_time="test-meta-content"/></head>'
         self.file_converter.parse_metadata_if_required()
-        self.assertEqual({'title': 'this is test2'}, self.file_converter._metadata_processor.metadata, 'meta data not parsed correctly')
+        self.assertEqual({'title': 'this is test2'},
+                         self.file_converter._metadata_processor.metadata,
+                         'meta data not parsed correctly'
+                         )

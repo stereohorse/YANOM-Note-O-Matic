@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 
 import config
 import file_writer
-from image_processing import ObsidianImageTagFormatter
+import image_processing
 from pandoc_converter import PandocConverter
 
 
@@ -89,14 +89,12 @@ class FileConverter(ABC):
     def pre_process_obsidian_image_links_if_required(self):
         if self._conversion_settings.markdown_conversion_input == 'obsidian':
             self.logger.debug(f"Pre process obsidian image links")
-            obsidian_image_link_formatter = ObsidianImageTagFormatter(self._pre_processed_content, 'gfm')
-            self._pre_processed_content = obsidian_image_link_formatter.processed_content
+            self._pre_processed_content = image_processing.replace_obsidian_image_links_with_html_img_tag(self._pre_processed_content)
 
     def post_process_obsidian_image_links_if_required(self):
         if self._conversion_settings.export_format == 'obsidian':
             self.logger.debug(f"Post process obsidian image links")
-            obsidian_image_link_formatter = ObsidianImageTagFormatter(self._post_processed_content, 'obsidian')
-            self._post_processed_content = obsidian_image_link_formatter.processed_content
+            self._post_processed_content = image_processing.replace_markdown_html_img_tag_with_obsidian_image_links(self._post_processed_content)
 
     def write_post_processed_content(self):
         self.logger.info(f"Writing new file {self._file.stem + self._out_put_extension}")

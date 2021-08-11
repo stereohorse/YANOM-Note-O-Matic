@@ -21,7 +21,7 @@ class TestMDToHTMLConverter(unittest.TestCase):
         test_strings = [
             ('obsidian',
              '![|600](filepath/image.png)',
-             '<img src="filepath/image.png" width="600">',
+             '<img src="filepath/image.png" width="600" />',
              'obsidian link to gfm failed'),
             ('obsidian',
              '![](filepath/image.png)',
@@ -88,19 +88,24 @@ class TestMDToHTMLConverter(unittest.TestCase):
         print(content)
         print(new_content)
         self.assertTrue('<p><a href="a_folder/test_md_file.html">md file</a></p>' in new_content,
-                        'clean md file extension not changed correctly')
+                        'clean md file extension not changed correctly'
+                        )
         self.assertTrue('<p><a href="a_folder/test_.md_file.html">md file  with dot md in name</a></p>'
                         in new_content,
-                        ' md file with dot md in name  not changed correctly')
+                        ' md file with dot md in name  not changed correctly'
+                        )
         self.assertTrue('<p><a href="a_folder/test_pdf_file.pdf">non md file file</a></p>'
                         in new_content,
-                        'non md file extension changed incorrectly')
+                        'non md file extension changed incorrectly'
+                        )
         self.assertTrue('</p><p><a href="https://a_folder/test_pdf_file.md">web md file</a></p>'
                         in new_content,
-                        'internet md file extension changed incorrectly')
+                        'internet md file extension changed incorrectly'
+                        )
         self.assertTrue('<p><a href="a_folder/not_in_convert_list.md">non md file file</a></p>'
                         in new_content,
-                        'file with md file extension not in to be changed list changed incorrectly')
+                        'file with md file extension not in to be changed list changed incorrectly'
+                        )
 
     def test_post_process_content(self):
         self.file_converter._conversion_settings.markdown_conversion_input = 'gfm'
@@ -110,7 +115,8 @@ class TestMDToHTMLConverter(unittest.TestCase):
         self.assertEqual(
             '<head><title>My Title</title><meta title="My Title"/></head><p><a href="a_folder/test_md_file.html">md file</a></p>',
             self.file_converter._post_processed_content,
-            'title and meta data inserted incorrectly')
+            'title and meta data inserted incorrectly'
+        )
 
     def test_add_meta_data_if_required(self):
         self.file_converter._conversion_settings.markdown_conversion_input = 'gfm'
@@ -129,4 +135,5 @@ class TestMDToHTMLConverter(unittest.TestCase):
         self.assertEqual(
             '<head><title>My Title</title><meta title="My Title"/></head><p><a href="a_folder/test_md_file.md">md file</a></p>',
             self.file_converter._post_processed_content,
-            'title and meta data inserted incorrectly with markdown conversion input')
+            'title and meta data inserted incorrectly with markdown conversion input'
+        )

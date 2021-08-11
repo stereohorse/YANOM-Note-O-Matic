@@ -116,15 +116,22 @@ class TestMDToMDConverter(unittest.TestCase):
         with TempDirectory() as d:
             self.file_converter._file = Path('does_not_exist.md')
             self.file_converter.rename_target_file_if_already_exists()
-            self.assertFalse(Path(d.path, 'does_not_exist.md').exists(), 'failed to manage a not existing file name')
-            self.assertFalse(Path(d.path, 'does_not_exist-old.md').exists(), 'failed to manage a not existing file name')
-            self.assertFalse(Path(d.path, 'does_not_exist-old-1.md').exists(), 'failed to manage a not existing file name')
+            self.assertFalse(Path(d.path,
+                             'does_not_exist.md').exists(),
+                             'failed to manage a not existing file name')
+            self.assertFalse(Path(d.path,
+                             'does_not_exist-old.md').exists(),
+                             'failed to manage a not existing file name'
+                             )
+            self.assertFalse(Path(d.path,
+                             'does_not_exist-old-1.md').exists(),
+                             'failed to manage a not existing file name')
 
     def test_pre_process_obsidian_image_links_if_required(self):
         test_strings = [
             ('obsidian',
              '![|600](filepath/image.png)',
-             '<img src="filepath/image.png" width="600">',
+             '<img src="filepath/image.png" width="600" />',
              'obsidian link to gfm failed'),
             ('obsidian',
              '![](filepath/image.png)',
@@ -153,7 +160,7 @@ class TestMDToMDConverter(unittest.TestCase):
         test_strings = [
             ('obsidian',
              '![|600](filepath/image.png)',
-             '<img src="filepath/image.png" width="600">',
+             '<img src="filepath/image.png" width="600" />',
              'obsidian link to gfm failed'),
             ('obsidian',
              '![](filepath/image.png)',

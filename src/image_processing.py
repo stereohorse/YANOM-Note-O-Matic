@@ -1,101 +1,173 @@
+import logging
 import re
+from typing import Optional
 
-from sn_attachment import ImageNSAttachment
+from bs4 import BeautifulSoup, Tag
 
-
-class ImageTag:
-    def __init__(self, raw_tag, attachments):
-        self._attachments = attachments
-        self._raw_tag = raw_tag
-        self._processed_tag = ''
-        self._ref = ''
-        self._width = None
-        self._relative_path = ''
-        self._image_attachments = []
-        self._get_image_attachments()
-        self._set_ref_and_relative_path()
-        self._set_width()
-        self._create_new_tag()
-
-    def _get_image_attachments(self):
-        self._image_attachments = [attachment
-                                   for attachment in self._attachments.values()
-                                   if isinstance(attachment, ImageNSAttachment)
-                                   ]
-
-    def _set_ref_and_relative_path(self):
-        for attachment in self._image_attachments:
-            if attachment.image_ref in self._raw_tag:
-                self._ref = attachment.image_ref
-                self._relative_path = str(attachment.path_relative_to_notebook)
-                return
-
-    def _set_width(self):
-        if 'width="' in self._raw_tag:
-            width = re.findall(r'width="([0-9]*)[^"]*"', self._raw_tag)
-            self._width = width[0]
-
-    def _create_new_tag(self):
-        if self._width is None:
-            self._processed_tag = f'<img src="{self._relative_path}">'
-            return
-
-        self._processed_tag = f'<img src="{self._relative_path}" width="{self._width}">'
-
-    @property
-    def processed_tag(self):
-        return self._processed_tag
-
-    @property
-    def raw_tag(self):
-        return self._raw_tag
+import config
 
 
-class ObsidianImageTagFormatter:
-    def __init__(self, content, generate_format):
-        self._processed_content = content
-        self._generate_format = generate_format
-        if generate_format == 'obsidian':
-            self._gfm_auto_links_to_obsidian_markdown()
-        if generate_format == 'gfm':
-            self._obsidian_markdown_links_to_gfm_auto_links()
+def what_module_is_this():
+    return __name__
 
-    @property
-    def processed_content(self):
-        return self._processed_content
 
-    def _gfm_auto_links_to_obsidian_markdown(self):
-        images = self._find_gfm_auto_links_image_links()
+logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}')
 
-        if not images:
-            return
 
-        for image in images:
-            width = re.search('width="([0-9]*)"', image).group(1)
+def clean_html_image_tag(tag: Tag, src_path=None):
+    """
+    Generate a clean tag object attrs dictionary
 
-            file_path = re.match('^<img src=\"(.*?)\"', image).group(1)
+    Process the tag object to retrieve alt text, width and src if present.  If a value for src_path is not
+    provided the src in the tag will be used, else src_path is used.
+    If the img tag does not contain alt or width they will not be in the returned dict. If src is missing
+    and src_path is not provided src is set to "".
+    then and return a attrs dictionary with only the values for these 3 items that can be used to update the tag.
 
-            new_image_tag = f'![|{width}]({file_path})'
+    Parameters
+    ==========
+    tag : bs4.Tag
+        img tag to be processed for data
+    src_path : str
+        path to the image content if not provided the src from the img tag will be used
 
-            self._processed_content = self._processed_content.replace(image, new_image_tag)
+    Returns
+    =======
+    dict : attrs dict that can be used to replace an existing attrs dictionary of an img tag - "tag.attrs = new_attrs"
 
-    def _find_gfm_auto_links_image_links(self):
-        return re.findall('<img src=[^>]*width="[0-9]*"[^>]*>', self._processed_content)
+    """
+    new_attrs = {'src': src_path}
+    if not src_path:
+        new_attrs['src'] = tag.attrs.get('src', "")
 
-    def _obsidian_markdown_links_to_gfm_auto_links(self):
-        images = self._find_obsidian_image_links()
+    if 'width' in tag.attrs:
+        new_attrs['width'] = tag.attrs['width']
 
-        if not images:
-            return
+    if 'alt' in tag.attrs:
+        new_attrs['alt'] = tag.attrs['alt']
 
-        for image in images:
-            width = re.search(r'!\[\w*\|(\d*)]\(.*?\)', image).group(1)
+    return new_attrs
 
-            file_path = re.match(r'!\[\w*\|\d*]\((.*?)\)', image).group(1)
 
-            new_image_tag = f'<img src="{file_path}" width="{width}">'
+def generate_obsidian_image_markdown_link(tag: Tag) -> Optional[str]:
+    """
+    Generate an obsidian image markdown link string.
 
-            self._processed_content = self._processed_content.replace(image, new_image_tag)
+    Use the values in the tag.attrs dict to populate a obsidian image link and return as a string.
 
-    def _find_obsidian_image_links(self):
-        return re.findall(r'!\[\w*\|\d*]\(.*?\)', self._processed_content)
+    Parameters
+    ==========
+    tag : bs4.Tag
+        an img tag element
+
+    Returns
+    =======
+    str : if width in html tag returns obsidian markdown formatted image link
+    None : if width is not in the image tag - no need to format for obsidian
+
+    """
+    if 'width' not in tag.attrs:
+        return  # no width so no need for obsidian format
+
+    if tag.attrs['width'] == '':
+        return  # no width so no need for obsidian format
+    else:
+        width = f"|{tag.attrs['width']}"
+
+    alt = tag.attrs.get('alt', '')
+    src = tag.attrs.get('src', '')
+
+    obsidian_img_tag_markdown = f'![{width}]({src})'
+    if alt:
+        obsidian_img_tag_markdown = f'![{alt}{width}]({src})'
+
+    return obsidian_img_tag_markdown
+
+
+def replace_obsidian_image_links_with_html_img_tag(content: str) -> str:
+    """
+    Reformat obsidian markdown formatted image links to markdown html img tag format in the provided content
+
+    ![Some alt text|600](my_image.gif)
+    becomes
+    <img src="my_image.gif" alt="Some alt text" width="600"/>
+
+    Tags that are not obsidian formatted - so do not contain |width will not be changed
+
+    Parameters
+    ==========
+    content :  str
+        Markdown content
+
+    Returns
+    =======
+    str
+        Updated content with replaced image links
+
+    """
+    image_tags = re.findall(r'!\[.*?]\(.*?\)', content)
+
+    if not image_tags:
+        return content
+
+    for tag in image_tags:
+        tag_part_one = tag.split('[', 1)[1].rsplit(']', 1)[0]
+
+        if not tag_part_one:
+            continue  # skip ahead as this tag is not formatted for obsidian as first part is empty[]
+
+        if '|' not in tag_part_one:
+            continue  # skip ahead as this tag is not formatted for obsidian as no pipe so no width so not obsidian
+
+        alt_text, width = tag_part_one.rsplit('|', 1)
+        if not width.isnumeric():
+            continue  # skip ahead as this tag is not formatted for obsidian
+
+        src = tag.rsplit('(', 1)[1].rstrip(')')
+
+        if alt_text:
+            alt_text = f'alt="{alt_text}" '
+
+        width = f' width="{width}"'
+
+        src = f'src="{src}"'
+
+        new_image_tag = f'<img {alt_text}{src}{width} />'
+
+        content = content.replace(tag, new_image_tag)
+
+    return content
+
+
+def replace_markdown_html_img_tag_with_obsidian_image_links(content: str) -> str:
+    """
+    Reformat markdown html img tag to obsidian markdown formatted image links in the provided content
+
+    <img src="my_image.gif" alt="Some alt text" width="600"/>
+    becomes
+    ![Some alt text|600](my_image.gif)
+
+    Parameters
+    ==========
+    content :  str
+        Markdown content
+
+    Returns
+    =======
+    str
+        Updated content with replaced image links
+
+    """
+    soup = BeautifulSoup(content, 'html.parser')
+    tags = soup.findAll('img')
+    replacements = {}
+    for i in range(len(tags)):
+        new_obsidian_link = generate_obsidian_image_markdown_link(tags[i])
+        if new_obsidian_link:  # confirm new link was returned
+            replacements[str(tags[i])] = new_obsidian_link
+
+    new_content = str(soup)
+    for old, new in replacements.items():
+        new_content = new_content.replace(old, new)
+
+    return new_content

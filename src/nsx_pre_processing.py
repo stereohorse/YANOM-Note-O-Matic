@@ -1,12 +1,14 @@
 import logging
 import re
 
+from bs4 import BeautifulSoup
+
 from chart_processing import NSXChartProcessor
 from checklist_processing import NSXInputMDOutputChecklistProcessor, NSXInputHTMLOutputChecklistProcessor
 import config
 from helper_functions import add_strong_between_tags, change_html_tags
 from iframe_processing import pre_process_iframes_from_html
-from image_processing import ImageTag
+import image_processing
 from metadata_processing import MetaDataProcessor
 from sn_attachment import FileNSAttachment
 
@@ -31,12 +33,14 @@ class NoteStationPreProcessing:
         self._attachments = note.attachments
         self._image_attachments = []
         self._image_tags = {}
-        self._image_tag_processors = []
-        self._image_ref_to_image_path = {}
+        self._obsidian_image_tags = {}
+        # self._image_tag_processors = []
+        # self._image_ref_to_image_path = {}
         self._iframes_dict = {}
         self._checklist_processor = None
         self._charts = []
         self._metadata_processor = None
+        self.soup = None
         # self.pre_process_note_page()
         pass
 
@@ -52,10 +56,13 @@ class NoteStationPreProcessing:
     def iframes_dict(self):
         return self._iframes_dict
 
+    @property
+    def obsidian_image_tags(self):
+        return self._obsidian_image_tags
+
     def pre_process_note_page(self):
         self.logger.debug(f"Pre processing of note page {self._note.title}")
-        self.create_image_tag_processors()
-        self._update_content_with_new_img_tags()
+        self.process_image_tags()
         if self._note.conversion_settings.export_format != 'pandoc_markdown_strict' \
                 and self._note.conversion_settings.export_format != 'html':
             self._process_iframes()
@@ -77,20 +84,61 @@ class NoteStationPreProcessing:
     def _process_iframes(self):
         self.pre_processed_content, self._iframes_dict = pre_process_iframes_from_html(self.pre_processed_content)
 
-    def create_image_tag_processors(self):
+    def process_image_tags(self):
         self.logger.debug(f"Cleaning image tags")
-        raw_image_tags = re.findall('<img.*class=[^>]*syno-notestation-image-object[^>]*>',
-                                    self.pre_processed_content)
-        self._image_tag_processors = [ImageTag(tag, self._attachments) for tag in raw_image_tags]
+        self.soup = BeautifulSoup(self.pre_processed_content, 'html.parser')
 
-    def _update_content_with_new_img_tags(self):
-        for image_tag_processor in self._image_tag_processors:
-            self.pre_processed_content = self.pre_processed_content.replace(image_tag_processor.raw_tag,
-                                                                            image_tag_processor.processed_tag)
+        image_tags = self.soup.findAll('img')
+
+        for i in range(len(image_tags)):
+            if 'src' not in image_tags[i].attrs:
+                self.logger.warning(f"No 'src' in html content for tag '{image_tags[i]}'")
+
+            self.clean_image_tag(image_tags[i])
+
+            self.generate_obsidian_tag_if_required(image_tags[i])
+
+        self.pre_processed_content = str(self.soup)
+
+    def clean_image_tag(self, tag):
+        src_path = None
+        if 'ref' in tag.attrs:
+            src_path = self.get_image_relative_path(tag.attrs['ref'])
+        new_attrs = image_processing.clean_html_image_tag(tag, src_path)
+        tag.attrs = new_attrs
+
+    def generate_obsidian_tag_if_required(self, tag):
+        if self._note.conversion_settings.export_format == 'obsidian':
+            obsidian_img_tag_markdown = image_processing.generate_obsidian_image_markdown_link(tag)
+            if not obsidian_img_tag_markdown:
+                return  # Return as tag did not need obsidian formatting
+            # Using a placeholder text inserted into content because pandoc will escape characters
+            # in the obsidian link like this \!\[\|600]() which is valid markdown but ugly it is a 'feature' of pandoc
+            # and not going to be changed because escaping still gives valid markdown it is due to the intermediate step
+            # in pandoc's conversion where it cannot recognise the text is already valid markdown so assumes
+            # the special characters need to be escaped.
+            placeholder = str(id(obsidian_img_tag_markdown))
+            self._obsidian_image_tags[placeholder] = obsidian_img_tag_markdown
+
+            new_tag = self.soup.new_tag("p")
+            new_tag.string = placeholder
+
+            tag.replaceWith(new_tag)
+            # placeholder is replaced with actual link in nsx_post_processing._format_images_links()
+
+    def get_image_relative_path(self, tag_ref):
+        for attachment in self._attachments.values():
+            try:
+                if attachment.image_ref == tag_ref:
+                    return str(attachment.path_relative_to_notebook)
+                # the ask for forgiveness approach an non file attachment object will not have an image_ref attribute
+                # raise exception and then continue effectively skipping the file attachments
+            except AttributeError:
+                continue
 
     def _clean_excessive_divs(self):
         """
-        Replace all the div's with p's
+        Replace all the div tags with p tags
         """
         self.logger.debug(f"Cleaning html <div")
         self.pre_processed_content = self.pre_processed_content.replace('<div></div>', '<p></p>')
