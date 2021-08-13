@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 
 import config
+import zip_file_reader
 from config import yanom_globals
 import helper_functions
 
@@ -107,8 +108,26 @@ class FileNSAttachment(NSAttachment):
     def create_file_name(self):
         self._file_name = Path(helper_functions.generate_clean_filename(self._name,
                                                                         self._conversion_settings.filename_options))
+        if not Path(self._name).suffix:
+            self.logger.warning(f'Original attachment name  "{self._name}" has no file extension')
+            self.add_suffix_if_possible()
+
         if not self._name == str(self._file_name):
             self.logger.info(f'Original attachment name was "{self._name}" the cleaned name used is "{self._file_name}"')
+
+    def add_suffix_if_possible(self):
+            suffix = helper_functions.file_extension_from_bytes(zip_file_reader.read_binary_file(self._nsx_file.nsx_file_name, self.filename_inside_nsx))
+            if suffix:
+                self._file_name = self._file_name.with_suffix(suffix)
+
+                self.logger.warning(f'From reading file header the extension "{suffix}" '
+                                    f'has been added to file name "{self._file_name}.  '
+                                    f'NSX json data reports file type '
+                                    f'of "{self._json["attachment"][self._attachment_id]["type"]}".')
+            else:
+                self.logger.warning(f'Unable to match file content to a file type. '
+                                    f'NSX json data reports file type '
+                                    f'of "{self._json["attachment"][self._attachment_id]["type"]}".')
 
     def get_content_to_save(self):
         return self._nsx_file.fetch_attachment_file(self.filename_inside_nsx)
@@ -132,6 +151,11 @@ class ImageNSAttachment(FileNSAttachment):
         self._name = self._name.replace('ns_attach_image_', '')
         self._file_name = Path(helper_functions.generate_clean_filename(self._name,
                                                                         self._conversion_settings.filename_options))
+
+        if not Path(self._name).suffix:
+            self.logger.warning(f'Original attachment name  "{self._name}" has no file extension')
+            self.add_suffix_if_possible()
+
         if self._name != str(self._file_name):
             self.logger.info(f'Original attachment name was "{self._name}" the cleaned name used is "{self._file_name}"')
 
@@ -143,8 +167,8 @@ class ChartNSAttachment(NSAttachment):
         self._chart_file_like_object = chart_file_like_object
         self._file_name = attachment_id
 
-    def get_content_to_save(self):  # pragma: no cover
-        pass
+    def get_content_to_save(self):
+        return self.chart_file_like_object
 
     @abstractmethod
     def create_html_link(self):  # pragma: no cover
@@ -163,13 +187,9 @@ class ChartImageNSAttachment(ChartNSAttachment):
     def create_html_link(self):
         self.html_link = f"<img src='{self.path_relative_to_notebook}'>"
 
-    def get_content_to_save(self):
-        return self.chart_file_like_object
-
 
 class ChartStringNSAttachment(ChartNSAttachment):
     def create_html_link(self):
         self.html_link = f"<a href='{self.path_relative_to_notebook}'>Chart data file</a>"
 
-    def get_content_to_save(self):
-        return self.chart_file_like_object
+

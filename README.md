@@ -1,4 +1,4 @@
-![coverage 92%](https://img.shields.io/badge/coverage-92%25-orange)  ![open issues](https://img.shields.io/github/issues/kevindurston21/YANOM-Note-O-Matic)  ![License](https://img.shields.io/github/license/kevindurston21/YANOM-Note-O-Matic)  ![version tag](https://img.shields.io/github/v/tag/kevindurston21/YANOM-Note-O-Matic)
+![coverage 91%](https://img.shields.io/badge/coverage-91%25-orange)  ![open issues](https://img.shields.io/github/issues/kevindurston21/YANOM-Note-O-Matic)  ![License](https://img.shields.io/github/license/kevindurston21/YANOM-Note-O-Matic)  ![version tag](https://img.shields.io/github/v/tag/kevindurston21/YANOM-Note-O-Matic)
 
 # YANOM - Yet Another Note-O-Matic
 YANOM - stands for Yet Another Note-O-Matic. 
@@ -89,7 +89,9 @@ Future versions will support conversion from additional proprietary file formats
       - For Note-Station most of the time this will be successful.  However, there are some limitations and the [Synology Note-Station Links to Other Note Pages](https://github.com/kevindurston21/YANOM-Note-O-Matic/wiki/Synology-Note-Station-Links-to-Other-Note-Pages) wiki page has examples of the possible issues and solutions for them.
     - Note-Station audio notes - are attached as an attachment
     - Option to include creation time in file name
-
+    - Add file extension for filenames, for common file types, where extension is missing. This may occur when there are sync issues between desktop and server note station versions.
+    - File name cleaning options - in manual mode user can choose to keep/remove spaces, unicode characters, uppercase characters, choose what character to replace spaces with.
+    - File name lengths - User can set a maximum file name length. Long note titles can cause issues on Windows where long paths are not enabled, on these systems YANOM restricts file names to 64 characters.  
 
 The formatting for QOwnNotes and Obsidian are variations on common Markdown formats optimised for those note systems.
 

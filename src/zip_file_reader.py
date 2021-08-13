@@ -1,10 +1,8 @@
 import json
 import logging
-import traceback
 import zipfile
 
 import config
-# import yanom
 import helper_functions
 
 logger = logging.getLogger(f'{config.yanom_globals.app_name}.{__name__}')
@@ -50,12 +48,13 @@ def read_binary_file(zip_filename, target_filename):
 
     Returns
     -------
-    binary str
+    bytes
 
     """
     try:
         with zipfile.ZipFile(str(zip_filename), 'r') as zip_file:
             return zip_file.read(target_filename)
+
     except Exception as e:
         _error_handling(e, target_filename, zip_filename)
 

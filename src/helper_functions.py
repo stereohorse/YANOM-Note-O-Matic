@@ -7,9 +7,11 @@ import re
 import string
 import sys
 import traceback
-from typing import Tuple
+from typing import Optional, Tuple
 import unicodedata
 from urllib.parse import unquote_plus
+
+import filetype
 
 FileNameOptions = namedtuple('FileNameOptions',
                              'max_length allow_unicode allow_uppercase allow_non_alphanumeric allow_spaces '
@@ -62,7 +64,7 @@ def generate_clean_filename(filename: str, name_options: FileNameOptions) -> str
     filename: str
         A file name.
     name_options: FileNameOptions
-        FileNameOptions namedtuple containing the options to aply to the name cleaning process
+        FileNameOptions namedtuple containing the options to apply to the name cleaning process
 
     Returns
     =======
@@ -92,7 +94,7 @@ def generate_clean_directory_name(directory_name: str, name_options: FileNameOpt
     directory_name: str
         A single directory name.
     name_options: FileNameOptions
-        FileNameOptions namedtuple containing the options to aply to the name cleaning process
+        FileNameOptions namedtuple containing the options to apply to the name cleaning process
 
     Returns
     =======
@@ -217,19 +219,6 @@ def process_path_part_for_unicode(allow_unicode, raw_part):
         cleaned_part = cleaned_part.decode('ascii')
 
     return cleaned_part
-
-
-def split_string_to_file_parts(path_class, path_to_clean):
-    parts = []
-    if path_class(path_to_clean).stem:
-        parts.append(str(path_class(path_to_clean).stem))
-    if path_class(path_to_clean).suffix:
-        parts.append(str(path_class(path_to_clean).suffix))
-
-    if not parts:
-        parts.append(get_random_string(6))
-
-    return parts
 
 
 def replace_slashes(path_to_clean):
@@ -422,3 +411,25 @@ def are_windows_long_paths_disabled():
         return not bool(ntdll.RtlAreLongPathsEnabled())
 
     return True
+
+
+def file_extension_from_bytes(file_bytes: bytes) -> Optional[str]:
+    """
+    From file byte content identify the type of file, if recognised return the suffix extension, else returns None
+
+    Parameters
+    ==========
+    file_bytes : bytes
+
+    Returns
+    =======
+    str or None
+        Str - suffix including dot is file is recognised, e.g. '.jpg'
+        None - File type was not recognised
+
+    """
+    kind_of_file = filetype.guess(file_bytes)
+    if kind_of_file:
+        return f".{kind_of_file.extension}"
+    # Note file type supports other inputs -
+    # Str of path to a file, bytes, bytearray, readable file like object, PurePath, memoryview

@@ -321,3 +321,18 @@ def test_are_windows_long_paths_enabled():
         assert isinstance(result, bool)
     else:
         assert result is None
+
+
+def test_file_extension_from_bytes():
+    with open('test/fixtures/png_with_no_extension', "rb") as file:
+        file_bytes = file.read(261)
+
+        result = helper_functions.file_extension_from_bytes(file_bytes)
+
+        assert result == '.png'
+
+
+def test_file_extension_from_bytes_file_not_recognised():
+    result = helper_functions.file_extension_from_bytes(b'1234')
+
+    assert result == None

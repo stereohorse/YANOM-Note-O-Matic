@@ -9,7 +9,7 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Increment the major version when significantly overhaul the user interface, or rewrite all internals.
 
 
-## [1.4.0]
+## [1.4.0]  20201-08-14
 
 ### Added
 - Options to select file and directory name cleaning
@@ -22,15 +22,18 @@ and this project follows something close to [Semantic Versioning](https://semver
     - Enter a space replacement character
     - Enter a maximum length for file names or directories.  Limit set to 255 for non-Windows and Windows where long file paths is enabled.  64 for Windows where long file paths are not enabled
   - Windows reserved file names are prepended with underscore on all operating systems.
+- For nsx files if a file - image or attachment - does not have a file extension the file wil be read and if recognised a file extension is added. This may help where there are issues in the nsx file.
 
 ### Fixed
 - Command line interface may not ask user to accept a changed directory name for export and attachment folders.  Now when name cleaned will always ask to accept new file name.
 - When asking if user wished to accept the new attachment folder name if the user chose 'no' the export folder question would display not the attachment folder question.
-- For nsx file updated image tag algorithm for new image tag format sene in nsx files
+- For nsx file updated image tag algorithm for new image tag format seen in nsx files
+- 'gfm' quick setting was not setting export format to gfm, it was using the previous export setting.
 
 ### Other Changes
 - Improved error handling around directory creation with additional messages on Windows systems where long path names are not enabled.
 - Moved global variables into a global class and use the instance object and properties for the fields.
+- Re-write of image tag searching.  Complete rewrite. Functions instead of classes. Reduced use of regex, now only a single regex is used, otheres replaced by beautiful soup or python string methods.
 
 ## [1.3.3] - 2021-08-01
 
