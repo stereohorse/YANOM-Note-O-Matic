@@ -80,7 +80,7 @@ def test_fetch_attachment_file(conv_setting):
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
 
     with patch('zip_file_reader.read_binary_file', spec=True, return_value='fake_binary'):
-        result = nsx_fc.fetch_attachment_file('data_id')
+        result = nsx_fc.fetch_attachment_file('data_id', 'note title')
 
         assert result == 'fake_binary'
 

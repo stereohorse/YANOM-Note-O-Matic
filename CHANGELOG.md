@@ -8,6 +8,10 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Increment the minor version number when adding a new feature or set of features and any current bug fixes not yet released
 - Increment the major version when significantly overhaul the user interface, or rewrite all internals.
 
+## [1.6.0] development
+- Improve error message when unable to find file in nsx zip file
+
+
 ## [1.5.0]  2021-08-27
 
 ### Added

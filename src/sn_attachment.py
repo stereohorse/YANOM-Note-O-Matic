@@ -14,13 +14,15 @@ def what_module_is_this():
 
 class NSAttachment(ABC):
     def __init__(self, note, attachment_id):
-        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(
+            f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._attachment_id = attachment_id
         self._nsx_file = note.nsx_file
         self._json = note.note_json
         self._notebook_folder_name = note.notebook_folder_name
         self._conversion_settings = note.conversion_settings
+        self._note_title = note.title
         self._file_name = ''
         self._path_relative_to_notebook = ''
         self._full_path = ''
@@ -113,24 +115,25 @@ class FileNSAttachment(NSAttachment):
             self.add_suffix_if_possible()
 
         if not self._name == str(self._file_name):
-            self.logger.info(f'Original attachment name was "{self._name}" the cleaned name used is "{self._file_name}"')
+            self.logger.info(
+                f'Original attachment name was "{self._name}" the cleaned name used is "{self._file_name}"')
 
     def add_suffix_if_possible(self):
-            suffix = helper_functions.file_extension_from_bytes(zip_file_reader.read_binary_file(self._nsx_file.nsx_file_name, self.filename_inside_nsx))
-            if suffix:
-                self._file_name = self._file_name.with_suffix(suffix)
+        suffix = helper_functions.file_extension_from_bytes(zip_file_reader.read_binary_file(self._nsx_file.nsx_file_name, self.filename_inside_nsx, self._note_title))
+        if suffix:
+            self._file_name = self._file_name.with_suffix(suffix)
 
-                self.logger.warning(f'From reading file header the extension "{suffix}" '
-                                    f'has been added to file name "{self._file_name}.  '
-                                    f'NSX json data reports file type '
-                                    f'of "{self._json["attachment"][self._attachment_id]["type"]}".')
-            else:
-                self.logger.warning(f'Unable to match file content to a file type. '
-                                    f'NSX json data reports file type '
-                                    f'of "{self._json["attachment"][self._attachment_id]["type"]}".')
+            self.logger.warning(f'From reading file header the extension "{suffix}" '
+                                f'has been added to file name "{self._file_name}.  '
+                                f'NSX json data reports file type '
+                                f'of "{self._json["attachment"][self._attachment_id]["type"]}".')
+        else:
+            self.logger.warning(f'Unable to match file content to a file type. '
+                                f'NSX json data reports file type '
+                                f'of "{self._json["attachment"][self._attachment_id]["type"]}".')
 
     def get_content_to_save(self):
-        return self._nsx_file.fetch_attachment_file(self.filename_inside_nsx)
+        return self._nsx_file.fetch_attachment_file(self.filename_inside_nsx, self._note_title)
 
 
 class ImageNSAttachment(FileNSAttachment):
@@ -157,7 +160,8 @@ class ImageNSAttachment(FileNSAttachment):
             self.add_suffix_if_possible()
 
         if self._name != str(self._file_name):
-            self.logger.info(f'Original attachment name was "{self._name}" the cleaned name used is "{self._file_name}"')
+            self.logger.info(
+                f'Original attachment name was "{self._name}" the cleaned name used is "{self._file_name}"')
 
 
 class ChartNSAttachment(NSAttachment):
@@ -191,5 +195,3 @@ class ChartImageNSAttachment(ChartNSAttachment):
 class ChartStringNSAttachment(ChartNSAttachment):
     def create_html_link(self):
         self.html_link = f"<a href='{self.path_relative_to_notebook}'>Chart data file</a>"
-
-

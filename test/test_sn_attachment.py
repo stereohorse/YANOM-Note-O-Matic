@@ -9,7 +9,7 @@ import conversion_settings
 class NSXFile:
     nsx_file_name = 'nsx_file_name'
     @staticmethod
-    def fetch_attachment_file(ignored):
+    def fetch_attachment_file(ignored, title):
         return 'file name in nsx'
 
 
@@ -27,7 +27,7 @@ class Note:
                                }
                           }
         self.notebook_folder_name = 'notebook_folder'
-
+        self.title = 'note_title'
 
 def test_notebook_folder_name():
     note = Note()
@@ -134,6 +134,7 @@ def test_test_change_file_name_image_attachment_no_extension_on_file_name(mocker
     image_attachment = sn_attachment.ImageNSAttachment(note, attachment_id)
 
     image_attachment._name = 'ns_attach_image_my_file'
+    mocker.patch('zip_file_reader.read_binary_file', return_value=b'1234')
     mocker.patch('helper_functions.file_extension_from_bytes', return_value='.png')
     image_attachment.create_file_name()
 
@@ -146,6 +147,7 @@ def test_test_change_file_name_image_attachment_no_extension_on_file_name_and_no
     image_attachment = sn_attachment.ImageNSAttachment(note, attachment_id)
 
     image_attachment._name = 'ns_attach_image_my_file'
+    mocker.patch('zip_file_reader.read_binary_file', return_value=b'1234')
     mocker.patch('helper_functions.file_extension_from_bytes', return_value=None)
     image_attachment.create_file_name()
 
@@ -158,6 +160,7 @@ def test_test_change_file_name_file_attachment_no_extension_on_file_name(mocker)
     image_attachment = sn_attachment.FileNSAttachment(note, attachment_id)
 
     image_attachment._name = 'my_file'
+    mocker.patch('zip_file_reader.read_binary_file', return_value=b'1234')
     mocker.patch('helper_functions.file_extension_from_bytes', return_value='.pdf')
     image_attachment.create_file_name()
 
@@ -170,6 +173,7 @@ def test_test_change_file_name_file_attachment_no_extension_on_file_name_and_not
     image_attachment = sn_attachment.FileNSAttachment(note, attachment_id)
 
     image_attachment._name = 'my_file'
+    mocker.patch('zip_file_reader.read_binary_file', return_value=b'1234')
     mocker.patch('helper_functions.file_extension_from_bytes', return_value=None)
     image_attachment.create_file_name()
 
