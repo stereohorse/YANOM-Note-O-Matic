@@ -1,4 +1,6 @@
 import logging
+
+import sn_attachment
 from mock import patch
 from pathlib import Path
 
@@ -187,6 +189,8 @@ def test_increment_duplicated_title(note_page, title_list, expected_new_title):
     assert note_page.title == expected_new_title
 
 
+
+
 @pytest.mark.parametrize(
     'export_format, expected', [
         ('gfm',
@@ -195,10 +199,15 @@ def test_increment_duplicated_title(note_page, title_list, expected_new_title):
          """<p>Below is a hyperlink to the internet</p><p><a href="https://github.com/kevindurston21/YANOM-Note-O-Matic">https://github.com/kevindurston21/YANOM-Note-O-Matic</a></p><h6>Attachments</h6><p><a href="attachments/Record 2021-02-15 16-00-13.webm">Record 2021-02-15 16-00-13.webm</a></p><p><a href="attachments/example-attachment.pdf">example-attachment.pdf</a></p><p><a href="attachments/test page.pdf">test page.pdf</a></p>"""),
     ]
 )
-def test_process_note(nsx, note_page_1, export_format, expected):
+def test_process_note(nsx, note_page_1, export_format, expected, monkeypatch):
     note_page_1.conversion_settings.export_format = export_format
     note_page_1._pandoc_converter = pandoc_converter.PandocConverter(note_page_1.conversion_settings)
     note_page_1.conversion_settings.front_matter_format = 'none'
+
+    def fake_store_file(ignored):
+        pass
+
+    monkeypatch.setattr(sn_attachment.NSAttachment, 'store_file', fake_store_file)
 
     note_page_1.process_note()
 

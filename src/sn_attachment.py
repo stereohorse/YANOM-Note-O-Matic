@@ -3,9 +3,9 @@ import logging
 from pathlib import Path
 
 import config
-import zip_file_reader
-from config import yanom_globals
 import helper_functions
+import file_writer
+import zip_file_reader
 
 
 def what_module_is_this():
@@ -43,6 +43,7 @@ class NSAttachment(ABC):
         self.generate_relative_path_to_notebook()
         self.generate_absolute_path()
         self.change_file_name_if_already_exists()
+        self.store_file()
         self.create_html_link()
 
     @abstractmethod
@@ -66,6 +67,9 @@ class NSAttachment(ABC):
         self._path_relative_to_notebook = (Path(self._conversion_settings.attachment_folder_name, self._file_name))
         self.logger.debug(f'Attachment name full path - {self._full_path}')
         self.logger.debug(f'Attachment name relative path - {self._path_relative_to_notebook}')
+
+    def store_file(self):
+        file_writer.store_file(self._full_path, self.get_content_to_save())
 
     @property
     def notebook_folder_name(self):

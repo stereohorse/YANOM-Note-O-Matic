@@ -117,8 +117,12 @@ class NotePage:
         return f"{self._title}.md"
 
     def _generate_absolute_path(self):
-        path_to_file = Path(self._conversion_settings.working_directory, config.yanom_globals.data_dir,
-                            self._conversion_settings.export_folder, self._notebook_folder_name, self._file_name)
+        path_to_file = Path(self._conversion_settings.working_directory,
+                            config.yanom_globals.data_dir,
+                            self._conversion_settings.export_folder,
+                            self._notebook_folder_name,
+                            self._file_name,
+                            )
 
         absolute_file_path = helper_functions.find_valid_full_file_path(path_to_file)
 
@@ -130,6 +134,12 @@ class NotePage:
         return self._file_name
 
     def create_attachments(self):
+        if self._attachments_json is None:
+            self.logger.warning(
+                f'Note - {self._title} - Has Null set for attachments. '
+                f'There may be a sync issues between desktop and web version of Note Station.')
+            return
+
         for attachment_id in self._attachments_json:
             if self._attachments_json[attachment_id]['type'].startswith('image'):
                 self._attachments[attachment_id] = sn_attachment.ImageNSAttachment(self, attachment_id)

@@ -69,8 +69,8 @@ class NSXFile:
         self.generate_note_page_filename_and_path()
         self.build_dictionary_of_inter_note_links()
         self.process_notebooks()
-        attachments = self.build_list_of_attachments()
-        self.store_attachments(attachments)
+        # attachments = self.build_list_of_attachments()
+        # self.store_attachments(attachments)
         self.save_note_pages()
         self.logger.info(f"Processing of {self._nsx_file_name} complete.")
 
@@ -247,25 +247,6 @@ class NSXFile:
                 self._notebooks[current_parent_id].pair_up_note_pages_and_notebooks(self._note_pages[note_page_id])
             else:
                 self._notebooks['recycle-bin'].pair_up_note_pages_and_notebooks(self._note_pages[note_page_id])
-
-    def store_attachments(self, attachments: list[Attachment]):
-        if not config.yanom_globals.is_silent:
-            print("Saving attachments")
-
-        with alive_bar(len(attachments), bar='blocks') as bar:
-            for attachment in attachments:
-                if attachment.attachment.full_path.is_dir():
-                    message = f'Unable to save attachment for the note {attachment.note_title}.  ' \
-                              f'Attachment path is to existing dir not file - {attachment.attachment.full_path}'
-                    self.logger.warning(message)
-                    if not config.yanom_globals.is_silent:
-                        print(message)
-                        bar()
-                    continue
-
-                file_writer.store_file(attachment.attachment.full_path, attachment.attachment.get_content_to_save())
-                if not config.yanom_globals.is_silent:
-                    bar()
 
     def process_notebooks(self):
         self._note_book_count += len(self._notebooks)
