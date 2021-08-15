@@ -26,10 +26,19 @@ def command_line_parser(args, logger):
                         help="No output to console. WILL also use ini file settings.")
     parser.add_argument('--source', nargs='?', default='',
                         help='Sub directory of "data" directory containing one or more files to process, '
-                             'or the name of a single file.  '
-                             'For example "--source my_html_file.html" or "--source my_nsx_files"  '
-                             'If not provided will search and use data folder AND any sub folders.'
+                             'or the name of a single file. or an absolute path to a folder or file  '
+                             'For example "--source my_html_file.html" or "--source /some_path/my_nsx_files" or '
+                             '"--source my_notes", or "--source /some_path/my_nsx_files/my_export.nsx"'
+                             'If not provided will search and use "data" folder of the working directory AND '
+                             'any of its sub folders. '
                              'When --source is provided it WILL override config.ini setting when '
+                             'used with the -i option')
+    parser.add_argument('--export', nargs='?', default='',
+                        help='Sub directory of "data" directory, or an absolute path to a directory '
+                             'that the converted content and attachements will be exported to.  '
+                             'For example "--export_notes" or "--source /usr/somewhere/exports/notes" '
+                             'If not provided a folder "data" will be used in the working directory.'
+                             'When --export is provided it WILL override config.ini setting when '
                              'used with the -i option')
     parser.add_argument("-l", "--log", default='INFO',
                         help="Set the level of program logging. Default = INFO. "

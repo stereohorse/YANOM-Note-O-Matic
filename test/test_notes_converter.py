@@ -146,7 +146,7 @@ def test_run_interactive_command_line_interface(caplog):
         assert 'Using conversion settings from interactive command line tool' in caplog.messages
 
 
-def test_evaluate_command_line_arguments_when_wil_be_interactive_command_line_used(caplog):
+def test_evaluate_command_line_arguments_when_will_be_interactive_command_line_used(caplog):
     test_source_path = str(Path(__file__).parent.absolute())
     config.yanom_globals.logger_level = logging.DEBUG
     args = {'silent': False, 'ini': False, 'source': test_source_path, 'export': 'hello'}
@@ -195,6 +195,29 @@ def test_evaluate_command_line_arguments_when_going_to_use_ini_file(caplog, sile
             mock_configure_for_ini_settings.assert_called_once()
             mock_run_interactive_command_line_interface.assert_not_called()
 
+
+def test_evaluate_command_line_arguments_when_blank_source_export_in_args(caplog):
+    test_source_path = str(Path(__file__).parent.absolute())
+    config.yanom_globals.logger_level = logging.DEBUG
+    args = {'silent': False, 'ini': False, 'source': '', 'export': ''}
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
+    nc = notes_converter.NotesConvertor(args, cd)
+    nc.conversion_settings = conversion_settings.ConversionSettings()
+
+    with patch('notes_converter.NotesConvertor.configure_for_ini_settings', spec=True,
+               ) as mock_configure_for_ini_settings:
+        with patch('notes_converter.NotesConvertor.run_interactive_command_line_interface', spec=True,
+                   ) as mock_run_interactive_command_line_interface:
+            caplog.clear()
+            nc.evaluate_command_line_arguments()
+
+            mock_configure_for_ini_settings.assert_called_once()
+            mock_run_interactive_command_line_interface.assert_called_once()
+
+            assert nc.conversion_settings.export_folder == 'notes'
+            assert nc.conversion_settings.source == ''
+
+            assert 'Starting interactive command line tool' in caplog.messages
 
 def test_update_processing_stats():
     test_source_path = str(Path(__file__).parent.absolute())

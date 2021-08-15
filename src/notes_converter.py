@@ -136,6 +136,9 @@ class NotesConvertor:
         if self.command_line_args['source']:
             self.conversion_settings.source = self.command_line_args['source']
 
+        if self.command_line_args['export']:
+            self.conversion_settings.export_folder = self.command_line_args['export']
+
         if self.command_line_args['silent'] or self.command_line_args['ini']:
             return
 
