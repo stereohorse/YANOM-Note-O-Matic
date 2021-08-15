@@ -45,6 +45,7 @@ class NotesConvertor:
 
     def convert_notes(self):
         self.evaluate_command_line_arguments()
+        self.create_export_folder_if_required()
         if self.conversion_settings.conversion_input == 'html':
             self.convert_html()
         elif self.conversion_settings.conversion_input == 'markdown':
@@ -55,6 +56,9 @@ class NotesConvertor:
         self.output_results_if_not_silent_mode()
         self.log_results()
         self.logger.info("Processing Completed")
+
+    def create_export_folder_if_required(self):
+        self.conversion_settings.export_folder_absolute.mkdir(parents=True, exist_ok=True)
 
     def convert_markdown(self):
         with Timer(name="md_conversion", logger=self.logger.info, silent=bool(config.yanom_globals.is_silent)):
@@ -90,7 +94,7 @@ class NotesConvertor:
             print(f"Processing note pages")
         with alive_bar(len(files_to_convert), bar='blocks') as bar:
             for file in files_to_convert:
-                file_converter.convert(file)
+                file_converter.convert_note(file)
                 file_count += 1
                 if not config.yanom_globals.is_silent:
                     bar()
@@ -129,6 +133,9 @@ class NotesConvertor:
     def evaluate_command_line_arguments(self):
         self.configure_for_ini_settings()
 
+        if self.command_line_args['source']:
+            self.conversion_settings.source = self.command_line_args['source']
+
         if self.command_line_args['silent'] or self.command_line_args['ini']:
             return
 
@@ -138,7 +145,6 @@ class NotesConvertor:
     def run_interactive_command_line_interface(self):
         command_line_interface = StartUpCommandLineInterface(self.conversion_settings)
         self.conversion_settings = command_line_interface.run_cli()
-        self.conversion_settings.source = self.command_line_args['source']
         self.config_data.conversion_settings = self.conversion_settings  # this will save the setting in the ini file
         self.logger.info("Using conversion settings from interactive command line tool")
 

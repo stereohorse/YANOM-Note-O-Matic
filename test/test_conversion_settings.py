@@ -6,7 +6,6 @@ import config
 import conversion_settings
 
 
-
 def test_read_settings_from_dictionary():
     cs = conversion_settings.ConversionSettings()
     cs.attachment_folder_name = 'old_folder_name'
@@ -92,13 +91,30 @@ def test_invalid_quick_setting(caplog, silent):
         assert record.levelname == "ERROR"
 
 
-def test_source_setting_empty_string(tmp_path):
+def test_source_setting_empty_string_data_dir_does_exist(tmp_path):
     cs = conversion_settings.ConversionSettings()
     cs.working_directory = tmp_path
+
+    # create data dir in temp_path to simulate the data folder that will exist
+    # because is is where config.ini lives and is in the yanom installs
+    Path(tmp_path, config.yanom_globals.data_dir).mkdir()
+
+    #set source with blank entry and test is using default data dir
     cs.source = ''
 
     assert cs.source == Path(tmp_path, config.yanom_globals.data_dir)
-    assert cs._source_absolute_path == Path(tmp_path, config.yanom_globals.data_dir)
+    assert cs._source_absolute_root == Path(tmp_path, config.yanom_globals.data_dir)
+
+
+def test_source_setting_empty_string_data_dir_not_exist(tmp_path):
+    cs = conversion_settings.ConversionSettings()
+    cs.working_directory = tmp_path
+
+    # THis will raise error as dat dir does not exist.
+
+    #set source with blank entry and test is using default data dir
+    with pytest.raises(SystemExit):
+        cs.source = ''
 
 
 @pytest.mark.parametrize(
@@ -132,7 +148,66 @@ def test_source_setting_valid_sub_directory(tmp_path):
     cs.source = 'my-source'
 
     assert cs.source == Path("my-source")
-    assert cs._source_absolute_path == Path(tmp_path, config.yanom_globals.data_dir, "my-source")
+    assert cs._source_absolute_root == Path(tmp_path, config.yanom_globals.data_dir, "my-source")
+
+
+def test_source_setting_valid_absolute_path(tmp_path):
+    cs = conversion_settings.ConversionSettings()
+    cs.working_directory = tmp_path
+    Path(tmp_path, config.yanom_globals.data_dir, "my-source").mkdir(parents=True)
+    cs.source = str(Path(tmp_path, config.yanom_globals.data_dir, "my-source"))
+
+    assert cs.source == Path("my-source")
+    assert cs._source_absolute_root == Path(tmp_path, config.yanom_globals.data_dir, "my-source")
+
+
+def test_source_setting_valid_absolute_path_not_in_data_dir(tmp_path):
+    cs = conversion_settings.ConversionSettings()
+    cs.working_directory = tmp_path
+    Path(tmp_path.parent, "somewhere_else/my-source").mkdir(parents=True)
+    cs.source = str(Path(tmp_path.parent, "somewhere_else/my-source"))
+
+    assert cs.source == Path(tmp_path.parent, "somewhere_else/my-source")
+    assert cs._source_absolute_root == Path(tmp_path.parent, "somewhere_else/my-source")
+
+
+def test_export_folder_setting_empty_string(tmp_path):
+    cs = conversion_settings.ConversionSettings()
+    cs.working_directory = tmp_path
+    cs.export_folder = ''
+
+    assert cs.export_folder == Path(config.yanom_globals.default_export_folder)
+    assert cs.export_folder_absolute == Path(tmp_path, config.yanom_globals.data_dir, config.yanom_globals.default_export_folder)
+
+
+def test_export_folder_setting_valid_absolute_path(tmp_path):
+    cs = conversion_settings.ConversionSettings()
+    cs.working_directory = tmp_path
+    Path(tmp_path, config.yanom_globals.data_dir, "my-target").mkdir(parents=True)
+    cs.export_folder = str(Path(tmp_path, config.yanom_globals.data_dir, "my-target"))
+
+    assert cs.export_folder == Path("my-target")
+    assert cs.export_folder_absolute == Path(tmp_path, config.yanom_globals.data_dir, "my-target")
+
+
+def test_export_folder_setting_absolute_path_not_in_data_dir(tmp_path):
+    cs = conversion_settings.ConversionSettings()
+    cs.working_directory = tmp_path
+    Path(tmp_path.parent, "somewhere_else/my-target").mkdir(parents=True)
+    cs.export_folder = str(Path(tmp_path.parent, "somewhere_else/my-target"))
+
+    assert cs.export_folder == Path(tmp_path.parent, "somewhere_else/my-target")
+    assert cs.export_folder_absolute == Path(tmp_path.parent, "somewhere_else/my-target")
+
+
+def test_export_folder_setting_default_data_dir(tmp_path):
+    cs = conversion_settings.ConversionSettings()
+    cs.working_directory = tmp_path
+    Path(tmp_path, config.yanom_globals.data_dir,).mkdir(parents=True)
+    cs.export_folder = str(Path(tmp_path, config.yanom_globals.data_dir))
+
+    assert cs.export_folder == Path(tmp_path, config.yanom_globals.data_dir)
+    assert cs.export_folder_absolute == Path(tmp_path, config.yanom_globals.data_dir)
 
 
 @pytest.mark.parametrize(
@@ -231,7 +306,7 @@ def test_quick_setting_setter_invalid_value():
 
 def test_source_absolute_path_property():
     cs = conversion_settings.ConversionSettings()
-    cs._source_absolute_path = Path('my/path')
+    cs._source_absolute_root = Path('my/path')
 
     assert cs.source_absolute_path == Path('my/path')
 

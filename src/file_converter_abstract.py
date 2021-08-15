@@ -70,7 +70,7 @@ class FileConverter(ABC):
             return '.html'
         return '.md'
 
-    def convert(self, file):
+    def convert_note(self, file):
         self._file = Path(file)
         self.read_file()
         self.pre_process_content()

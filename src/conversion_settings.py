@@ -53,8 +53,10 @@ class ConversionSettings:
         Allow spaces in tag names
     split_tags: bool
         Split tags into separate tags where the input was a grouped tag format e.g. /coding/python -> coding python
-    _export_folder_name: pathlib.Path
-        Path object for the sub-directory name to place exported notes into
+    _export_folder: pathlib.Path
+        Path object for the relative or absolute path to place exported notes into
+    _export_folder_absolute: pathlib.Path
+        Path object for the absolute path to place exported notes into
     _attachment_folder_name: pathlib.Path
         Path object for the sub-directory name within the export folder to place images and attachments
     _creation_time_in_exported_file_name: bool
@@ -76,7 +78,7 @@ class ConversionSettings:
     _working_directory: Path
         The base working directory for the program execution. This is not stored in ini files it is used for program
         execution only
-    _source_absolute_path: Path
+    _source_absolute_root: Path
         An absolute path to the source files
 
     Methods
@@ -165,7 +167,7 @@ class ConversionSettings:
         self.chart_image = True
         self.chart_csv = True
         self.chart_data_table = True
-        self._export_folder_name = 'notes'
+        self._export_folder = 'notes'
         self._attachment_folder_name = 'attachments'
         self._allow_spaces_in_file_names = True
         self._filename_spaces_replaced_by = '-'
@@ -175,8 +177,9 @@ class ConversionSettings:
         self._creation_time_in_exported_file_name = False
         self._maximum_file_or_directory_name_length = yanom_globals.path_part_max_length
         self._working_directory, environment_message = find_working_directory()
+        self._export_folder_absolute = Path(self._working_directory, config.yanom_globals.data_dir, self._export_folder)
         self.logger.debug(environment_message)
-        self._source_absolute_path = None
+        self._source_absolute_root = None
 
     def __str__(self):
         return f"{self.__class__.__name__}(valid_conversion_inputs={self.valid_conversion_inputs}, " \
@@ -321,7 +324,6 @@ class ConversionSettings:
         self.quick_setting = 'multimarkdown'
         self.export_format = 'multimarkdown'
 
-
     def quick_set_pandoc_markdown_strict_settings(self):
         """
         Set Pandoc Markdown-strict conversion settings.
@@ -362,6 +364,30 @@ class ConversionSettings:
         self._creation_time_in_exported_file_name = False
         self._maximum_file_or_directory_name_length = yanom_globals.path_part_max_length
 
+    def _set_folder_paths(self, provided_folder):
+        if provided_folder == '':
+            self.logger.debug(f"No provided source using relative path {config.yanom_globals.data_dir} as source directory")
+            provided_folder = Path(self._working_directory, config.yanom_globals.data_dir)
+            provided_folder_absolute = Path(self._working_directory, config.yanom_globals.data_dir)
+
+            return provided_folder, provided_folder_absolute
+
+        if Path(provided_folder).is_absolute():
+            provided_folder_absolute = Path(provided_folder)
+
+            if Path(provided_folder) == Path(self._working_directory, config.yanom_globals.data_dir):
+                return Path(provided_folder), provided_folder_absolute
+
+            if Path(provided_folder).is_relative_to(self._working_directory, config.yanom_globals.data_dir):
+                provided_folder = Path(provided_folder).relative_to(Path(self._working_directory, config.yanom_globals.data_dir))
+            else:
+                provided_folder = Path(provided_folder)
+            return provided_folder, provided_folder_absolute
+
+        provided_folder = generate_clean_directory_name(provided_folder, self.filename_options)
+        provided_folder = Path(provided_folder)
+        provided_folder_absolute = Path(self._working_directory, config.yanom_globals.data_dir, provided_folder)
+        return provided_folder, provided_folder_absolute
 
     @property
     def filename_options(self):
@@ -401,16 +427,11 @@ class ConversionSettings:
     def source(self, provided_source):
         if isinstance(provided_source, str):
             provided_source = provided_source.strip()
-        if provided_source == '':
-            self.logger.debug(f"Using relative path {config.yanom_globals.data_dir} as source directory")
-            self._source = Path(self._working_directory, config.yanom_globals.data_dir)
-            self._source_absolute_path = Path(self._working_directory, config.yanom_globals.data_dir)
-            return
 
-        if Path(self._working_directory, config.yanom_globals.data_dir, provided_source).exists():
-            self._source = Path(provided_source)
-            self.logger.debug(f"Using relative path {self._source} as source")
-            self._source_absolute_path = Path(self._working_directory, config.yanom_globals.data_dir, provided_source)
+        self._source, self._source_absolute_root = self._set_folder_paths(provided_source)
+
+        if self._source_absolute_root.exists():
+            self.logger.info(f'Using {self._source_absolute_root} as source path')
             return
 
         msg = f"Invalid source location - {provided_source} - Check command line argument OR config.ini entry - Exiting program"
@@ -521,25 +542,33 @@ class ConversionSettings:
 
     @property
     def export_folder(self):
-        return self._export_folder_name
+        return self._export_folder
 
     @export_folder.setter
-    def export_folder(self, value):
-        if value == '':
-            value = yanom_globals.default_export_folder
-        value = value.strip()
-        if Path(value).is_file():
-            msg = f"Invalid path provided. Path is to existing file not a directory '{value}'"
+    def export_folder(self, provided_export_folder):
+        provided_export_folder = provided_export_folder.strip()
+        if provided_export_folder == '':
+            provided_export_folder = yanom_globals.default_export_folder
+
+        if Path(provided_export_folder).is_file():
+            msg = f"Invalid path provided. Path is to existing file not a directory '{provided_export_folder}'"
             self.logger.error(msg)
             if not config.yanom_globals.is_silent:
                 print(msg)
             sys.exit(1)
 
-        self._export_folder_name = Path(generate_clean_directory_name(value,
-                                                                      self.filename_options))
+        self._export_folder, self._export_folder_absolute = self._set_folder_paths(provided_export_folder)
+
+        # self._export_folder = Path(generate_clean_directory_name(value,
+        #                                                          self.filename_options))
 
         self.logger.info(
-            f'For the provided attachment folder name of "{value}" the cleaned name used is {self._export_folder_name}')
+            f'For the provided attachment folder name of "{provided_export_folder}" the cleaned name used is {self._export_folder}')
+        self.logger.info(f'Using {self._export_folder_absolute} as export path')
+
+    @property
+    def export_folder_absolute(self):
+        return self._export_folder_absolute
 
     @property
     def attachment_folder_name(self):
@@ -563,7 +592,7 @@ class ConversionSettings:
 
     @property
     def source_absolute_path(self):
-        return self._source_absolute_path
+        return self._source_absolute_root
 
     @property
     def allow_spaces_in_filenames(self):
@@ -621,4 +650,3 @@ class ConversionSettings:
     def maximum_file_or_directory_name_length(self, value: int):
         value = min(int(value), yanom_globals.path_part_max_length)
         self._maximum_file_or_directory_name_length = value
-

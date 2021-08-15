@@ -143,17 +143,16 @@ def test_run_interactive_command_line_interface(caplog):
         nc.run_interactive_command_line_interface()
 
         mock_run_cli.assert_called_once()
-        assert nc.conversion_settings.source == Path(test_source_path)
-        assert nc.config_data.conversion_settings.source == Path(test_source_path)
         assert 'Using conversion settings from interactive command line tool' in caplog.messages
 
 
 def test_evaluate_command_line_arguments_when_wil_be_interactive_command_line_used(caplog):
     test_source_path = str(Path(__file__).parent.absolute())
     config.yanom_globals.logger_level = logging.DEBUG
-    args = {'silent': False, 'ini': False, 'source': test_source_path}
+    args = {'silent': False, 'ini': False, 'source': test_source_path, 'export': 'hello'}
     cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
+    nc.conversion_settings = conversion_settings.ConversionSettings()
 
     with patch('notes_converter.NotesConvertor.configure_for_ini_settings', spec=True,
                ) as mock_configure_for_ini_settings:
@@ -165,9 +164,10 @@ def test_evaluate_command_line_arguments_when_wil_be_interactive_command_line_us
             mock_configure_for_ini_settings.assert_called_once()
             mock_run_interactive_command_line_interface.assert_called_once()
 
-            assert len(caplog.records) == 1
+            assert nc.conversion_settings.export_folder == Path('hello')
+            assert nc.conversion_settings.source == Path(test_source_path)
 
-            assert 'Starting interactive command line tool' in caplog.records[0].message
+            assert 'Starting interactive command line tool' in caplog.messages
 
 
 @pytest.mark.parametrize(
@@ -177,12 +177,13 @@ def test_evaluate_command_line_arguments_when_wil_be_interactive_command_line_us
         (False, True),
     ]
 )
-def test_evaluate_command_line_arguments_when_gogin_to_use_ini_file(caplog, silent, ini):
+def test_evaluate_command_line_arguments_when_going_to_use_ini_file(caplog, silent, ini):
     test_source_path = str(Path(__file__).parent.absolute())
     config.yanom_globals.logger_level = logging.DEBUG
-    args = {'silent': silent, 'ini': ini, 'source': test_source_path}
+    args = {'silent': silent, 'ini': ini, 'source': test_source_path, 'export': 'hello'}
     cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
+    nc.conversion_settings = conversion_settings.ConversionSettings()
 
     with patch('notes_converter.NotesConvertor.configure_for_ini_settings', spec=True,
                ) as mock_configure_for_ini_settings:
@@ -193,8 +194,6 @@ def test_evaluate_command_line_arguments_when_gogin_to_use_ini_file(caplog, sile
 
             mock_configure_for_ini_settings.assert_called_once()
             mock_run_interactive_command_line_interface.assert_not_called()
-
-            assert len(caplog.records) == 0
 
 
 def test_update_processing_stats():

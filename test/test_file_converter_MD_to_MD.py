@@ -282,7 +282,7 @@ class TestMDToMDConverter(unittest.TestCase):
         with TempDirectory() as d:
             source_file = Path(d.path, 'some_markdown.md')
             source_file.write_text('<img src="filepath/image.png" width="600">')
-            self.file_converter.convert(source_file)
+            self.file_converter.convert_note(source_file)
 
             result = source_file.read_text()
             self.assertEqual('![|600](filepath/image.png)', result, 'failed to convert file')
