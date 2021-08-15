@@ -259,198 +259,90 @@ class ConversionSettings:
         Used for user configured selections and ConfigData Class to provide conversions read from ini files.
         """
         self.logger.debug("Manual conversion settings")
+        self.set_common_quick_settings_defaults()
         self.quick_setting = 'manual'
         self.front_matter_format = 'none'
-        self.metadata_schema = []
-        if self.conversion_input == 'nsx':
-            self.metadata_schema = ['title', 'ctime', 'mtime', 'tag']
-        self.spaces_in_tags = False
-        self.split_tags = False
-        self.first_row_as_header = False
-        self.first_column_as_header = False
-        self.chart_image = True
-        self.chart_csv = True
-        self.chart_data_table = True
-        self._allow_spaces_in_file_names = True
-        self._allow_unicode_in_file_names = True
-        self._allow_uppercase_in_file_names = True
-        self._allow_non_alphanumeric_in_file_names = True
-        self._filename_spaces_replaced_by = '-'
 
     def quick_set_qownnotes_settings(self):
         """
         QOwnNotes conversion settings to convert input formats to format suitable for QOwnNotes users.
         """
         self.logger.debug("QOwnNotes Setting conversion settings")
+        self.set_common_quick_settings_defaults()
         self.quick_setting = 'q_own_notes'
         self.export_format = 'q_own_notes'
         self.front_matter_format = 'yaml'
-        self.metadata_schema = []
-        if self.conversion_input == 'nsx':
-            self.metadata_schema = ['title', 'ctime', 'mtime', 'tag']
-        self.spaces_in_tags = False
-        self.split_tags = False
-        self.first_row_as_header = True
-        self.first_column_as_header = True
-        self.chart_image = True
-        self.chart_csv = True
-        self.chart_data_table = True
-        self._allow_spaces_in_file_names = True
-        self._allow_unicode_in_file_names = True
-        self._allow_uppercase_in_file_names = True
-        self._allow_non_alphanumeric_in_file_names = True
-        self._filename_spaces_replaced_by = '-'
 
     def quick_set_gfm_settings(self):
         """
         Git-flavoured markdown conversion settings to convert input formats to gfm format.
         """
         self.logger.debug("GFM conversion settings")
+        self.set_common_quick_settings_defaults()
         self.quick_setting = 'gfm'
         self.export_format = 'gfm'
         self.front_matter_format = 'yaml'
-        self.metadata_schema = []
-        if self.conversion_input == 'nsx':
-            self.metadata_schema = ['title', 'ctime', 'mtime', 'tag']
-        self.spaces_in_tags = False
-        self.split_tags = False
-        self.first_row_as_header = True
-        self.first_column_as_header = True
-        self.chart_image = True
-        self.chart_csv = True
-        self.chart_data_table = True
-        self._allow_spaces_in_file_names = True
-        self._allow_unicode_in_file_names = True
-        self._allow_uppercase_in_file_names = True
-        self._allow_non_alphanumeric_in_file_names = True
-        self._filename_spaces_replaced_by = '-'
 
     def quick_set_obsidian_settings(self):
         """
         Obsidian conversion settings to convert input formats to format suitable for Obsidian users.
         """
         self.logger.debug("Obsidian conversion settings")
+        self.set_common_quick_settings_defaults()
         self.quick_setting = 'obsidian'
         self.export_format = 'obsidian'
         self.front_matter_format = 'yaml'
-        self.metadata_schema = []
-        if self.conversion_input == 'nsx':
-            self.metadata_schema = ['title', 'ctime', 'mtime', 'tag']
-        self.spaces_in_tags = False
-        self.split_tags = False
-        self.first_row_as_header = True
-        self.first_column_as_header = True
-        self.chart_image = True
-        self.chart_csv = True
-        self.chart_data_table = True
-        self._allow_spaces_in_file_names = True
-        self._allow_unicode_in_file_names = True
-        self._allow_uppercase_in_file_names = True
-        self._allow_non_alphanumeric_in_file_names = True
-        self._filename_spaces_replaced_by = '-'
 
     def quick_set_commonmark_settings(self):
         """
         Commonmark conversion settings
         """
         self.logger.debug("Commonmark conversion settings")
+        self.set_common_quick_settings_defaults()
         self.quick_setting = 'commonmark'
         self.export_format = 'commonmark'
         self.front_matter_format = 'yaml'
-        self.metadata_schema = []
-        if self.conversion_input == 'nsx':
-            self.metadata_schema = ['title', 'ctime', 'mtime', 'tag']
-        self.spaces_in_tags = False
-        self.split_tags = False
-        self.first_row_as_header = True
-        self.first_column_as_header = True
-        self.chart_image = True
-        self.chart_csv = True
-        self.chart_data_table = True
-        self._allow_spaces_in_file_names = True
-        self._allow_unicode_in_file_names = True
-        self._allow_uppercase_in_file_names = True
-        self._allow_non_alphanumeric_in_file_names = True
-        self._filename_spaces_replaced_by = '-'
 
     def quick_set_pandoc_markdown_settings(self):
         """
         Set Pandoc Markdown conversion settings.
         """
         self.logger.debug("Pandoc markdown conversion settings")
+        self.set_common_quick_settings_defaults()
         self.quick_setting = 'pandoc_markdown'
         self.export_format = 'pandoc_markdown'
         self.front_matter_format = 'yaml'
-        self.metadata_schema = []
-        if self.conversion_input == 'nsx':
-            self.metadata_schema = ['title', 'ctime', 'mtime', 'tag']
-        self.spaces_in_tags = False
-        self.split_tags = False
-        self.first_row_as_header = True
-        self.first_column_as_header = True
-        self.chart_image = True
-        self.chart_csv = True
-        self.chart_data_table = True
-        self._allow_spaces_in_file_names = True
-        self._allow_unicode_in_file_names = True
-        self._allow_uppercase_in_file_names = True
-        self._allow_non_alphanumeric_in_file_names = True
-        self._filename_spaces_replaced_by = '-'
 
     def quick_set_multimarkdown_settings(self):
         """
         MultiMarkdown conversion settings.
         """
         self.logger.debug("MultiMarkdown conversion settings")
+        self.set_common_quick_settings_defaults()
         self.quick_setting = 'multimarkdown'
         self.export_format = 'multimarkdown'
-        self.metadata_schema = []
-        if self.conversion_input == 'nsx':
-            self.metadata_schema = ['title', 'ctime', 'mtime', 'tag']
-        self.spaces_in_tags = False
-        self.split_tags = False
-        self.first_row_as_header = True
-        self.first_column_as_header = True
-        self.chart_image = True
-        self.chart_csv = True
-        self.chart_data_table = True
-        self._allow_spaces_in_file_names = True
-        self._allow_unicode_in_file_names = True
-        self._allow_uppercase_in_file_names = True
-        self._allow_non_alphanumeric_in_file_names = True
-        self._filename_spaces_replaced_by = '-'
+
 
     def quick_set_pandoc_markdown_strict_settings(self):
         """
         Set Pandoc Markdown-strict conversion settings.
         """
         self.logger.debug("Pandoc Markdown Strict Setting conversion settings")
+        self.set_common_quick_settings_defaults()
         self.quick_setting = 'pandoc_markdown_strict'
         self.export_format = 'pandoc_markdown_strict'
-        self.metadata_schema = []
-        if self.conversion_input == 'nsx':
-            self.metadata_schema = ['title', 'ctime', 'mtime', 'tag']
-        self.spaces_in_tags = False
-        self.split_tags = False
-        self.first_row_as_header = True
-        self.first_column_as_header = True
-        self.chart_image = True
-        self.chart_csv = True
-        self.chart_data_table = True
-        self._allow_spaces_in_file_names = True
-        self._allow_unicode_in_file_names = True
-        self._allow_uppercase_in_file_names = True
-        self._allow_non_alphanumeric_in_file_names = True
-        self._filename_spaces_replaced_by = '-'
 
     def quick_set_html_conversion_settings(self):
         """
         Set HTML conversion settings to convert input formats to HTML files plus attachments in a folder.
         """
         self.logger.debug("HTML conversion settings")
+        self.set_common_quick_settings_defaults()
         self.export_format = 'html'
         self.quick_setting = 'html'
         self.front_matter_format = 'yaml'
+
+    def set_common_quick_settings_defaults(self):
         self.metadata_schema = []
         if self.conversion_input == 'nsx':
             self.metadata_schema = ['title', 'ctime', 'mtime', 'tag']
@@ -466,6 +358,9 @@ class ConversionSettings:
         self._allow_uppercase_in_file_names = True
         self._allow_non_alphanumeric_in_file_names = True
         self._filename_spaces_replaced_by = '-'
+        self._creation_time_in_exported_file_name = False
+        self._maximum_file_or_directory_name_length = yanom_globals.path_part_max_length
+
 
     @property
     def filename_options(self):
