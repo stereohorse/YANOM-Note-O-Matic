@@ -55,7 +55,7 @@ def build_package():
     ])
 
     print("Create yanom/data dir")
-    Path('dist/yanom/data').mkdir(exist_ok=True)
+    Path('./../src/dist/yanom/data').mkdir(exist_ok=True)
 
     copy_pandoc_to_yanom_folder()
     copy_shortcut_file_to_yanom_folder()
@@ -108,8 +108,8 @@ def copy_spec_file_to_source():
 def remove_existing_build_folders():
     with contextlib.suppress(FileNotFoundError):
         print("Remove existing windows dist and build folders if exist")
-        shutil.rmtree('dist')
-        shutil.rmtree('build')
+        shutil.rmtree('../../src/dist')
+        shutil.rmtree('../../src/build')
 
 
 if __name__ == "__main__":
