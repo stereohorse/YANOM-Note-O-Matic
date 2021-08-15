@@ -29,7 +29,7 @@ class NotePage:
         self._note_json = note_json
         self.get_json_note_title()
         self._original_title = self._title
-        self._format_ctime_and_mtime_if_required()
+        self.format_ctime_and_mtime_if_required()
         self.get_json_note_content()
         self.get_json_parent_notebook()
         self.get_json_attachment_data()
@@ -78,9 +78,9 @@ class NotePage:
             if not config.yanom_globals.is_silent:
                 print(f"No parent notebook ID was found in '{self._note_id}'.  Note will be in the Recycle Bin notebook")
 
-    def _format_ctime_and_mtime_if_required(self):
+    def format_ctime_and_mtime_if_required(self):
         if self._conversion_settings.front_matter_format != 'none' \
-                or self._conversion_settings._creation_time_in_exported_file_name is True:
+                or self._conversion_settings.creation_time_in_exported_file_name is True:
             if 'ctime' in self._note_json:
                 self._note_json['ctime'] = time.strftime('%Y%m%d%H%M', time.localtime(self._note_json['ctime']))
             if 'mtime' in self._note_json:
@@ -97,7 +97,11 @@ class NotePage:
         self.logger.debug(f"Processing of note page '{self._title}' - {self._note_id}  completed.")
 
     def _create_file_name(self, used_filenames):
-        dirty_filename = self._append_file_extension()
+        dirty_filename = self._title
+        if self.conversion_settings.creation_time_in_exported_file_name:
+            dirty_filename = f"{self._note_json['ctime']}-{self._title}"
+
+        dirty_filename = self._append_file_extension(dirty_filename)
         cleaned_filename = Path(helper_functions.generate_clean_filename(dirty_filename,
                                                                          self.conversion_settings.filename_options))
 
@@ -110,11 +114,11 @@ class NotePage:
         self._file_name = new_filename
         self.logger.info(f'For the note "{self._title}" the file name used is "{self._file_name}"')
 
-    def _append_file_extension(self):
+    def _append_file_extension(self, file_name):
         if self._conversion_settings.export_format == 'html':
-            return f"{self._title}.html"
+            return f"{file_name}.html"
 
-        return f"{self._title}.md"
+        return f"{file_name}.md"
 
     def _generate_absolute_path(self):
         path_to_file = Path(self._conversion_settings.working_directory,
@@ -138,7 +142,7 @@ class NotePage:
             self.logger.warning(
                 f'Note - {self._title} - Has Null set for attachments. '
                 f'There may be a sync issues between desktop and web version of Note Station.')
-            return
+            return 0, 0
 
         for attachment_id in self._attachments_json:
             if self._attachments_json[attachment_id]['type'].startswith('image'):

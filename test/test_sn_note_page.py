@@ -120,18 +120,21 @@ def test_init_note_page(nsx, front_matter_format, creation_time_in_exported_file
 
 
 @pytest.mark.parametrize(
-    'export_format, extension', [
-        ('html', 'html'),
-        ('gfm', 'md'),
+    'export_format, extension, time, optional_dash,  ctime', [
+        ('html', 'html', '20210815', '-', True),
+        ('html', 'html', '', '', False),
+        ('gfm', 'md', '', '', False),
     ]
 )
-def test_generate_filenames_and_paths(export_format, extension, note_page):
+def test_generate_filenames_and_paths(export_format, extension, time, optional_dash,  ctime, note_page):
     note_page.conversion_settings.export_format = export_format
     note_page.notebook_folder_name = 'note_book2'
+    note_page._note_json['ctime'] = time
+    note_page.conversion_settings.creation_time_in_exported_file_name = ctime
 
     note_page.generate_filenames_and_paths([''])
 
-    assert note_page.file_name == Path(f'Page 8 title.{extension}')
+    assert note_page.file_name == Path(f"{time}{optional_dash}{note_page.title}.{extension}")
     assert note_page.full_path == Path(note_page.conversion_settings.working_directory, config.yanom_globals.data_dir,
                                        note_page.conversion_settings.export_folder, note_page.notebook_folder_name,
                                        note_page.file_name)
@@ -144,6 +147,16 @@ def test_create_attachments(nsx, note_page_1):
 
     assert image_count == 1
     assert file_count == 3
+
+
+def test_create_attachments_no_note_json_for_attachments(nsx, note_page_1, caplog):
+    note_page_1._attachments_json = None
+    with patch('sn_attachment.ImageNSAttachment', spec=True):
+        with patch('sn_attachment.FileNSAttachment', spec=True):
+            image_count, file_count = note_page_1.create_attachments()
+
+    assert image_count == 0
+    assert file_count == 0
 
 
 def test_process_attachments(nsx, note_page_1):
@@ -317,3 +330,34 @@ def test_get_json_attachment_data_key_is_null(note_page_1, caplog):
     assert note_page_1._attachments_json == {}
     assert expected_caplog_msg1 in caplog.messages
     assert expected_caplog_msg2 in caplog.messages
+
+@pytest.mark.parametrize(
+    'ctime, mtime, expected_ctime, expected_mtime, format_time', [
+        (1594591675, 1594591737, 1594591675, 1594591737, False),
+        (1594591675, 1594591737, '202007122307', '202007122308', True),
+    ]
+)
+def test_format_ctime_and_mtime_if_required(note_page_1, ctime, mtime, expected_ctime, expected_mtime, format_time):
+    note_page_1._note_json['ctime'] = ctime
+    note_page_1._note_json['mtime'] = mtime
+    note_page_1.conversion_settings.creation_time_in_exported_file_name = format_time
+    note_page_1.conversion_settings.front_matter_format = 'none'
+    note_page_1.format_ctime_and_mtime_if_required()
+
+    assert note_page_1._note_json['ctime'] == expected_ctime
+    assert note_page_1._note_json['mtime'] == expected_mtime
+
+
+@pytest.mark.parametrize(
+    'ctime, mtime, expected_ctime, expected_mtime, format_time', [
+        (1594591675, 1594591737, 1594591675, 1594591737, False),
+        (1594591675, 1594591737, '202007122307', '202007122308', True),
+    ]
+)
+def test_format_ctime_and_mtime_if_required_no_time_data_in_note_json(note_page_1, ctime, mtime, expected_ctime, expected_mtime, format_time):
+    note_page_1._note_json= {}
+    note_page_1.conversion_settings.creation_time_in_exported_file_name = format_time
+    note_page_1.conversion_settings.front_matter_format = 'none'
+    note_page_1.format_ctime_and_mtime_if_required()
+
+    assert note_page_1._note_json == {}
