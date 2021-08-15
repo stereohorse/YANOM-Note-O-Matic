@@ -213,7 +213,7 @@ def test_convert_using_strings_forcing_subprocess_error(caplog, capsys, monkeypa
     result = pandoc_processor.convert_using_strings('hello world', 'my_note')
 
     assert result == 'Error converting data'
-    assert "Unable to convert note 'my_note'." in caplog.messages
+    assert 'Unable to convert note "my_note".' == caplog.messages[0]
 
     captured = capsys.readouterr()
     assert expected_capture_out in captured.out

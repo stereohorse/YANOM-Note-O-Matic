@@ -145,8 +145,7 @@ def test_run_interactive_command_line_interface(caplog):
         mock_run_cli.assert_called_once()
         assert nc.conversion_settings.source == Path(test_source_path)
         assert nc.config_data.conversion_settings.source == Path(test_source_path)
-        assert len(caplog.records) == 3
-        assert caplog.records[2].message == 'Using conversion settings from interactive command line tool'
+        assert 'Using conversion settings from interactive command line tool' in caplog.messages
 
 
 def test_evaluate_command_line_arguments_when_wil_be_interactive_command_line_used(caplog):
@@ -291,7 +290,7 @@ def test_convert_html(tmp_path, capsys):
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
     nc.conversion_settings._source = Path(tmp_path, 'file1.html')
-    nc.conversion_settings._source_absolute_path = Path(tmp_path)
+    nc.conversion_settings._source_absolute_root = Path(tmp_path)
 
     nc.convert_html()
 
@@ -306,7 +305,7 @@ def test_process_files(tmp_path):
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
     nc.conversion_settings._source = Path(tmp_path, 'file1.html')
-    nc.conversion_settings._source_absolute_path = Path(tmp_path)
+    nc.conversion_settings._source_absolute_root = Path(tmp_path)
 
     files_to_convert = [Path(tmp_path, 'file1.html')]
     file_converter = file_converter_HTML_to_MD.HTMLToMDConverter(nc.conversion_settings, files_to_convert)
@@ -360,7 +359,7 @@ def test_convert_markdown(tmp_path, input_file, file_converter_type, export_form
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
     nc.conversion_settings._source = Path(tmp_path, input_file)
-    nc.conversion_settings._source_absolute_path = Path(tmp_path)
+    nc.conversion_settings._source_absolute_root = Path(tmp_path)
     nc.conversion_settings.export_format = export_format
 
     with patch('notes_converter.NotesConvertor.process_files', spec=True) as mock_process_files:
@@ -386,7 +385,7 @@ def test_convert_notes(tmp_path, input_file, file_converter_type, export_format,
     nc.conversion_settings = conversion_settings.ConversionSettings()
     nc.conversion_settings._source = Path(tmp_path, input_file)
     nc.conversion_settings._working_directory = Path(tmp_path)
-    nc.conversion_settings._source_absolute_path = Path(tmp_path)
+    nc.conversion_settings._source_absolute_root = Path(tmp_path)
     nc.conversion_settings.export_format = export_format
     nc.conversion_settings.conversion_input = conversion_input
 
@@ -411,7 +410,7 @@ def test_convert_notes_nsx_file_type(tmp_path, capsys, caplog):
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
     nc.conversion_settings._source = Path(tmp_path, input_file)
-    nc.conversion_settings._source_absolute_path = Path(tmp_path)
+    nc.conversion_settings._source_absolute_root = Path(tmp_path)
     nc.conversion_settings.conversion_input = 'nsx'
 
     with patch('notes_converter.NotesConvertor.process_nsx_files', spec=True) as mock_process_nsx_files:

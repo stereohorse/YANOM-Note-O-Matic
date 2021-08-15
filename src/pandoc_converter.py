@@ -112,7 +112,7 @@ class PandocConverter:
             return out.stdout
 
         except subprocess.CalledProcessError as e:
-            self.logger.error(f"Unable to convert note '{note_title}'.")
+            self.logger.error(f'Unable to convert note "{note_title}".')
             self.logger.error(helper_functions.log_traceback(e))
             if not config.yanom_globals.is_silent:
                 print(f"Error converting note {note_title} with pandoc please check log file and pandoc installation.")

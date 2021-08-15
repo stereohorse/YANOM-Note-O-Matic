@@ -259,9 +259,8 @@ class ConversionSettings:
         Used for user configured selections and ConfigData Class to provide conversions read from ini files.
         """
         self.logger.debug("Manual conversion settings")
-        self.set_common_quick_settings_defaults()
         self.quick_setting = 'manual'
-        self.front_matter_format = 'none'
+
 
     def quick_set_qownnotes_settings(self):
         """
@@ -343,6 +342,8 @@ class ConversionSettings:
         self.front_matter_format = 'yaml'
 
     def set_common_quick_settings_defaults(self):
+        self.export_folder = config.yanom_globals.default_export_folder
+        self.attachment_folder_name = config.yanom_globals.default_attachment_folder
         self.metadata_schema = []
         if self.conversion_input == 'nsx':
             self.metadata_schema = ['title', 'ctime', 'mtime', 'tag']
