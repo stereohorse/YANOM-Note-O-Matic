@@ -1,5 +1,8 @@
 import logging
+import shutil
 import sys
+from pathlib import Path
+
 from timer import Timer
 
 from alive_progress import alive_bar
@@ -77,7 +80,7 @@ class NotesConvertor:
     def generate_file_list(self, file_extension):
         if not self.conversion_settings.source.is_file():
             file_list_generator = self.conversion_settings.source_absolute_root.rglob(f'*.{file_extension}')
-            file_list = [item for item in file_list_generator]
+            file_list = {item for item in file_list_generator}
             return file_list
 
         return [self.conversion_settings.source]
@@ -92,13 +95,28 @@ class NotesConvertor:
 
     def process_files(self, files_to_convert, file_converter):
         file_count = 0
+        self._attachment_count = 0
+        set_of_attachments = set()
         if not config.yanom_globals.is_silent:
             print(f"Processing note pages")
         with alive_bar(len(files_to_convert), bar='blocks') as bar:
             for file in files_to_convert:
                 file_converter.convert_note(file)
+                set_of_attachments.update(file_converter.copyable_attachment_absolute_path_set)
                 file_converter.write_post_processed_content()
                 file_count += 1
+                if not config.yanom_globals.is_silent:
+                    bar()
+
+        if not config.yanom_globals.is_silent:
+            print(f"Copying attachments")
+        with alive_bar(len(set_of_attachments), bar='blocks') as bar:
+            for attachment in set_of_attachments:
+                attachment_path_relative_to_source = attachment.relative_to(self.conversion_settings.source_absolute_root)
+                target_attachment_absolute_path = Path(self.conversion_settings.export_folder_absolute, attachment_path_relative_to_source)
+                target_attachment_absolute_path.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy(attachment, target_attachment_absolute_path)
+
                 if not config.yanom_globals.is_silent:
                     bar()
 

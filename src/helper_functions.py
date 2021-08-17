@@ -1,7 +1,7 @@
 from collections import namedtuple
 import ctypes
 import os
-from pathlib import Path
+from pathlib import Path, PureWindowsPath, PurePath
 import random
 import re
 import string
@@ -9,6 +9,7 @@ import sys
 import traceback
 from typing import Optional, Tuple
 import unicodedata
+from urllib import parse
 from urllib.parse import unquote_plus
 
 import filetype
@@ -17,6 +18,33 @@ FileNameOptions = namedtuple('FileNameOptions',
                              'max_length allow_unicode allow_uppercase allow_non_alphanumeric allow_spaces '
                              'space_replacement',
                              )
+
+
+def file_uri_to_path(file_uri, path_class=PurePath):
+    """
+    This function returns a pathlib.PurePath object for the supplied file URI.
+
+    Parameters
+    ==========
+    file_uri : str
+        The file URI
+    path_class : The type of path in the file_uri. By default it uses
+        the system specific path pathlib.PurePath, to force a specific type of path
+        pass pathlib.PureWindowsPath or pathlib.PurePosixPath
+
+    Returns
+    =======
+    pathlib.PurePath object
+
+    """
+    windows_path = isinstance(path_class(), PureWindowsPath)
+    file_uri_parsed = parse.urlparse(file_uri)
+    file_uri_path_unquoted = parse.unquote(file_uri_parsed.path)
+
+    if windows_path and file_uri_path_unquoted.startswith("/"):  # absolute windows path
+        return path_class(file_uri_parsed.netloc, file_uri_path_unquoted)
+
+    return path_class(file_uri_path_unquoted)  # absolute linux and relative windows and linux paths
 
 
 def find_working_directory(is_frozen=getattr(sys, 'frozen', False)) -> Tuple[Path, str]:

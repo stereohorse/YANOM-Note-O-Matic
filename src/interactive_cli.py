@@ -108,6 +108,8 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
 
     def _ask_markdown_conversion_options(self):
         self._ask_and_set_markdown_input_format()
+        self._ask_and_set_source()
+        self._ask_and_set_export_folder_name()
 
         if self._current_conversion_settings.quick_setting == 'manual':
             self._ask_and_set_export_format()
@@ -120,19 +122,18 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
                     self._ask_and_set_metadata_schema()
                 else:
                     self._ask_and_set_tag_prefix()
-            self._ask_and_set_source()
-            self._ask_and_set_export_folder_name()
+
 
     def _ask_html_conversion_options(self):
         self._ask_and_set_conversion_quick_setting()
+        self._ask_and_set_source()
+        self._ask_and_set_export_folder_name()
 
         if self._current_conversion_settings.quick_setting == 'manual':
             self._ask_and_set_export_format()
             self._ask_and_set_front_matter_format()
             if self._current_conversion_settings.front_matter_format != 'none':
                 self._ask_and_set_metadata_schema()
-            self._ask_and_set_source()
-            self._ask_and_set_export_folder_name()
 
     def _nothing_to_convert(self):
         self.logger.warning('Input and output formats are the same nothing to convert. Exiting.')
@@ -170,6 +171,8 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
 
     def _ask_nsx_conversion_options(self):
         self._ask_and_set_conversion_quick_setting()
+        self._ask_and_set_source()
+        self._ask_and_set_export_folder_name()
 
         if self._current_conversion_settings.quick_setting == 'manual':
             self._ask_and_set_export_format()
@@ -177,8 +180,6 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
                 self._ask_markdown_metadata_questions()
             self._ask_and_set_table_details()
             self._ask_and_set_chart_options()
-            self._ask_and_set_source()
-            self._ask_and_set_export_folder_name()
             self._ask_and_set_attachment_folder_name()
             self._ask_and_set_file_name_options()
             self._ask_and_set_space_replacement_character()

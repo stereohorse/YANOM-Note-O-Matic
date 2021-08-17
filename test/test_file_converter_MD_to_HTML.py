@@ -13,7 +13,8 @@ class TestMDToHTMLConverter(unittest.TestCase):
         files_to_convert = [Path('not_existing.md'),
                             Path('some_markdown-old-1.md'),
                             Path('renaming source file failed'),
-                            Path('a_folder/test_md_file.md')]
+                            Path('a_folder/test_md_file.md'),
+                            ]
         self.file_converter = MDToHTMLConverter(self.conversion_settings, files_to_convert)
         self.file_converter._metadata_processor = MetaDataProcessor(self.conversion_settings)
 
@@ -22,19 +23,23 @@ class TestMDToHTMLConverter(unittest.TestCase):
             ('obsidian',
              '![|600](filepath/image.png)',
              '<img src="filepath/image.png" width="600" />',
-             'obsidian link to gfm failed'),
+             'obsidian link to gfm failed',
+             ),
             ('obsidian',
              '![](filepath/image.png)',
              '![](filepath/image.png)',
-             'markdown std link not left unchanged'),
+             'markdown std link not left unchanged',
+             ),
             ('obsidian',
              '![|some-text](filepath/image.png)',
              '![|some-text](filepath/image.png)',
-             'markdown std with pipe and text link not left unchanged',),
+             'markdown std with pipe and text link not left unchanged',
+             ),
             ('commonmark',
              '![](filepath/image.png)',
              '![](filepath/image.png)',
-             'non obsidian input image incorrectly changed')
+             'non obsidian input image incorrectly changed',
+             ),
         ]
 
         for test_set in test_strings:
@@ -72,12 +77,13 @@ class TestMDToHTMLConverter(unittest.TestCase):
                     self.file_converter.pre_process_content()
                     self.assertEqual(test_set[2], self.file_converter._pre_processed_content, test_set[3])
 
-    def test_change_md_links_to_html_links(self):
+    def test_update_note_links(self):
         self.file_converter._files_to_convert = [Path('not_existing.md'),
                                                  Path('some_markdown-old-1.md'),
                                                  Path('renaming source file failed'),
                                                  Path('a_folder/test_md_file.md'),
-                                                 Path('a_folder/test_.md_file.md')]
+                                                 Path('a_folder/test_.md_file.md'),
+                                                 ]
 
         content = '<p><a href="a_folder/test_md_file.md">md file</a></p>' \
                   '<p><a href="a_folder/test_.md_file.md">md file  with dot md in name</a></p>' \
@@ -85,39 +91,43 @@ class TestMDToHTMLConverter(unittest.TestCase):
                   '</p><p><a href="https://a_folder/test_pdf_file.md">web md file</a></p>' \
                   '<p><a href="a_folder/not_in_convert_list.md">non md file file</a></p>'
 
-        new_content = self.file_converter.update_note_links(content, 'md', 'html')
+        self.file_converter._output_extension = '.html'
+        new_content = self.file_converter.update_note_links_in_html_content(content)
 
         print(content)
         print(new_content)
         self.assertTrue('<p><a href="a_folder/test_md_file.html">md file</a></p>' in new_content,
-                        'clean md file extension not changed correctly'
+                        'clean md file extension not changed correctly',
                         )
         self.assertTrue('<p><a href="a_folder/test_.md_file.html">md file  with dot md in name</a></p>'
                         in new_content,
-                        ' md file with dot md in name  not changed correctly'
+                        ' md file with dot md in name  not changed correctly',
                         )
         self.assertTrue('<p><a href="a_folder/test_pdf_file.pdf">non md file file</a></p>'
                         in new_content,
-                        'non md file extension changed incorrectly'
+                        'non md file extension changed incorrectly',
                         )
         self.assertTrue('</p><p><a href="https://a_folder/test_pdf_file.md">web md file</a></p>'
                         in new_content,
-                        'internet md file extension changed incorrectly'
+                        'internet md file extension changed incorrectly',
                         )
         self.assertTrue('<p><a href="a_folder/not_in_convert_list.md">non md file file</a></p>'
                         in new_content,
-                        'file with md file extension not in to be changed list changed incorrectly'
+                        'file with md file extension not in to be changed list changed incorrectly',
                         )
 
     def test_post_process_content(self):
         self.file_converter._conversion_settings.markdown_conversion_input = 'gfm'
         self.file_converter._converted_content = '<head><title>-</title></head><p><a href="a_folder/test_md_file.md">md file</a></p>'
         self.file_converter._metadata_processor._metadata = {'title': 'My Title'}
+        self.file_converter._conversion_settings.export_format = 'html'
+        self.file_converter.set_output_file_extension()
+        self.file_converter._file = Path('a_folder/file.html')
         self.file_converter.post_process_content()
         self.assertEqual(
             '<head><title>My Title</title><meta title="My Title"/></head><p><a href="a_folder/test_md_file.html">md file</a></p>',
             self.file_converter._post_processed_content,
-            'title and meta data inserted incorrectly'
+            'title and meta data inserted incorrectly',
         )
 
     def test_add_meta_data_if_required(self):
@@ -128,7 +138,8 @@ class TestMDToHTMLConverter(unittest.TestCase):
         self.assertEqual(
             '<head><title>My Title</title><meta title="My Title"/></head><p><a href="a_folder/test_md_file.md">md file</a></p>',
             self.file_converter._post_processed_content,
-            'title and meta data inserted incorrectly')
+            'title and meta data inserted incorrectly',
+        )
 
         self.file_converter._conversion_settings.markdown_conversion_input = 'pandoc_markdown'
         self.file_converter._post_processed_content = '<head><title>-</title></head><p><a href="a_folder/test_md_file.md">md file</a></p>'
@@ -137,5 +148,59 @@ class TestMDToHTMLConverter(unittest.TestCase):
         self.assertEqual(
             '<head><title>My Title</title><meta title="My Title"/></head><p><a href="a_folder/test_md_file.md">md file</a></p>',
             self.file_converter._post_processed_content,
-            'title and meta data inserted incorrectly with markdown conversion input'
+            'title and meta data inserted incorrectly with markdown conversion input',
         )
+
+
+def test_generate_set_of_attachment_paths_html_export_format(tmp_path):
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/my_other_notebook/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/my_other_notebook/attachments/five.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/nine.md').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png').touch()
+
+    file_path = Path(tmp_path, 'some_folder/data/my_notebook/note.md')
+    content = f'![copyable](../my_other_notebook/attachments/five.pdf "test tool tip text")\n' \
+              f'![note link](nine.md)\n' \
+              f'[a web link](https:\\www.google.com "google")\n' \
+              f'<img src="attachments/ten.png" />\n' \
+              f'<a href="attachments/eleven.pdf">example-attachment.pdf</a>\n' \
+              f'![copyable](attachments/file%20twelve.pdf)\n' \
+              f'<a href="attachments/file%20thirteen.pdf">example-attachment.pdf</a>\n' \
+              f'<img src="attachments/file%20fourteen.png" />'
+
+    expected_content = f'![copyable](../my_other_notebook/attachments/five.pdf "test tool tip text")\n' \
+                       f'![note link](nine.md)\n' \
+                       f'[a web link](https:\\www.google.com "google")\n' \
+                       f'<img src="attachments/ten.png" />\n' \
+                       f'<a href="attachments/eleven.pdf">example-attachment.pdf</a>\n' \
+                       f'![copyable](attachments/file%20twelve.pdf)\n' \
+                       f'<a href="attachments/file%20thirteen.pdf">example-attachment.pdf</a>\n' \
+                       f'<img src="attachments/file%20fourteen.png" />'
+
+    conversion_settings = ConversionSettings()
+    conversion_settings.source = Path(tmp_path, 'some_folder/data')
+    conversion_settings.export_folder = Path(tmp_path, 'some_folder/export')
+    conversion_settings.export_format = 'html'
+    file_converter = MDToHTMLConverter(conversion_settings, 'files_to_convert')
+    file_converter._file = file_path
+    file_converter._files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md')}
+    result_content = file_converter.handle_attachment_paths(content)
+
+    assert Path(tmp_path,
+                'some_folder/data/my_notebook/attachments/ten.png') in file_converter._copyable_attachment_absolute_path_set
+    assert Path(tmp_path,
+                'some_folder/data/my_notebook/attachments/eleven.pdf') in file_converter._copyable_attachment_absolute_path_set
+    assert Path(tmp_path,
+                'some_folder/data/my_notebook/attachments/file fourteen.png') in file_converter._copyable_attachment_absolute_path_set
+    assert len(file_converter._copyable_attachment_absolute_path_set) == 3
+    assert Path(tmp_path,
+                'some_folder/data/my_notebook/attachments/file thirteen.pdf') in file_converter._non_existing_links_set
+    assert len(file_converter._non_existing_links_set) == 1
+
+    assert result_content == expected_content

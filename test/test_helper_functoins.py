@@ -1,5 +1,5 @@
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 import re
 import sys
 
@@ -336,3 +336,25 @@ def test_file_extension_from_bytes_file_not_recognised():
     result = helper_functions.file_extension_from_bytes(b'1234')
 
     assert result == None
+
+
+@pytest.mark.parametrize(
+    'uri, path_type, expected', [
+        ('some_folder/some%20space/file%20space.pdf', PurePosixPath, Path('some_folder/some space/file space.pdf')),
+        ('some_folder/some_space/file_space.pdf', PurePosixPath, Path('some_folder/some_space/file_space.pdf')),
+        ('file:///Users/user/folder/attachments/example attachment.pdf', PurePosixPath, Path('/Users/user/folder/attachments/example attachment.pdf')),
+        ('file:///Users/user/folder/attachments/example%20attachment.pdf', PurePosixPath, Path('/Users/user/folder/attachments/example attachment.pdf')),
+        ('file://c:/users/files/a file.pdf', PurePosixPath, Path('/users/files/a file.pdf')),
+        ('some_folder/some%20space/file%20space.pdf', PureWindowsPath, PureWindowsPath('some_folder/some space/file space.pdf')),
+        ('some_folder/some_space/file_space.pdf', PureWindowsPath, PureWindowsPath('some_folder/some_space/file_space.pdf')),
+        ('file:///Users/user/folder/attachments/example attachment.pdf', PureWindowsPath,
+         PureWindowsPath('/Users/user/folder/attachments/example attachment.pdf')),
+        ('file:///Users/user/folder/attachments/example%20attachment.pdf', PureWindowsPath,
+         PureWindowsPath('/Users/user/folder/attachments/example attachment.pdf')),
+        ('file://c:/users/files/a file.pdf', PureWindowsPath, PureWindowsPath('c:/users/files/a file.pdf')),
+        ]
+)
+def test_file_uri_to_path(uri, path_type, expected):
+    result = helper_functions.file_uri_to_path(uri, path_type)
+
+    assert result == expected

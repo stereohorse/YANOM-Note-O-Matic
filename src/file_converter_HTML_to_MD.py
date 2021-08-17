@@ -13,11 +13,11 @@ class HTMLToMDConverter(FileConverter):
         self.logger.debug(f'Pre-process HTML file {self._file}')
         self._checklist_processor = HTMLInputMDOutputChecklistProcessor(self._file_content)
         self._pre_processed_content = self._checklist_processor.processed_html
-        self._pre_processed_content = self.update_note_links(self._pre_processed_content, 'html', 'md')
+        self._pre_processed_content = self.update_note_links_in_html_content(self._pre_processed_content)
         self.parse_metadata_if_required()
         self.logger.debug(f'Search for iframes')
         self._pre_processed_content, self._iframes_dict = pre_process_iframes_from_html(self._pre_processed_content)
-        self.rename_target_file_if_already_exists()
+        self.rename_target_file_if_it_already_exists()
 
     def parse_metadata_if_required(self):
         self._metadata_processor = MetaDataProcessor(self._conversion_settings)
@@ -32,6 +32,7 @@ class HTMLToMDConverter(FileConverter):
             self.logger.debug(f'Add iframes to Markdown content')
             self._post_processed_content = post_process_iframes_to_markdown(self._post_processed_content, self._iframes_dict)
         self.add_one_last_line_break()
+        self._post_processed_content = self.handle_attachment_paths(self._post_processed_content)
 
     def update_checklists(self):
         self._post_processed_content = self._checklist_processor.checklist_post_processing(self._post_processed_content)
