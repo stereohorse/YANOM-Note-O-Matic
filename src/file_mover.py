@@ -53,3 +53,9 @@ def create_target_file_path(file_path, source_absolute_root, target_path_root, t
 #
 # def create_absolute_target_path(target_path_root, source_relative_path):
 #     return Path(target_path_root, source_relative_path)
+
+
+def get_file_suffix_for(export_format: str) -> str:
+    if export_format == 'html':
+        return '.html'
+    return '.md'

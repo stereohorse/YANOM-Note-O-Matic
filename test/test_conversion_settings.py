@@ -99,7 +99,7 @@ def test_source_setting_empty_string_data_dir_does_exist(tmp_path):
     # because is is where config.ini lives and is in the yanom installs
     Path(tmp_path, config.yanom_globals.data_dir).mkdir()
 
-    #set source with blank entry and test is using default data dir
+    # set source with blank entry and test is using default data dir
     cs.source = ''
 
     assert cs.source == Path(tmp_path, config.yanom_globals.data_dir)
@@ -112,7 +112,7 @@ def test_source_setting_empty_string_data_dir_not_exist(tmp_path):
 
     # THis will raise error as dat dir does not exist.
 
-    #set source with blank entry and test is using default data dir
+    # set source with blank entry and test is using default data dir
     with pytest.raises(SystemExit):
         cs.source = ''
 
@@ -177,7 +177,10 @@ def test_export_folder_setting_empty_string(tmp_path):
     cs.export_folder = ''
 
     assert cs.export_folder == Path(config.yanom_globals.default_export_folder)
-    assert cs.export_folder_absolute == Path(tmp_path, config.yanom_globals.data_dir, config.yanom_globals.default_export_folder)
+    assert cs.export_folder_absolute == Path(tmp_path,
+                                             config.yanom_globals.data_dir,
+                                             config.yanom_globals.default_export_folder
+                                             )
 
 
 def test_export_folder_setting_valid_absolute_path(tmp_path):
@@ -222,15 +225,18 @@ def test_export_folder_setting_provide_a_file_not_directory(tmp_path, caplog, ca
     cs.working_directory = tmp_path
     Path(tmp_path, "my-target-file.txt").touch()
 
-    with pytest.raises(SystemExit) as exc:
+    with pytest.raises(SystemExit):
         cs.export_folder = str(Path(tmp_path, "my-target-file.txt"))
 
-    assert f"Invalid path provided. Path is to existing file not a directory '{Path(tmp_path, 'my-target-file.txt')}'" in caplog.messages
+    assert f"Invalid path provided. Path is to existing file " \
+           f"not a directory '{Path(tmp_path, 'my-target-file.txt')}'" \
+           in caplog.messages
+
     captured = capsys.readouterr()
     assert expected_screen_output in captured.out
 
 
-def test_front_matter_setter_invalid(caplog):
+def test_front_matter_setter_invalid():
     cs = conversion_settings.ConversionSettings()
     cs.front_matter_format = 'toml'
     with pytest.raises(ValueError) as exc:
@@ -335,7 +341,6 @@ def test_markdown_conversion_input_setter_invalid_value():
     assert cs.markdown_conversion_input == 'gfm'
 
 
-
 @pytest.mark.parametrize(
     'string_to_test, expected', [
         ("!?hello", Path('!-hello')),
@@ -354,11 +359,35 @@ def test_attachment_folder_name_setter(string_to_test, expected):
     'string_to_test, expected', [
         ("!?hello", Path('!-hello')),
         ("", Path(config.yanom_globals.default_export_folder)),
+        ("/hello/all", Path("/hello/all")),
     ]
 )
-def test_attachment_export_folder_setter(string_to_test, expected):
+def test_attachment_export_folder_setter(string_to_test, expected, tmp_path):
     cs = conversion_settings.ConversionSettings()
+    cs._working_directory = tmp_path
+    export_path = Path(string_to_test)
+    cs.export_folder = export_path
 
-    cs.export_folder = string_to_test
+    assert cs.export_folder == Path(expected)
+    assert cs.export_folder_absolute == Path(tmp_path, config.yanom_globals.data_dir, expected)
 
-    assert cs.export_folder == expected
+
+@pytest.mark.parametrize(
+    'value', ['ignore', 'copy', 'orphan']
+)
+def test_orphans_setter(value):
+    cs = conversion_settings.ConversionSettings()
+    cs.orphans = value
+
+    assert cs.orphans == value
+
+
+def test_orphans_setter_invalid_value():
+    cs = conversion_settings.ConversionSettings()
+    cs.orphans = 'ignore'
+    with pytest.raises(ValueError) as exc:
+        cs.orphans = 'invalid value'
+
+    assert 'Invalid value provided for for orphan file option. Attempted to use invalid value -' in exc.value.args[0]
+
+    assert cs.orphans == 'ignore'

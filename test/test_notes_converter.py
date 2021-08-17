@@ -308,6 +308,7 @@ def test_convert_html(tmp_path):
     cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
+    nc.conversion_settings.orphans = 'orphan'
     nc.conversion_settings._working_directory = Path(tmp_path)
     nc.conversion_settings.export_folder = Path(tmp_path, 'notes')
     Path(nc.conversion_settings.export_folder).mkdir()
@@ -323,14 +324,16 @@ def test_convert_html(tmp_path):
 def test_convert_html_rename_existing_file(tmp_path):
     test_source_path = tmp_path
     args = {'source': test_source_path}
-    touch(Path(tmp_path, 'file1.html'))
-    Path(tmp_path, 'notes').mkdir()
-    touch(Path(tmp_path, 'notes', 'file1.md'))
     cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
+    nc.conversion_settings.orphans = 'orphan'
     nc.conversion_settings._working_directory = Path(tmp_path)
     nc.conversion_settings.export_folder = Path(tmp_path, 'notes')
+
+    touch(Path(tmp_path, 'file1.html'))
+    Path(tmp_path, 'notes').mkdir()
+    touch(Path(tmp_path, 'notes', 'file1.md'))
     Path(nc.conversion_settings.export_folder).mkdir(exist_ok=True)
     nc.conversion_settings._source = Path(tmp_path, 'file1.html')
     nc.conversion_settings._source_absolute_root = Path(tmp_path)
@@ -340,8 +343,6 @@ def test_convert_html_rename_existing_file(tmp_path):
     assert Path(tmp_path, 'file1.html').exists()
     assert Path(tmp_path, 'notes', 'file1.md').exists()
     assert Path(tmp_path, 'notes', 'file1-old-1.md').exists()
-
-    # confirm files are renamed correctly old wil be zero bytes, new is one byte
     assert Path(tmp_path, 'notes', 'file1-old-1.md').stat().st_size == 0
     assert Path(tmp_path, 'notes', 'file1.md').stat().st_size == 1
 
@@ -414,7 +415,7 @@ def test_convert_markdown(tmp_path, input_file, file_converter_type, export_form
         nc.convert_markdown()
 
     args = mock_process_files.call_args.args
-    assert args[0] == [Path(tmp_path, input_file)]
+    assert args[0] == {Path(tmp_path, input_file)}
     assert isinstance(args[1], file_converter_type)
 
 
@@ -446,7 +447,7 @@ def test_convert_notes(tmp_path, input_file, file_converter_type, export_format,
             mock_evaluate_command_line_arguments.assert_called_once()
             mock_process_files.assert_called_once()
             args = mock_process_files.call_args.args
-            assert args[0] == [Path(tmp_path, input_file)]
+            assert args[0] == {Path(tmp_path, input_file)}
             assert isinstance(args[1], file_converter_type)
 
 
@@ -474,3 +475,198 @@ def test_convert_notes_nsx_file_type(tmp_path, capsys, caplog):
 
     assert 'Processing Completed' in caplog.records[-1].message
     assert 'Found pandoc' in captured.out
+
+
+def test_get_list_of_orphan_files(tmp_path):
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/my_other_notebook/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/my_notebook/note.md').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png').touch()
+    Path(tmp_path, 'some_folder/data/attachments/two.csv').touch()
+    Path(tmp_path, 'some_folder/three.png').touch()
+    Path(tmp_path, 'some_folder/attachments/four.csv').touch()
+    Path(tmp_path, 'some_folder/four.csv').touch()
+    Path(tmp_path, 'some_folder/data/my_other_notebook/attachments/five.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/six.csv').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/nine.md').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png').touch()
+
+    test_source_path = tmp_path
+    args = {'silent': True, 'ini': False, 'source': test_source_path}
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
+    nc = notes_converter.NotesConvertor(args, cd)
+    nc.conversion_settings = conversion_settings.ConversionSettings()
+    nc.conversion_settings._source = Path(tmp_path)
+    nc.conversion_settings._source_absolute_root = Path(tmp_path)
+    nc._set_files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md'),
+                                Path(tmp_path, 'some_folder/data/my_notebook/note.md'),
+                                }
+    nc._set_of_found_attachments = {
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png'),
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf'),
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf'),
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png'),
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf')
+    }
+    files = nc.get_list_of_orphan_files()
+
+    assert len(files) == 7
+
+
+def test_handle_orphan_files_as_required_orphans_set_to_orphans_folder(tmp_path):
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/my_other_notebook/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/my_notebook/note.md').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png').touch()
+    Path(tmp_path, 'some_folder/data/attachments/two.csv').touch()
+    Path(tmp_path, 'some_folder/three.png').touch()
+    Path(tmp_path, 'some_folder/attachments/four.csv').touch()
+    Path(tmp_path, 'some_folder/four.csv').touch()
+    Path(tmp_path, 'some_folder/data/my_other_notebook/attachments/five.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/six.csv').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/nine.md').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png').touch()
+
+    test_source_path = tmp_path
+    args = {'silent': True, 'ini': False, 'source': test_source_path}
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
+    nc = notes_converter.NotesConvertor(args, cd)
+    nc.conversion_settings = conversion_settings.ConversionSettings()
+    nc.conversion_settings._source = Path(tmp_path)
+    nc.conversion_settings._source_absolute_root = Path(tmp_path)
+    nc.conversion_settings.export_folder = Path(tmp_path, 'notes')
+    nc._set_files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md'),
+                                Path(tmp_path, 'some_folder/data/my_notebook/note.md'),
+                                }
+    nc._set_of_found_attachments = {
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png'),
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf'),
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf'),
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png'),
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf')
+    }
+    nc.conversion_settings.orphans = 'orphan'
+
+    nc.handle_orphan_files_as_required()
+
+    assert len(nc._orphan_files) == 7
+
+    assert Path(tmp_path, 'notes/orphan/some_folder/data/my_notebook/attachments/one.png').exists()
+    assert Path(tmp_path, 'notes/orphan/some_folder/data/attachments/two.csv').exists()
+    assert Path(tmp_path, 'notes/orphan/some_folder/three.png').exists()
+    assert Path(tmp_path, 'notes/orphan/some_folder/attachments/four.csv').exists()
+    assert Path(tmp_path, 'notes/orphan/some_folder/four.csv').exists()
+    assert Path(tmp_path, 'notes/orphan/some_folder/data/my_other_notebook/attachments/five.pdf').exists()
+    assert Path(tmp_path, 'notes/orphan/some_folder/data/my_notebook/six.csv').exists()
+
+
+def test_handle_orphan_files_as_required_orphans_copy(tmp_path):
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/my_other_notebook/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/my_notebook/note.md').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png').touch()
+    Path(tmp_path, 'some_folder/data/attachments/two.csv').touch()
+    Path(tmp_path, 'some_folder/three.png').touch()
+    Path(tmp_path, 'some_folder/attachments/four.csv').touch()
+    Path(tmp_path, 'some_folder/four.csv').touch()
+    Path(tmp_path, 'some_folder/data/my_other_notebook/attachments/five.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/six.csv').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/nine.md').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png').touch()
+
+    test_source_path = tmp_path
+    args = {'silent': True, 'ini': False, 'source': test_source_path}
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
+    nc = notes_converter.NotesConvertor(args, cd)
+    nc.conversion_settings = conversion_settings.ConversionSettings()
+    nc.conversion_settings._source = Path(tmp_path)
+    nc.conversion_settings._source_absolute_root = Path(tmp_path)
+    nc.conversion_settings.export_folder = Path(tmp_path, 'notes')
+    nc._set_files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md'),
+                                Path(tmp_path, 'some_folder/data/my_notebook/note.md'),
+                                }
+    nc._set_of_found_attachments = {
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png'),
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf'),
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf'),
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png'),
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf')
+    }
+    nc.conversion_settings.orphans = 'copy'
+
+    nc.handle_orphan_files_as_required()
+
+    assert len(nc._orphan_files) == 7
+
+    assert Path(tmp_path, 'notes/some_folder/data/my_notebook/attachments/one.png').exists()
+    assert Path(tmp_path, 'notes/some_folder/data/attachments/two.csv').exists()
+    assert Path(tmp_path, 'notes/some_folder/three.png').exists()
+    assert Path(tmp_path, 'notes/some_folder/attachments/four.csv').exists()
+    assert Path(tmp_path, 'notes/some_folder/four.csv').exists()
+    assert Path(tmp_path, 'notes/some_folder/data/my_other_notebook/attachments/five.pdf').exists()
+    assert Path(tmp_path, 'notes/some_folder/data/my_notebook/six.csv').exists()
+
+
+def test_handle_orphan_files_as_required_orphans_ignore(tmp_path):
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/my_other_notebook/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/my_notebook/note.md').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png').touch()
+    Path(tmp_path, 'some_folder/data/attachments/two.csv').touch()
+    Path(tmp_path, 'some_folder/three.png').touch()
+    Path(tmp_path, 'some_folder/attachments/four.csv').touch()
+    Path(tmp_path, 'some_folder/four.csv').touch()
+    Path(tmp_path, 'some_folder/data/my_other_notebook/attachments/five.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/six.csv').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/nine.md').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png').touch()
+
+    test_source_path = tmp_path
+    args = {'silent': True, 'ini': False, 'source': test_source_path}
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
+    nc = notes_converter.NotesConvertor(args, cd)
+    nc.conversion_settings = conversion_settings.ConversionSettings()
+    nc.conversion_settings._source = Path(tmp_path)
+    nc.conversion_settings._source_absolute_root = Path(tmp_path)
+    nc.conversion_settings.export_folder = Path(tmp_path, 'notes')
+    nc._set_files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md'),
+                                Path(tmp_path, 'some_folder/data/my_notebook/note.md')}
+    nc._set_of_found_attachments = {
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png'),
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf'),
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf'),
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png'),
+        Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf')
+    }
+    nc.conversion_settings.orphans = 'ignore'
+
+    nc.handle_orphan_files_as_required()
+
+    assert len(nc._orphan_files) == 7
+
+    assert not Path(tmp_path, 'notes/some_folder/data/my_notebook/attachments/one.png').exists()
+    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png').exists()

@@ -1,5 +1,6 @@
 from collections import namedtuple
 import ctypes
+import errno
 import os
 from pathlib import Path, PureWindowsPath, PurePath
 import random
@@ -7,7 +8,7 @@ import re
 import string
 import sys
 import traceback
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 import unicodedata
 from urllib import parse
 from urllib.parse import unquote_plus
@@ -130,6 +131,48 @@ def generate_clean_directory_name(directory_name: str, name_options: FileNameOpt
 
     """
     return _clean_file_or_directory_name(directory_name, name_options, is_file=False)
+
+
+def generate_clean_directory_path(directory_name: str, name_options: FileNameOptions) -> str:
+    """
+    Clean a directory path.
+
+    Test each path part and if it exists there is no cleaning. Only non existing parts of the path are cleaned.
+    If the string is empty return a 6 letter lower case random string.
+    Convert to ASCII if 'allow_unicode' is False.
+    Remove any reserved windows characters.
+    Convert spaces or repeated dashes to single dashes.
+    Strip leading and trailing whitespace, dashes, and underscores.
+    If the name is a reserved windows name prepend with an underscore.
+    If resulting sting is empty generates a 6 letter lower case random string.
+    If any directory exceeds the provided max length it is trimmed to max_length
+    There is no consideration of the total length exceeding the OS max length for a path.
+    If more than one directory is provided /dir1/dir2/dir3 only dir1-dir2-dir3 will be cleaned and returned.
+
+    Parameters
+    ==========
+    directory_name: str
+        A single directory name.
+    name_options: FileNameOptions
+        FileNameOptions namedtuple containing the options to apply to the name cleaning process
+
+    Returns
+    =======
+    str
+
+    """
+    cleaned_path = ''
+    directory_name = directory_name.strip()
+    for path_part in Path(directory_name).parts:
+        testing_path = Path(cleaned_path, path_part)
+        if testing_path.exists():
+            cleaned_path = testing_path
+            continue
+
+        clean_part = _clean_file_or_directory_name(path_part, name_options, is_file=False)
+        cleaned_path = Path(cleaned_path, clean_part)
+
+    return str(cleaned_path)
 
 
 def _clean_file_or_directory_name(dirty_name: str, name_options: FileNameOptions, is_file=True) -> str:
@@ -461,3 +504,200 @@ def file_extension_from_bytes(file_bytes: bytes) -> Optional[str]:
         return f".{kind_of_file.extension}"
     # Note file type supports other inputs -
     # Str of path to a file, bytes, bytearray, readable file like object, PurePath, memoryview
+
+
+def is_available_to_use(path_to_dir: Union[str, Path]) -> bool:
+    """Test if a directry is empty or does not exist.
+
+     A directory is considered available if it contains no files or directories other than hidden
+     files beginning with dot '.'.  If the directory does not exist it is also available.
+
+     Parameters
+     ----------
+     path_to_dir : str or pathlib.Path
+        The path to be tested
+     """
+    if not Path(path_to_dir).exists():
+        return True
+
+    if not [file for file in os.listdir(path_to_dir) if not file.startswith('.')]:
+        return True
+
+    return False
+
+
+def next_available_directory_name(path_to_dir: Union[str, Path]) -> Union[str, Path]:
+    """
+    Return the name of the next available empty or unused directory name available by incrementing the name if required.
+
+    A directory is considered empty is it contains no files or directories other than hidden files beginning with dot '.'
+    If the directory provided is not empty increment the directory name by adding "-number" e.g. directory-1
+    If the directory is empty it is returned unchanged.
+    If the directory ends in a number the number will be incremented so "directory1" becomes "directory2",
+    "directory-1" becomes "directory-2"
+
+    Parameters
+    ----------
+    path_to_dir : str or pathlib.Path
+        The path to be tested
+
+    Returns
+    -------
+    str or pathlib.Path
+        returns the same type as path_to_dir
+
+    """
+
+    if Path(path_to_dir).is_file():
+        raise ValueError(f'Path "{path_to_dir}" is to a file not a directory')
+
+    provided_type = type(path_to_dir)
+    n = get_trailing_number(str(path_to_dir))
+    if n is None:
+        n = 0
+        new_path = path_to_dir
+        while not is_available_to_use(new_path):
+            n += 1
+            new_path = Path(f'{path_to_dir}-{n}')
+    else:
+        new_path = path_to_dir
+        numberless_path = str(path_to_dir).strip(str(n))
+        while not is_available_to_use(new_path):
+            n += 1
+            new_path = Path(f'{numberless_path}{n}')
+
+    return provided_type(new_path)
+
+
+def get_trailing_number(string_to_search: str):
+    match = re.search(r'\d+$', string_to_search)
+    return int(match.group()) if match else None
+
+
+ERROR_INVALID_NAME = 123
+# Windows-specific error code indicating an invalid pathname. used in is_pathname_valid
+# See Also
+# ----------
+# https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-
+#     Official listing of all such codes.
+
+
+def is_pathname_valid(pathname: str) -> bool:
+    """
+    `True` if the passed pathname is a valid pathname for the current OS;
+    `False` otherwise.
+    """
+
+    # If this pathname is either not a string or is but is empty, this pathname
+    # is invalid.
+    try:
+        if not isinstance(pathname, str) or not pathname:
+            return False
+
+        # Strip this pathname's Windows-specific drive specifier (e.g., `C:\`)
+        # if any. Since Windows prohibits path components from containing `:`
+        # characters, failing to strip this `:`-suffixed prefix would
+        # erroneously invalidate all valid absolute Windows pathnames.
+        _, pathname = os.path.splitdrive(pathname)
+
+        # Directory guaranteed to exist. If the current OS is Windows, this is
+        # the drive to which Windows was installed (e.g., the "%HOMEDRIVE%"
+        # environment variable); else, the typical root directory.
+        root_dirname = os.environ.get('HOMEDRIVE', 'C:') if os.name == 'nt' else os.path.sep
+        assert os.path.isdir(root_dirname)   # ...Murphy and her ironclad Law
+
+        # Append a path separator to this directory if needed.
+        root_dirname = root_dirname.rstrip(os.path.sep) + os.path.sep
+
+        # Test whether each path component split from this pathname is valid or
+        # not, ignoring non-existent and non-readable path components.
+        for pathname_part in pathname.split(os.path.sep):
+            try:
+                os.lstat(root_dirname + pathname_part)
+            # If an OS-specific exception is raised, its error code
+            # indicates whether this pathname is valid or not. Unless this
+            # is the case, this exception implies an ignorable kernel or
+            # filesystem complaint (e.g., path not found or inaccessible).
+            #
+            # Only the following exceptions indicate invalid pathnames:
+            #
+            # * Instances of the Windows-specific "WindowsError" class
+            #   defining the "winerror" attribute whose value is
+            #   "ERROR_INVALID_NAME". Under Windows, "winerror" is more
+            #   fine-grained and hence useful than the generic "errno"
+            #   attribute. When a too-long pathname is passed, for example,
+            #   "errno" is "ENOENT" (i.e., no such file or directory) rather
+            #   than "ENAMETOOLONG" (i.e., file name too long).
+            # * Instances of the cross-platform "OSError" class defining the
+            #   generic "errno" attribute whose value is either:
+            #   * Under most POSIX-compatible OSes, "ENAMETOOLONG".
+            #   * Under some edge-case OSes (e.g., SunOS, *BSD), "ERANGE".
+            except OSError as exc:
+                if hasattr(exc, 'winerror'):
+                    if exc.winerror == ERROR_INVALID_NAME:
+                        return False
+                elif exc.errno in {errno.ENAMETOOLONG, errno.ERANGE}:
+                    return False
+    # If a "ValueError" exception was raised, it almost certainly has the
+    # error message "embedded NUL character" indicating an invalid pathname.
+    except ValueError:
+        return False
+    # If no exception was raised, all path components and hence this
+    # pathname itself are valid. (Praise be to the curmudgeonly python.)
+    else:
+        return True
+    # If any other exception was raised, this is an unrelated fatal issue
+    # (e.g., a bug). Permit this exception to unwind the call stack.
+
+
+def absolute_path_for(provided_path: Path, root_path: Path) -> Path:
+    """
+    Return an absolute path inclding root_path if provided path is a relative path, else return provided_path
+
+    Parameters
+    ----------
+    provided_path : Path
+        absolute or relative apth
+    root_path : Path
+        absolute path a provided relative path will be added to
+
+    Returns
+    -------
+    Path
+        Absolute path if provided_path is relative and root_path is absolute.  Else will return
+        the provided_path whcih is an absolute path not on root_path.
+
+
+    """
+    if provided_path.is_absolute():
+        return provided_path
+
+    return Path(root_path, provided_path)
+
+
+def relative_path_for(provided_path: Path, root_path: Path) -> Path:
+    """
+    Return relative path to root is provided path is on root_path, If not return the provided path
+
+    Parameters
+    ----------
+    provided_path : Path
+        absolute or relative apth
+    root_path : Path
+        absolute path the relative path will stem from
+
+    Returns
+    -------
+    Path
+        relative path if provided_path is relative or provided_path is on root_path.  Else will return
+        the provided_path which will be an absolute path.
+
+    """
+    if provided_path.is_absolute():
+        if provided_path == root_path:
+            return provided_path
+
+        if provided_path.is_relative_to(root_path):
+            return provided_path.relative_to(root_path)
+
+    return provided_path

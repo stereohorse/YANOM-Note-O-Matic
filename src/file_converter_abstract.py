@@ -31,8 +31,7 @@ class FileConverter(ABC):
         self._converted_content = ''
         self._post_processed_content = ''
         self._conversion_settings = conversion_settings
-        self._output_extension = ''
-        self.set_output_file_extension()
+        self._output_extension = file_mover.get_file_suffix_for(self._conversion_settings.export_format)
         self._pandoc_converter = PandocConverter(self._conversion_settings)
         self._pre_processor = None
         self._checklist_processor = None
@@ -44,6 +43,8 @@ class FileConverter(ABC):
         self._non_existing_links_set = set()
         self._existing_links_set = set()
         self._copyable_attachment_path_set = set()
+        self._created_note_path = set()
+        self._renamed_note_file = None
 
     @abstractmethod
     def pre_process_content(self):  # pragma: no cover
@@ -70,13 +71,6 @@ class FileConverter(ABC):
                 a_tag['href'] = str(link)
 
         return str(soup)
-
-    def set_output_file_extension(self):
-        if self._conversion_settings.export_format == 'html':
-            self._output_extension = '.html'
-            return
-
-        self._output_extension = '.md'
 
     def convert_note(self, file):
         self._file = Path(file)
@@ -116,9 +110,14 @@ class FileConverter(ABC):
         self.logger.info(f"Writing new file {target_path}")
         target_path.parent.mkdir(parents=True, exist_ok=True)
         file_writer.write_text(target_path, self._post_processed_content)
+        self._created_note_path = target_path
 
     def rename_target_file_if_it_already_exists(self):
         """Rename an exiting file that the new converted content would overwrite"""
+        # NOTE this is still required for edge case.  When copying over attachments, in theory, an attachment
+        # may have same name as a newly created note file.  SO we rename that attachment to old-1 here.
+        # There is an issue as then where ever it was linked from the link will no longer work....
+        self._renamed_note_file = None
         n = 0
         target_path = file_mover.create_target_file_path(
             file_path=self._file,
@@ -126,7 +125,7 @@ class FileConverter(ABC):
             target_path_root=self._conversion_settings.export_folder_absolute,
             target_suffix=self._output_extension)
 
-        if not target_path.exists():  # no need for renaming id target file does not exist
+        if not target_path.exists():  # no need for renaming if target file does not exist
             return
 
         new_target_path = target_path
@@ -135,6 +134,7 @@ class FileConverter(ABC):
             new_target_path = Path(target_path.parent, f'{target_path.stem}-old-{n}{target_path.suffix}')
 
         target_path.replace(new_target_path)  # rename the existing target file with the new -old-'n' name
+        self._renamed_note_file = new_target_path
 
     def handle_attachment_paths(self, content):
         """
@@ -332,12 +332,12 @@ class FileConverter(ABC):
 
     def _split_existing_links_copyable_non_copyable(self, existing_links):
         """
-        Split the set of existing ifle links into two sets.  One set of links that will be copyable to the new export
+        Split the set of existing file links into two sets.  One set of links that will be copyable to the new export
         folder and one set that will not be copyable.
 
         The non-copyable links are links that have a path outside of the current conversion source path.
-        For example if the source path is /somewhere/data  then files in apths outside of that path can not be
-        copied to the export folder for exmaple /somewhere/another_folder/attachment.pdf can not be copied whilst
+        For example if the source path is /somewhere/data  then files in paths outside of that path can not be
+        copied to the export folder for example /somewhere/another_folder/attachment.pdf can not be copied whilst
         /somewhere/data/any_file_or_path/any_file.pdf can be copied
         _non_copyable_attachment_path_set and _copyable_attachment_path_set will be updated with the
         relevant paths
@@ -397,3 +397,15 @@ class FileConverter(ABC):
     @property
     def copyable_attachment_absolute_path_set(self):
         return self._copyable_attachment_absolute_path_set
+
+    @property
+    def created_note_path(self):
+        return self._created_note_path
+
+    @property
+    def renamed_note_file(self):
+        return self._renamed_note_file
+
+    @property
+    def non_existing_links_set(self):
+        return self._non_existing_links_set

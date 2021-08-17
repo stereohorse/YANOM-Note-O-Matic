@@ -1,8 +1,10 @@
 import unittest
-from src.conversion_settings import ConversionSettings
-from src.file_converter_MD_to_MD import MDToMDConverter
 from pathlib import Path
 from testfixtures import TempDirectory
+
+import file_mover
+from src.conversion_settings import ConversionSettings
+from src.file_converter_MD_to_MD import MDToMDConverter
 from src.metadata_processing import MetaDataProcessor
 
 
@@ -102,17 +104,27 @@ class TestMDToMDConverter(unittest.TestCase):
         for test_set in test_strings:
             with self.subTest(msg=f'Testing when existing old set to {test_set[0]}'):
                 with TempDirectory() as d:
-                    source_file = Path(d.path, test_set[0])
+                    # the order here is a little messy but it has to be like this not have the export folder renamed
+                    # as if it is renamed then the new folder is empty and the rename existing file never runs
+
+                    # set source to an existing folder
+                    self.file_converter._conversion_settings.source = Path(d.path)
+                    # set export folder to non-existing folder so is an empty folder
+                    self.file_converter._conversion_settings.export_folder = Path(d.path, 'export')
+                    # make the export folder
+                    Path(d.path, 'export').mkdir(exist_ok=True)
+                    # change the source to the export folder to where the source file will be
+                    self.file_converter._conversion_settings.source = Path(d.path, 'export')
+                    # put the source file in the folder
+                    source_file = Path(d.path, 'export', test_set[0])
                     source_file.touch()
-                    source_file_old_exists = Path(d.path, test_set[1])
+                    source_file_old_exists = Path(d.path, 'export', test_set[1])
                     source_file_old_exists.touch()
                     self.assertTrue(source_file.exists())
                     self.assertTrue(source_file_old_exists.exists())
-                    self.file_converter._conversion_settings.source = Path(d.path)
-                    self.file_converter._conversion_settings.export_folder = Path(d.path)
                     self.file_converter._file = source_file
                     self.file_converter.rename_target_file_if_it_already_exists()
-                    self.assertTrue(Path(d.path, test_set[2]).exists(), test_set[3])
+                    self.assertTrue(Path(d.path, 'export', test_set[2]).exists(), test_set[3])
 
         with TempDirectory() as d:
             self.file_converter._file = Path('does_not_exist.md')
@@ -277,13 +289,13 @@ class TestMDToMDConverter(unittest.TestCase):
                          'failed to post process content 3')
 
     def test_set_out_put_extension(self):
-        self.file_converter.set_output_file_extension()
-        self.assertEqual('.md', self.file_converter._output_extension, 'failed to select correct md extension')
+        extension = file_mover.get_file_suffix_for(self.file_converter._conversion_settings.export_format)
+        self.assertEqual('.md', extension, 'failed to select correct md extension')
 
         self.file_converter._conversion_settings = ConversionSettings()
         self.file_converter._conversion_settings.set_quick_setting('html')
-        self.file_converter.set_output_file_extension()
-        self.assertEqual('.html', self.file_converter._output_extension, 'failed to select correct html extension')
+        extension = file_mover.get_file_suffix_for(self.file_converter._conversion_settings.export_format)
+        self.assertEqual('.html', extension, 'failed to select correct html extension')
 
     def test_convert(self):
         self.file_converter._conversion_settings = ConversionSettings()
@@ -296,7 +308,7 @@ class TestMDToMDConverter(unittest.TestCase):
 
             self.file_converter.convert_note(source_file)
 
-            result = source_file.read_text()
+            result = Path(self.file_converter._conversion_settings.export_folder, 'some_markdown.md').read_text()
             self.assertEqual('![|600](filepath/image.png)', result, 'failed to convert file')
 
 
@@ -305,6 +317,7 @@ def test_scan_md_content_for_attachments(tmp_path):
     expected = {Path('attachments/one.png'), Path('attachments/two.csv'),
                 Path('/usr/something/something/data/attachments/three.pdf')}
     conversion_settings = ConversionSettings()
+    conversion_settings.export_format = 'obsidian'
     file_converter = MDToMDConverter(conversion_settings, [Path(tmp_path, 'hello.html')])
     file_converter._file = Path(tmp_path, 'hello.html')
     result = file_converter.scan_content_for_attachments(content)
@@ -378,32 +391,46 @@ def test_generate_set_of_attachment_paths_markdown_export_format(tmp_path):
     file_converter._files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md')}
     result_content = file_converter.handle_attachment_paths(content)
 
+    assert Path(tmp_path, 'some_folder/data/my_other_notebook/attachments/five.pdf') \
+           in file_converter._copyable_attachment_absolute_path_set
+
+    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png') \
+           in file_converter._copyable_attachment_absolute_path_set
+
     assert Path(tmp_path,
-                'some_folder/data/my_other_notebook/attachments/five.pdf') in file_converter._copyable_attachment_absolute_path_set
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/one.png') in file_converter._copyable_attachment_absolute_path_set
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/six.csv') in file_converter._copyable_attachment_absolute_path_set
-    assert Path(tmp_path,
-                'some_folder/data/attachments/two.csv') in file_converter._copyable_attachment_absolute_path_set
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/eight.pdf') in file_converter._copyable_attachment_absolute_path_set
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/ten.png') in file_converter._copyable_attachment_absolute_path_set
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/eleven.pdf') in file_converter._copyable_attachment_absolute_path_set
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/file twelve.pdf') in file_converter._copyable_attachment_absolute_path_set
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/file fourteen.png') in file_converter._copyable_attachment_absolute_path_set
+                'some_folder/data/my_notebook/six.csv') \
+           in file_converter._copyable_attachment_absolute_path_set
+
+    assert Path(tmp_path, 'some_folder/data/attachments/two.csv') \
+           in file_converter._copyable_attachment_absolute_path_set
+
+    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf') \
+           in file_converter._copyable_attachment_absolute_path_set
+
+    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png') \
+           in file_converter._copyable_attachment_absolute_path_set
+
+    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf') \
+           in file_converter._copyable_attachment_absolute_path_set
+
+    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf') \
+           in file_converter._copyable_attachment_absolute_path_set
+
+    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png') \
+           in file_converter._copyable_attachment_absolute_path_set
+
     assert len(file_converter._copyable_attachment_absolute_path_set) == 9
 
     assert Path(tmp_path, 'some_folder/two.png') in file_converter._non_existing_links_set
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/three.pdf') in file_converter._non_existing_links_set
+
+    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/three.pdf') \
+           in file_converter._non_existing_links_set
+
     assert Path(tmp_path, 'some_folder/data/my_notebook/seven.csv') in file_converter._non_existing_links_set
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/file thirteen.pdf') in file_converter._non_existing_links_set
+
+    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/file thirteen.pdf') \
+           in file_converter._non_existing_links_set
+
     assert len(file_converter._non_existing_links_set) == 4
 
     # NOTE for the "some_folder/attachments/four.csv" attachment the content should be updated to a new relative link
@@ -455,15 +482,20 @@ def test_generate_set_of_attachment_paths_html_export_format(tmp_path):
     file_converter._files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md')}
     result_content = file_converter.handle_attachment_paths(content)
 
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/ten.png') in file_converter._copyable_attachment_absolute_path_set
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/eleven.pdf') in file_converter._copyable_attachment_absolute_path_set
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/file fourteen.png') in file_converter._copyable_attachment_absolute_path_set
+    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png') \
+           in file_converter._copyable_attachment_absolute_path_set
+
+    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf') \
+           in file_converter._copyable_attachment_absolute_path_set
+
+    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png') \
+           in file_converter._copyable_attachment_absolute_path_set
+
     assert len(file_converter._copyable_attachment_absolute_path_set) == 3
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/file thirteen.pdf') in file_converter._non_existing_links_set
+
+    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/file thirteen.pdf') \
+           in file_converter._non_existing_links_set
+
     assert len(file_converter._non_existing_links_set) == 1
 
     assert result_content == expected_content

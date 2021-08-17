@@ -303,6 +303,28 @@ def test_generate_clean_directory_name_empty_string(string_to_test, filename_opt
 
 
 @pytest.mark.parametrize(
+    'string_to_test, filename_options, expected', [
+        (" /dir 1/dir 2/dir 3 ",
+         helper_functions.FileNameOptions(64, False, True, True, False, '-'),
+         "/dir-1/dir-2/dir-3"),
+        (" /dir 1/dir 2/dir 3 ",
+         helper_functions.FileNameOptions(64, False, True, True, True, '-'),
+         "/dir 1/dir 2/dir 3"),
+        ("dir1/dir2/dir3",
+         helper_functions.FileNameOptions(64, False, True, True, False, '-'),
+         "dir1/dir2/dir3"),
+        ("dir1",
+         helper_functions.FileNameOptions(64, False, True, True, False, '-'),
+         "dir1"),
+    ]
+)
+def test_generate_clean_directory_name(string_to_test, filename_options, expected):
+    result = helper_functions.generate_clean_directory_path(string_to_test, filename_options)
+
+    assert result == expected
+
+
+@pytest.mark.parametrize(
     'is_frozen, expected', [
         (True, Path(sys.executable).parent.absolute()),
         (False, Path(Path(__file__).parent.absolute().parent.absolute(), 'src'))
@@ -335,7 +357,7 @@ def test_file_extension_from_bytes():
 def test_file_extension_from_bytes_file_not_recognised():
     result = helper_functions.file_extension_from_bytes(b'1234')
 
-    assert result == None
+    assert result is None
 
 
 @pytest.mark.parametrize(
@@ -358,3 +380,109 @@ def test_file_uri_to_path(uri, path_type, expected):
     result = helper_functions.file_uri_to_path(uri, path_type)
 
     assert result == expected
+
+
+def test_is_available_to_use(tmp_path):
+    Path(tmp_path, 'empty').mkdir()
+    Path(tmp_path, 'not_empty').mkdir()
+    Path(tmp_path, 'empty', '.hidden_file').touch()
+    Path(tmp_path, 'not_empty', '.hidden_file').touch()
+    Path(tmp_path, 'not_empty', 'a_file').touch()
+
+    assert helper_functions.is_available_to_use(Path(tmp_path, 'empty'))
+    assert not helper_functions.is_available_to_use(Path(tmp_path, 'not_empty'))
+    assert helper_functions.is_available_to_use(str(Path(tmp_path, 'empty')))
+    assert not helper_functions.is_available_to_use(str(Path(tmp_path, 'not_empty')))
+
+
+def test_next_available_directory_name_not_empty_dir_use_next_empty_dir(tmp_path):
+    empty = Path(tmp_path, 'folder-1')
+    empty.mkdir()
+    Path(empty, '.hidden_file').touch()
+
+    not_empty = Path(tmp_path, 'folder')
+    not_empty.mkdir()
+    Path(not_empty, '.hidden_file').touch()
+    Path(not_empty, 'a_file').touch()
+
+    result = helper_functions.next_available_directory_name(not_empty)
+
+    assert result == Path(tmp_path, 'folder-1')
+
+
+def test_next_available_directory_name_not_empty_dir_use_next_available_name(tmp_path):
+    not_empty2 = Path(tmp_path, 'folder-1')
+    not_empty2.mkdir()
+    Path(not_empty2, '.hidden_file').touch()
+    Path(not_empty2, 'a_file').touch()
+
+    not_empty = Path(tmp_path, 'folder')
+    not_empty.mkdir()
+    Path(not_empty, '.hidden_file').touch()
+    Path(not_empty, 'a_file').touch()
+
+    result = helper_functions.next_available_directory_name(not_empty)
+
+    assert result == Path(tmp_path, 'folder-2')
+
+
+def test_next_available_directory_name_not_empty_dir_use_next_available_name_provided_folder_has_a_number(tmp_path):
+    not_empty2 = Path(tmp_path, 'folder-2')
+    not_empty2.mkdir()
+    Path(not_empty2, '.hidden_file').touch()
+    Path(not_empty2, 'a_file').touch()
+
+    not_empty = Path(tmp_path, 'folder-1')
+    not_empty.mkdir()
+    Path(not_empty, '.hidden_file').touch()
+    Path(not_empty, 'a_file').touch()
+
+    result = helper_functions.next_available_directory_name(not_empty)
+
+    assert result == Path(tmp_path, 'folder-3')
+
+
+def test_next_available_directory_name_empty_dir(tmp_path):
+    empty = Path(tmp_path, 'empty')
+    empty.mkdir()
+    Path(empty, '.hidden_file').touch()
+
+    result = helper_functions.next_available_directory_name(empty)
+
+    assert result == Path(tmp_path, 'empty')
+
+
+def test_next_available_directory_name_check_casting(tmp_path):
+    empty = Path(tmp_path, 'empty')
+    empty.mkdir()
+    Path(empty, '.hidden_file').touch()
+
+    result = helper_functions.next_available_directory_name(str(empty))
+
+    assert result == str(Path(tmp_path, 'empty'))
+
+
+@pytest.mark.parametrize(
+    'string_to_search, expected', [
+        ('hello-1234', 1234),
+        ('hello-', None),
+        ]
+)
+def test_get_trailing_number(string_to_search, expected):
+    result = helper_functions.get_trailing_number(string_to_search)
+    assert result == expected
+
+
+def test_is_pathname_valid_posix():
+    if os.name == 'posix':
+        assert not helper_functions.is_pathname_valid('\0hello')
+        assert helper_functions.is_pathname_valid('hello')
+        assert not helper_functions.is_pathname_valid('')
+
+
+def test_is_pathname_valid_windows():
+    if os.name == 'nt':
+        result = helper_functions.is_pathname_valid(r'c:\hello')
+        assert result
+        result = helper_functions.is_pathname_valid(r'c:\K<>hello')
+        assert not result

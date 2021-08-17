@@ -3,6 +3,8 @@ from conversion_settings import ConversionSettings
 from file_converter_MD_to_HTML import MDToHTMLConverter
 from pathlib import Path
 from testfixtures import TempDirectory
+
+import file_mover
 from metadata_processing import MetaDataProcessor
 
 
@@ -121,7 +123,7 @@ class TestMDToHTMLConverter(unittest.TestCase):
         self.file_converter._converted_content = '<head><title>-</title></head><p><a href="a_folder/test_md_file.md">md file</a></p>'
         self.file_converter._metadata_processor._metadata = {'title': 'My Title'}
         self.file_converter._conversion_settings.export_format = 'html'
-        self.file_converter.set_output_file_extension()
+        self.file_converter._output_extension = file_mover.get_file_suffix_for(self.file_converter._conversion_settings.export_format)
         self.file_converter._file = Path('a_folder/file.html')
         self.file_converter.post_process_content()
         self.assertEqual(

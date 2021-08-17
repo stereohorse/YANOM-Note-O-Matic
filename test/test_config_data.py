@@ -84,7 +84,12 @@ allow_non_alphanumeric_in_filenames = True
 creation_time_in_exported_file_name = False
     # if true creation time as `yyyymmddhhmm-` will be added as prefix to file name
 maximum_file_or_directory_name_length = 255
-
+# The following options apply to directory names, and currently only apply to html and markdown conversions.': None,                
+orphans = ignore
+    # orphans are files that are not linked to any notes.  Valid Values are
+    # ignore - orphan files are left where they are and are not moved to an export folder.
+    # copy - orphan files are coppied to the export folder in the same relative locations as the source.
+    # orphan - orphan files are moved to a directory named orphan in the export folder.
 """
 
 
@@ -163,7 +168,14 @@ allow_non_alphanumeric_in_filenames = True
 creation_time_in_exported_file_name = False
     # if true creation time as `yyyymmddhhmm-` will be added as prefix to file name
 maximum_file_or_directory_name_length = 255
+# The following options apply to directory names, and currently only apply to html and markdown conversions.': None,                
+orphans = ignore
+    # orphans are files that are not linked to any notes.  Valid Values are
+    # ignore - orphan files are left where they are and are not moved to an export folder.
+    # copy - orphan files are coppied to the export folder in the same relative locations as the source.
+    # orphan - orphan files are moved to a directory named orphan in the export folder.
 """
+
 
 def test_initialisation(tmp_path):
     cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'gfm', allow_no_value=True)
@@ -193,7 +205,7 @@ def test_read_config_file_file_missing(tmp_path, caplog):
         (False, 'config.ini missing, generating new file.\n')
     ], ids=['silent-mode', 'not-silent']
 )
-def test_read_config_missing_file(tmp_path, good_config_ini, caplog, capsys, silent, expected):
+def test_read_config_missing_file(tmp_path, caplog, capsys, silent, expected):
 
     config.yanom_globals.is_silent = silent
 
@@ -246,6 +258,7 @@ def test_validate_good_config_ini_no_notes_or_attachment_folder(tmp_path, good_c
         ('chart_options', 'chart_csv', 'bad-value-1234'),
         ('chart_options', 'chart_data_table', 'bad-value-1234'),
         ('file_options', 'creation_time_in_exported_file_name', 'bad-value-1234'),
+        ('file_options', 'orphans', 'invalid-value'),
     ]
 )
 def test_validate_config_file_bad_values(tmp_path, good_config_ini, key1, key2, bad_value):
@@ -298,6 +311,7 @@ def test_validate_config_file_missing_keys_and_sections(tmp_path, good_config_in
         ('file_options', 'export_folder', 'export_orig', 'export_new', Path('export_new')),
         ('file_options', 'attachment_folder_name', 'attachment_orig', 'attachment_new', Path('attachment_new')),
         ('file_options', 'creation_time_in_exported_file_name', 'True', 'False', False),
+        ('file_options', 'orphans', 'copy', 'ignore', 'ignore'),
     ]
 )
 def test_generate_conversion_settings_from_parsed_config_file_data(good_config_ini, tmp_path, key1, key2, start_value,
@@ -360,7 +374,7 @@ def test_generate_conversion_settings_from_parsed_config_file_data_test_source_s
     assert str(exc.value) == '1'
 
 
-def test_conversion_settings_proprty_obj_confirm_obj_read(tmp_path, good_config_ini):
+def test_conversion_settings_property_obj_confirm_obj_read(tmp_path, good_config_ini):
     Path(f'{str(tmp_path)}/config.ini').write_text(good_config_ini, encoding="utf-8")
 
     cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'gfm', allow_no_value=True)
@@ -402,12 +416,10 @@ def test_conversion_settings_proprty_obj_confirm_string_setting(tmp_path, good_c
     assert cd['export_formats']['export_format'] == 'multimarkdown'
 
 
-def test_conversion_settings_proprty_string_setting_confirm_config_file_written(tmp_path, good_config_ini):
+def test_conversion_settings_property_string_setting_confirm_config_file_written(tmp_path, good_config_ini):
     Path(f'{str(tmp_path)}/config.ini').write_text(good_config_ini, encoding="utf-8")
 
     cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'gfm', allow_no_value=True)
-
-    cs = ConversionSettings()
 
     cd.conversion_settings = 'multimarkdown'
 
@@ -448,7 +460,8 @@ def test_parse_config_file_invalid_config_file(good_config_ini, tmp_path):
 
 def test_ask_user_to_choose_new_default_config_file_user_choose_exit(good_config_ini, tmp_path, monkeypatch):
     print('hello')
-    def patched_cli(ignored):
+
+    def patched_cli(_):
         return 'exit'
 
     good_config_ini = good_config_ini.replace('source = my_source', 'source = ')
@@ -469,7 +482,7 @@ def test_ask_user_to_choose_new_default_config_file_user_choose_exit(good_config
 def test_ask_user_to_choose_new_default_config_file_user_choose_new_file(good_config_ini, tmp_path, monkeypatch):
     import interactive_cli
 
-    def patched_cli(ignored):
+    def patched_cli(_):
         return 'default'
 
     good_config_ini = good_config_ini.replace('source = my_source', 'source = ')
@@ -492,7 +505,7 @@ def test_str(good_config_ini, tmp_path):
     cd.parse_config_file()
 
     result = str(cd)
-    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'False', 'maximum_file_or_directory_name_length': '255'}}"
+    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'False', 'maximum_file_or_directory_name_length': '255', 'orphans': 'ignore'}}"
 
 
 def test_repr(good_config_ini, tmp_path):
@@ -502,7 +515,7 @@ def test_repr(good_config_ini, tmp_path):
     cd.parse_config_file()
 
     result = repr(cd)
-    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'False', 'maximum_file_or_directory_name_length': '255'}}"
+    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'False', 'maximum_file_or_directory_name_length': '255', 'orphans': 'ignore'}}"
 
 
 def test_generate_conversion_settings_using_quick_settings_string(good_config_ini, tmp_path):
@@ -570,7 +583,7 @@ def test_generate_conversion_settings_using_quick_settings_string_bad_value(good
     assert 'is not a recognised quick setting string' in caplog.records[-1].message
 
 
-def test_generate_conversion_settings_using_quick_settings_object(good_config_ini, tmp_path, caplog):
+def test_generate_conversion_settings_using_quick_settings_object(good_config_ini, tmp_path):
     Path(f'{str(tmp_path)}/config.ini').write_text(good_config_ini, encoding="utf-8")
 
     cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'gfm', allow_no_value=True)
@@ -595,4 +608,3 @@ def test_generate_conversion_settings_using_quick_settings_object_bad_value(good
         cd.generate_conversion_settings_using_quick_settings_object(cs)
 
     assert 'Passed invalid value' in caplog.records[-1].message
-

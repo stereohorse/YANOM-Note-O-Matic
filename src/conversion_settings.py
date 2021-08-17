@@ -80,6 +80,9 @@ class ConversionSettings:
         execution only
     _source_absolute_root: Path
         An absolute path to the source files
+    _orphans: str
+        String indicating what action to take when dealing with orpahn files int he source directory.  Orphan files
+        are any files that are not a note file or linked to file/attachment
 
     Methods
     -------
@@ -137,13 +140,15 @@ class ConversionSettings:
             'allow_non_alphanumeric_in_filenames': ('True', 'False'),
             'creation_time_in_exported_file_name': ('True', 'False'),
             'maximum_file_or_directory_name_length': '',
+            'orphans': ('ignore', 'copy', 'orphan'),
         }
     }
 
     def __init__(self):
         # if you change any of the following values changes are likely to affect the quick settings method
         # and the validation_values class variable
-        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(
+            f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._valid_conversion_inputs = list(self.validation_values['conversion_inputs']['conversion_input'])
         self._valid_markdown_conversion_inputs = list(
@@ -152,6 +157,7 @@ class ConversionSettings:
         self._valid_export_formats = list(self.validation_values['export_formats']['export_format'])
         self._valid_front_matter_formats = list(
             self.validation_values['meta_data_options']['front_matter_format'])
+        self._valid_orphan_values = list(self.validation_values['file_options']['orphans'])
         self._source = ''
         self._conversion_input = 'nsx'
         self._markdown_conversion_input = 'gfm'
@@ -180,6 +186,7 @@ class ConversionSettings:
         self._export_folder_absolute = Path(self._working_directory, config.yanom_globals.data_dir, self._export_folder)
         self.logger.debug(environment_message)
         self._source_absolute_root = None
+        self._orphans = ''
 
     def __str__(self):
         return f"{self.__class__.__name__}(valid_conversion_inputs={self.valid_conversion_inputs}, " \
@@ -196,7 +203,8 @@ class ConversionSettings:
                f"spaces_in_tags={self.spaces_in_tags}, split_tags={self.split_tags}, " \
                f"export_folder='{self.export_folder}', " \
                f"attachment_folder_name='{self.attachment_folder_name}', " \
-               f"creation_time_in_exported_file_name='{self._creation_time_in_exported_file_name})'"
+               f"creation_time_in_exported_file_name='{self._creation_time_in_exported_file_name}'," \
+               f"orphans='{self._orphans})"
 
     def __repr__(self):
         return repr(self.__dict__)
@@ -246,7 +254,8 @@ class ConversionSettings:
         }
 
         if quick_setting in quick_settings:
-            getattr(self, quick_settings[quick_setting])()
+            settings_to_use = getattr(self, quick_settings[quick_setting])
+            settings_to_use()
             return
 
         msg = f"Invalid quick setting key '{quick_setting}' used"
@@ -362,33 +371,44 @@ class ConversionSettings:
         self._filename_spaces_replaced_by = '-'
         self._creation_time_in_exported_file_name = False
         self._maximum_file_or_directory_name_length = yanom_globals.path_part_max_length
-        self._source, self._source_absolute_root = self._set_folder_paths(Path(self._working_directory, config.yanom_globals.data_dir))
+        self._source, self._source_absolute_root = self._get_folder_paths(
+            Path(self._working_directory, config.yanom_globals.data_dir),
+            Path(self._working_directory, config.yanom_globals.data_dir)
+        )
+        self._orphans = 'copy'
 
-    def _set_folder_paths(self, provided_folder):
-        if provided_folder == '':
-            self.logger.debug(f"No provided source using relative path "
-                              f"{config.yanom_globals.data_dir} as source directory")
-            provided_folder = Path(self._working_directory, config.yanom_globals.data_dir)
-            provided_folder_absolute = Path(self._working_directory, config.yanom_globals.data_dir)
+    def _get_folder_paths(self, provided_folder: Path, root_path: Path):
+        """
+        Calculate relative or absolute path based on the provided_folder path
 
-            return provided_folder, provided_folder_absolute
+        If provided_folder is absolute calculate, calculate path relative to root_path if the path is on
+        the root_path, if it is not return the absolute path
+        If provided_folder is a relative , calculate the absolute path by prepending root_path
 
-        if Path(provided_folder).is_absolute():
-            provided_folder_absolute = Path(provided_folder)
+        Parameters
+        ----------
+        provided_folder : pathlib.Path
+            Absolute or relative path
+        root_path : pathlib.Path
+            absolute path that forms the beginning of the relative paths
 
-            if Path(provided_folder) == Path(self._working_directory, config.yanom_globals.data_dir):
-                return Path(provided_folder), provided_folder_absolute
+        Returns
+        -------
+        absolute_path : Path
+            Absolute path
+        relative path : Path
+            Relative path to root_path is on root_path, else will be the absolute path
 
-            if Path(provided_folder).is_relative_to(self._working_directory, config.yanom_globals.data_dir):
-                provided_folder = Path(provided_folder).relative_to(Path(self._working_directory, config.yanom_globals.data_dir))
-            else:
-                provided_folder = Path(provided_folder)
-            return provided_folder, provided_folder_absolute
+        """
+        if provided_folder.is_absolute():
+            absolute_provided_folder = Path(provided_folder)
+            relative_provided_folder = helper_functions.relative_path_for(absolute_provided_folder, root_path)
+            return Path(relative_provided_folder), Path(absolute_provided_folder)
 
-        provided_folder = generate_clean_directory_name(provided_folder, self.filename_options)
-        provided_folder = Path(provided_folder)
-        provided_folder_absolute = Path(self._working_directory, config.yanom_globals.data_dir, provided_folder)
-        return provided_folder, provided_folder_absolute
+        relative_provided_folder = Path(provided_folder)
+        absolute_provided_folder = helper_functions.absolute_path_for(relative_provided_folder, root_path)
+
+        return relative_provided_folder, absolute_provided_folder
 
     @property
     def filename_options(self):
@@ -421,6 +441,10 @@ class ConversionSettings:
         return self._valid_front_matter_formats
 
     @property
+    def valid_orphan_values(self):
+        return self._valid_orphan_values
+
+    @property
     def source(self):
         return self._source
 
@@ -429,7 +453,14 @@ class ConversionSettings:
         if isinstance(provided_source, str):
             provided_source = provided_source.strip()
 
-        self._source, self._source_absolute_root = self._set_folder_paths(provided_source)
+        if provided_source == '' or provided_source == '.':
+            self.logger.debug(f"Using relative path "
+                              f"{config.yanom_globals.data_dir} as source directory")
+            provided_source = Path(self._working_directory, config.yanom_globals.data_dir)
+
+        provided_source = Path(provided_source)
+        root_path = Path(self._working_directory, config.yanom_globals.data_dir)
+        self._source, self._source_absolute_root = self._get_folder_paths(provided_source, root_path)
 
         if self._source_absolute_root.exists():
             self.logger.info(f'Using {self._source_absolute_root} as source path')
@@ -548,24 +579,44 @@ class ConversionSettings:
     @export_folder.setter
     def export_folder(self, provided_export_folder):
         provided_export_folder = str(provided_export_folder).strip()
-        if provided_export_folder == '':
+
+        root_path = Path(self._working_directory, config.yanom_globals.data_dir)
+
+        if provided_export_folder == '' or provided_export_folder == '.':
             provided_export_folder = yanom_globals.default_export_folder
 
-        if Path(provided_export_folder).is_file():
-            msg = f"Invalid path provided. Path is to existing file not a directory '{provided_export_folder}'"
+        provided_export_folder = Path(helper_functions.generate_clean_directory_path(provided_export_folder,
+                                                                                     self.filename_options))
+
+        absolute_export_folder = helper_functions.absolute_path_for(provided_export_folder, root_path)
+
+        self.exit_if_path_is_invalid(absolute_export_folder, provided_export_folder)
+
+        self.exit_if_path_is_to_file(absolute_export_folder, provided_export_folder)
+
+        self._export_folder_absolute = helper_functions.next_available_directory_name(absolute_export_folder)
+
+        self._export_folder = helper_functions.relative_path_for(self._export_folder_absolute, root_path)
+
+        self.logger.info(f'For the provided attachment folder name of "{provided_export_folder}" '
+                         f'the cleaned name used is {self._export_folder}')
+        self.logger.info(f'Using {self._export_folder_absolute} as export path')
+
+    def exit_if_path_is_invalid(self, absolute_export_folder, provided_export_folder):
+        if not helper_functions.is_pathname_valid(str(absolute_export_folder)):
+            msg = f"Invalid path provided '{provided_export_folder}'"
             self.logger.error(msg)
             if not config.yanom_globals.is_silent:
                 print(msg)
             sys.exit(1)
 
-        self._export_folder, self._export_folder_absolute = self._set_folder_paths(provided_export_folder)
-
-        # self._export_folder = Path(generate_clean_directory_name(value,
-        #                                                          self.filename_options))
-
-        self.logger.info(
-            f'For the provided attachment folder name of "{provided_export_folder}" the cleaned name used is {self._export_folder}')
-        self.logger.info(f'Using {self._export_folder_absolute} as export path')
+    def exit_if_path_is_to_file(self, absolute_export_folder, provided_export_folder):
+        if Path(absolute_export_folder).is_file():
+            msg = f"Invalid path provided. Path is to existing file not a directory '{provided_export_folder}'"
+            self.logger.error(msg)
+            if not config.yanom_globals.is_silent:
+                print(msg)
+            sys.exit(1)
 
     @property
     def export_folder_absolute(self):
@@ -651,3 +702,17 @@ class ConversionSettings:
     def maximum_file_or_directory_name_length(self, value: int):
         value = min(int(value), yanom_globals.path_part_max_length)
         self._maximum_file_or_directory_name_length = value
+
+    @property
+    def orphans(self):
+        return self._orphans
+
+    @orphans.setter
+    def orphans(self, value):
+        if value in self._valid_orphan_values:
+            self._orphans = value
+            return
+
+        raise ValueError(f'Invalid value provided for for orphan file option. '
+                         f'Attempted to use invalid value - "{value}", '
+                         f'valid values are - "{self._valid_orphan_values}')

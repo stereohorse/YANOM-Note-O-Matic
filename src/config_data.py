@@ -157,6 +157,7 @@ class ConfigData(ConfigParser):
             self.getboolean('file_options', 'allow_non_alphanumeric_in_filenames')
         self._conversion_settings.filename_spaces_replaced_by = self['file_options']['filename_spaces_replaced_by']
         self._conversion_settings.maximum_file_or_directory_name_length = self['file_options']['maximum_file_or_directory_name_length']
+        self._conversion_settings.orphans = self['file_options']['orphans']
 
     def _write_config_file(self):
         try:
@@ -313,6 +314,12 @@ class ConfigData(ConfigParser):
                 'creation_time_in_exported_file_name': self._conversion_settings.allow_uppercase_in_filenames,
                 '    # If True creation time as `yyyymmddhhmm-` will be added as prefix to file name': None,
                 'maximum_file_or_directory_name_length': self._conversion_settings.maximum_file_or_directory_name_length,
+                '    # The following options apply to directory names, and currently only apply to html and markdown conversions.': None,
+                'orphans': self._conversion_settings.orphans,
+                '    # orphans are files that are not linked to any notes.  Valid Values are': None,
+                '    # ignore - orphan files are left where they are and are not moved to an export folder.': None,
+                '    # copy - orphan files are coppied to the export folder in the same relative locations as the source.': None,
+                '    # orphan - orphan files are moved to a directory named orphan in the export folder.': None,
             }
         }
 

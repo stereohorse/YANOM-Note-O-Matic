@@ -122,7 +122,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
                     self._ask_and_set_metadata_schema()
                 else:
                     self._ask_and_set_tag_prefix()
-
+            self._ask_and_set_orphans_option()
 
     def _ask_html_conversion_options(self):
         self._ask_and_set_conversion_quick_setting()
@@ -134,6 +134,22 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             self._ask_and_set_front_matter_format()
             if self._current_conversion_settings.front_matter_format != 'none':
                 self._ask_and_set_metadata_schema()
+            self._ask_and_set_orphans_option()
+
+    def _ask_and_set_orphans_option(self):
+        orphans_choices = self._default_settings.valid_orphan_values
+        if self._current_conversion_settings.source_absolute_root == self._current_conversion_settings.export_folder_absolute:
+            orphans_choices.remove('move')
+        orphans = {
+            'type': 'list',
+            'name': 'orphans',
+            'message': 'What do you want to be done with orphan files?',
+            'choices': self._default_settings.valid_orphan_values,
+            'default': self._default_settings.orphans,
+        }
+        answer = prompt(orphans, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
+        self._current_conversion_settings.orphans = answer['orphans']
 
     def _nothing_to_convert(self):
         self.logger.warning('Input and output formats are the same nothing to convert. Exiting.')
