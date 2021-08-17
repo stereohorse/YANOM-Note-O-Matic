@@ -108,13 +108,16 @@ class TestMDToMDConverter(unittest.TestCase):
                     source_file_old_exists.touch()
                     self.assertTrue(source_file.exists())
                     self.assertTrue(source_file_old_exists.exists())
-
+                    self.file_converter._conversion_settings.source = Path(d.path)
+                    self.file_converter._conversion_settings.export_folder = Path(d.path)
                     self.file_converter._file = source_file
                     self.file_converter.rename_target_file_if_already_exists()
                     self.assertTrue(Path(d.path, test_set[2]).exists(), test_set[3])
 
         with TempDirectory() as d:
             self.file_converter._file = Path('does_not_exist.md')
+            self.file_converter._conversion_settings.source = Path(d.path)
+            self.file_converter._conversion_settings.export_folder = Path(d.path)
             self.file_converter.rename_target_file_if_already_exists()
             self.assertFalse(Path(d.path,
                              'does_not_exist.md').exists(),
@@ -186,6 +189,8 @@ class TestMDToMDConverter(unittest.TestCase):
 
                     self.conversion_settings.markdown_conversion_input = test_set[0]
                     self.file_converter._file_content = test_set[1]
+                    self.file_converter._conversion_settings.source = Path(d.path)
+                    self.file_converter._conversion_settings.export_folder = Path(d.path)
                     self.file_converter.pre_process_content()
                     self.assertEqual(test_set[2],
                                      self.file_converter._pre_processed_content,
@@ -234,6 +239,8 @@ class TestMDToMDConverter(unittest.TestCase):
         with TempDirectory() as d:
             self.file_converter._file = Path(d.path, 'test.txt')
             self.file_converter._post_processed_content = '# Header 1\n'
+            self.file_converter._conversion_settings.source = Path(d.path)
+            self.file_converter._conversion_settings.export_folder = Path(d.path)
             self.file_converter.write_post_processed_content()
             output_path = Path(d.path, 'test.md')
             read_text = output_path.read_text()
@@ -282,6 +289,9 @@ class TestMDToMDConverter(unittest.TestCase):
         with TempDirectory() as d:
             source_file = Path(d.path, 'some_markdown.md')
             source_file.write_text('<img src="filepath/image.png" width="600">')
+            self.file_converter._conversion_settings.source = Path(d.path)
+            self.file_converter._conversion_settings.export_folder = Path(d.path)
+
             self.file_converter.convert_note(source_file)
 
             result = source_file.read_text()

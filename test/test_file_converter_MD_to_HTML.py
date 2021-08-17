@@ -67,6 +67,8 @@ class TestMDToHTMLConverter(unittest.TestCase):
 
                     self.conversion_settings.markdown_conversion_input = test_set[0]
                     self.file_converter._file_content = test_set[1]
+                    self.file_converter._conversion_settings.source = Path(d.path)
+                    self.file_converter._conversion_settings.export_folder = Path(d.path)
                     self.file_converter.pre_process_content()
                     self.assertEqual(test_set[2], self.file_converter._pre_processed_content, test_set[3])
 

@@ -29,7 +29,8 @@ class NotesConvertor:
     """
 
     def __init__(self, args, config_data):
-        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(
+            f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self.logger.info(f'Conversion startup')
         self.command_line_args = args
@@ -83,7 +84,8 @@ class NotesConvertor:
 
     def exit_if_no_files_found(self, files_to_convert, file_extension):
         if not files_to_convert:
-            self.logger.info(f"No .{file_extension} files found at path {self.conversion_settings.source}. Exiting program")
+            self.logger.info(
+                f"No .{file_extension} files found at path {self.conversion_settings.source}. Exiting program")
             if not config.yanom_globals.is_silent:
                 print(f'No .{file_extension} files found at {self.conversion_settings.source}')
             sys.exit(0)
@@ -95,6 +97,7 @@ class NotesConvertor:
         with alive_bar(len(files_to_convert), bar='blocks') as bar:
             for file in files_to_convert:
                 file_converter.convert_note(file)
+                file_converter.write_post_processed_content()
                 file_count += 1
                 if not config.yanom_globals.is_silent:
                     bar()
@@ -114,7 +117,8 @@ class NotesConvertor:
         nsx_files_to_convert = self.generate_file_list(file_extension)
         self.exit_if_no_files_found(nsx_files_to_convert, file_extension)
         self.pandoc_converter = PandocConverter(self.conversion_settings)
-        self._nsx_backups = [NSXFile(file, self.conversion_settings, self.pandoc_converter) for file in nsx_files_to_convert]
+        self._nsx_backups = [NSXFile(file, self.conversion_settings, self.pandoc_converter)
+                             for file in nsx_files_to_convert]
         self.process_nsx_files()
 
     def process_nsx_files(self):
@@ -167,7 +171,8 @@ class NotesConvertor:
                 num_links_corrected = num_links_corrected + len(nsx_file.inter_note_link_processor.replacement_links)
                 num_links_not_corrected = num_links_not_corrected + len(nsx_file.inter_note_link_processor.renamed_links_not_corrected)
             if (num_links_corrected + num_links_not_corrected) > 0:
-                print(f'{num_links_corrected} out of {num_links_corrected + num_links_not_corrected} links between notes were re-created')
+                print(f'{num_links_corrected} out of {num_links_corrected + num_links_not_corrected} '
+                      f'links between notes were re-created')
             for nsx_file in self._nsx_backups:
                 if nsx_file.inter_note_link_processor.unmatched_links_msg:
                     print(nsx_file.inter_note_link_processor.unmatched_links_msg)

@@ -264,7 +264,6 @@ class ConversionSettings:
         self.logger.debug("Manual conversion settings")
         self.quick_setting = 'manual'
 
-
     def quick_set_qownnotes_settings(self):
         """
         QOwnNotes conversion settings to convert input formats to format suitable for QOwnNotes users.
@@ -367,7 +366,8 @@ class ConversionSettings:
 
     def _set_folder_paths(self, provided_folder):
         if provided_folder == '':
-            self.logger.debug(f"No provided source using relative path {config.yanom_globals.data_dir} as source directory")
+            self.logger.debug(f"No provided source using relative path "
+                              f"{config.yanom_globals.data_dir} as source directory")
             provided_folder = Path(self._working_directory, config.yanom_globals.data_dir)
             provided_folder_absolute = Path(self._working_directory, config.yanom_globals.data_dir)
 
@@ -547,7 +547,7 @@ class ConversionSettings:
 
     @export_folder.setter
     def export_folder(self, provided_export_folder):
-        provided_export_folder = provided_export_folder.strip()
+        provided_export_folder = str(provided_export_folder).strip()
         if provided_export_folder == '':
             provided_export_folder = yanom_globals.default_export_folder
 

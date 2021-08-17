@@ -130,9 +130,8 @@ def test_configure_for_ini_settings(caplog):
     assert nc.conversion_settings == 'fake_conversion_settings'
 
 
-def test_run_interactive_command_line_interface(caplog):
-    test_source_path = str(Path(__file__).parent.absolute())
-    args = {'source': test_source_path}
+def test_run_interactive_command_line_interface(caplog, tmp_path):
+    args = {'source': tmp_path}
     cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
@@ -197,7 +196,6 @@ def test_evaluate_command_line_arguments_when_going_to_use_ini_file(caplog, sile
 
 
 def test_evaluate_command_line_arguments_when_blank_source_export_in_args(caplog):
-    test_source_path = str(Path(__file__).parent.absolute())
     config.yanom_globals.logger_level = logging.DEBUG
     args = {'silent': False, 'ini': False, 'source': '', 'export': ''}
     cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
@@ -218,6 +216,7 @@ def test_evaluate_command_line_arguments_when_blank_source_export_in_args(caplog
             assert nc.conversion_settings.source == ''
 
             assert 'Starting interactive command line tool' in caplog.messages
+
 
 def test_update_processing_stats():
     test_source_path = str(Path(__file__).parent.absolute())
@@ -285,9 +284,7 @@ def test_generate_file_list_single_file_source(tmp_path):
     assert Path(tmp_path, f'file1.nsx') in result
 
 
-def test_convert_nsx(tmp_path, capsys):
-    file_converter_type = nsx_file_converter.NSXFile
-
+def test_convert_nsx(tmp_path):
     test_source_path = tmp_path
     args = {'source': test_source_path}
     touch(Path(tmp_path, 'file1.nsx'))
@@ -304,24 +301,53 @@ def test_convert_nsx(tmp_path, capsys):
     assert isinstance(nc._nsx_backups[0], nsx_file_converter.NSXFile)
 
 
-def test_convert_html(tmp_path, capsys):
+def test_convert_html(tmp_path):
     test_source_path = tmp_path
     args = {'source': test_source_path}
     touch(Path(tmp_path, 'file1.html'))
     cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
+    nc.conversion_settings._working_directory = Path(tmp_path)
+    nc.conversion_settings.export_folder = Path(tmp_path, 'notes')
+    Path(nc.conversion_settings.export_folder).mkdir()
     nc.conversion_settings._source = Path(tmp_path, 'file1.html')
     nc.conversion_settings._source_absolute_root = Path(tmp_path)
 
     nc.convert_html()
 
-    assert Path(tmp_path, 'file1.md').exists()
+    assert Path(tmp_path, 'file1.html').exists()
+    assert Path(tmp_path, 'notes', 'file1.md').exists()
+
+
+def test_convert_html_rename_existing_file(tmp_path):
+    test_source_path = tmp_path
+    args = {'source': test_source_path}
+    touch(Path(tmp_path, 'file1.html'))
+    Path(tmp_path, 'notes').mkdir()
+    touch(Path(tmp_path, 'notes', 'file1.md'))
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
+    nc = notes_converter.NotesConvertor(args, cd)
+    nc.conversion_settings = conversion_settings.ConversionSettings()
+    nc.conversion_settings._working_directory = Path(tmp_path)
+    nc.conversion_settings.export_folder = Path(tmp_path, 'notes')
+    Path(nc.conversion_settings.export_folder).mkdir(exist_ok=True)
+    nc.conversion_settings._source = Path(tmp_path, 'file1.html')
+    nc.conversion_settings._source_absolute_root = Path(tmp_path)
+
+    nc.convert_html()
+
+    assert Path(tmp_path, 'file1.html').exists()
+    assert Path(tmp_path, 'notes', 'file1.md').exists()
+    assert Path(tmp_path, 'notes', 'file1-old-1.md').exists()
+
+    # confirm files are renamed correctly old wil be zero bytes, new is one byte
+    assert Path(tmp_path, 'notes', 'file1-old-1.md').stat().st_size == 0
+    assert Path(tmp_path, 'notes', 'file1.md').stat().st_size == 1
 
 
 def test_process_files(tmp_path):
-    test_source_path = tmp_path
-    args = {'source': test_source_path}
+    args = {'source': tmp_path}
     touch(Path(tmp_path, 'file1.html'))
     cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
@@ -412,7 +438,8 @@ def test_convert_notes(tmp_path, input_file, file_converter_type, export_format,
     nc.conversion_settings.conversion_input = conversion_input
 
     with patch('notes_converter.NotesConvertor.process_files', spec=True) as mock_process_files:
-        with patch('notes_converter.NotesConvertor.evaluate_command_line_arguments', spec=True) as mock_evaluate_command_line_arguments:
+        with patch('notes_converter.NotesConvertor.evaluate_command_line_arguments', spec=True) \
+                as mock_evaluate_command_line_arguments:
             nc.convert_notes()
 
             mock_evaluate_command_line_arguments.assert_called_once()
@@ -436,7 +463,7 @@ def test_convert_notes_nsx_file_type(tmp_path, capsys, caplog):
     nc.conversion_settings.conversion_input = 'nsx'
 
     with patch('notes_converter.NotesConvertor.process_nsx_files', spec=True) as mock_process_nsx_files:
-        with patch('notes_converter.NotesConvertor.evaluate_command_line_arguments', spec=True) as mock_evaluate_command_line_arguments:
+        with patch('notes_converter.NotesConvertor.evaluate_command_line_arguments', spec=True):
             caplog.clear()
             nc.convert_notes()
 

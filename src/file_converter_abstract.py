@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 
 import config
 import file_writer
+import file_mover
 import image_processing
 from pandoc_converter import PandocConverter
 
@@ -17,7 +18,8 @@ def what_module_is_this():
 
 class FileConverter(ABC):
     def __init__(self, conversion_settings, files_to_convert):
-        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(
+            f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._file = None
         self._files_to_convert = files_to_convert
@@ -89,28 +91,39 @@ class FileConverter(ABC):
     def pre_process_obsidian_image_links_if_required(self):
         if self._conversion_settings.markdown_conversion_input == 'obsidian':
             self.logger.debug(f"Pre process obsidian image links")
-            self._pre_processed_content = image_processing.replace_obsidian_image_links_with_html_img_tag(self._pre_processed_content)
+            self._pre_processed_content = image_processing.replace_obsidian_image_links_with_html_img_tag(
+                self._pre_processed_content)
 
     def post_process_obsidian_image_links_if_required(self):
         if self._conversion_settings.export_format == 'obsidian':
             self.logger.debug(f"Post process obsidian image links")
-            self._post_processed_content = image_processing.replace_markdown_html_img_tag_with_obsidian_image_links(self._post_processed_content)
+            self._post_processed_content = image_processing.replace_markdown_html_img_tag_with_obsidian_image_links(
+                self._post_processed_content)
 
     def write_post_processed_content(self):
-        self.logger.info(f"Writing new file {self._file.stem + self._out_put_extension}")
-        absolute_path = self._file.parent / (self._file.stem + self._out_put_extension)
-        file_writer.write_text(absolute_path, self._post_processed_content)
+        target_path = file_mover.create_target_file_path(self._file, self._conversion_settings.source_absolute_root,
+                                                         self._conversion_settings.export_folder_absolute,
+                                                         self._out_put_extension)
+
+        self.logger.info(f"Writing new file {target_path}")
+        # absolute_path = self._file.parent / (self._file.stem + self._out_put_extension)
+        # file_writer.write_text(absolute_path, self._post_processed_content)
+        file_writer.write_text(target_path, self._post_processed_content)
 
     def rename_target_file_if_already_exists(self):
+        """Rename an exiting file that the new converted content would overwrite"""
         n = 0
-        target_path = Path(self._file.parent, f'{self._file.stem}{self._out_put_extension}')
+        target_path = file_mover.create_target_file_path(self._file,
+                                                         self._conversion_settings.source_absolute_root,
+                                                         self._conversion_settings.export_folder_absolute,
+                                                         self._out_put_extension)
 
-        if not target_path.exists():  # no need for renaming
+        if not target_path.exists():  # no need for renaming id target file does not exist
             return
 
         check_target_path = target_path
         while check_target_path.exists():
             n += 1
-            check_target_path = Path(self._file.parent, f'{self._file.stem}-old-{n}{self._out_put_extension}')
+            check_target_path = Path(target_path.parent, f'{target_path.stem}-old-{n}{target_path.suffix}')
 
-        target_path.replace(check_target_path)
+        target_path.replace(check_target_path)  # rename the existing file
