@@ -75,7 +75,7 @@ class NotesConvertor:
 
     def generate_file_list(self, file_extension):
         if not self.conversion_settings.source.is_file():
-            file_list_generator = self.conversion_settings.source_absolute_path.rglob(f'*.{file_extension}')
+            file_list_generator = self.conversion_settings.source_absolute_root.rglob(f'*.{file_extension}')
             file_list = [item for item in file_list_generator]
             return file_list
 

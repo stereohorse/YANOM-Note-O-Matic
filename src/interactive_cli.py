@@ -3,6 +3,7 @@ import sys
 from abc import ABC, abstractmethod
 import copy
 import logging
+from pathlib import Path
 
 from pyfiglet import Figlet
 from PyInquirer.prompt import prompt
@@ -119,6 +120,8 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
                     self._ask_and_set_metadata_schema()
                 else:
                     self._ask_and_set_tag_prefix()
+            self._ask_and_set_source()
+            self._ask_and_set_export_folder_name()
 
     def _ask_html_conversion_options(self):
         self._ask_and_set_conversion_quick_setting()
@@ -128,6 +131,8 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             self._ask_and_set_front_matter_format()
             if self._current_conversion_settings.front_matter_format != 'none':
                 self._ask_and_set_metadata_schema()
+            self._ask_and_set_source()
+            self._ask_and_set_export_folder_name()
 
     def _nothing_to_convert(self):
         self.logger.warning('Input and output formats are the same nothing to convert. Exiting.')
@@ -172,6 +177,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
                 self._ask_markdown_metadata_questions()
             self._ask_and_set_table_details()
             self._ask_and_set_chart_options()
+            self._ask_and_set_source()
             self._ask_and_set_export_folder_name()
             self._ask_and_set_attachment_folder_name()
             self._ask_and_set_file_name_options()
@@ -333,6 +339,36 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         answer = prompt(questions, style=self.style)
         _exit_if_keyboard_interrupt(answer)
         self._current_conversion_settings.tag_prefix = answer['tag_prefix']
+
+    def _ask_and_set_source(self):
+        def make_absolute(path):
+            if path.is_absolute():
+                return path
+
+            return Path(self._current_conversion_settings.working_directory,
+                        config.yanom_globals.data_dir,
+                        path
+                        )
+
+        questions = [
+            {
+                'type': 'input',
+                'name': 'source',
+                'message': 'Enter a source directory name or file',
+                'default': str(self._default_settings.source)
+            }
+        ]
+        answer = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
+        path_to_test = make_absolute(Path(answer['source']))
+
+        while not path_to_test.exists():
+            print(f"Source path does not exist.  Try again.")
+            answer = prompt(questions, style=self.style)
+            _exit_if_keyboard_interrupt(answer)
+            path_to_test = make_absolute(Path(answer['source']))
+
+        self._current_conversion_settings.source = answer['source']
 
     def _ask_and_set_export_folder_name(self):
         default_folder_name = str(self._default_settings.export_folder)

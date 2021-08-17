@@ -308,7 +308,7 @@ def test_source_absolute_path_property():
     cs = conversion_settings.ConversionSettings()
     cs._source_absolute_root = Path('my/path')
 
-    assert cs.source_absolute_path == Path('my/path')
+    assert cs.source_absolute_root == Path('my/path')
 
 
 def test_conversion_input_setter_invalid_value():

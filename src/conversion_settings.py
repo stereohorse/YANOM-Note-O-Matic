@@ -363,6 +363,7 @@ class ConversionSettings:
         self._filename_spaces_replaced_by = '-'
         self._creation_time_in_exported_file_name = False
         self._maximum_file_or_directory_name_length = yanom_globals.path_part_max_length
+        self._source, self._source_absolute_root = self._set_folder_paths(Path(self._working_directory, config.yanom_globals.data_dir))
 
     def _set_folder_paths(self, provided_folder):
         if provided_folder == '':
@@ -591,7 +592,7 @@ class ConversionSettings:
         self._working_directory = Path(path)
 
     @property
-    def source_absolute_path(self):
+    def source_absolute_root(self):
         return self._source_absolute_root
 
     @property
