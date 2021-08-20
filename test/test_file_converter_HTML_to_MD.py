@@ -163,6 +163,7 @@ def test_generate_set_of_attachment_paths_markdown_export_format(tmp_path):
     conversion_settings.source = Path(tmp_path, 'some_folder/data')
     conversion_settings.export_folder = Path(tmp_path, 'some_folder/export')
     conversion_settings.export_format = 'obsidian'
+    conversion_settings.make_absolute = False
     file_converter = HTMLToMDConverter(conversion_settings, 'files_to_convert')
     file_converter._file = file_path
     file_converter._files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md')}
@@ -201,5 +202,110 @@ def test_generate_set_of_attachment_paths_markdown_export_format(tmp_path):
     assert Path('../../attachments/four.csv') in file_converter._non_copyable_attachment_path_set
     assert Path(tmp_path, 'some_folder/three.png') in file_converter._non_copyable_attachment_path_set
     assert len(file_converter._non_copyable_attachment_path_set) == 2
+
+    assert result_content == expected_content
+
+
+def test_generate_set_of_attachment_paths_where_make_absolute_for_non_copyable_files(tmp_path):
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/my_other_notebook/attachments').mkdir(parents=True)
+    Path(tmp_path, 'some_folder/data/my_notebook/note.md').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png').touch()
+    Path(tmp_path, 'some_folder/data/attachments/two.csv').touch()
+    Path(tmp_path, 'some_folder/three.png').touch()
+    Path(tmp_path, 'some_folder/attachments/four.csv').touch()
+    Path(tmp_path, 'some_folder/four.csv').touch()
+    Path(tmp_path, 'some_folder/data/my_other_notebook/attachments/five.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/six.csv').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/nine.md').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf').touch()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png').touch()
+
+    file_path = Path(tmp_path, 'some_folder/data/my_notebook/note.md')
+    content = f'![copyable|600]({str(tmp_path)}/some_folder/data/my_notebook/attachments/one.png)\n' \
+              f'![non-existing|600]({str(tmp_path)}/some_folder/two.png)\n' \
+              f'![non-copyable|600]({str(tmp_path)}/some_folder/three.png)\n' \
+              f'![non-copyable|600](../../three.png)\n' \
+              f'![non-existing|600](attachments/three.pdf)\n' \
+              f'![copyable|600](attachments/eight.pdf)\n' \
+              f'![copyable](../attachments/two.csv)\n' \
+              f'![non-copyable](../../attachments/four.csv)\n' \
+              f'![non-existing](../my_notebook/seven.csv)\n' \
+              f'![copyable](../my_notebook/six.csv)\n' \
+              f'![copyable](../my_other_notebook/attachments/five.pdf "test tool tip text")\n' \
+              f'![note link](nine.md)\n' \
+              f'[a web link](https:\\www.google.com "google")\n' \
+              f'<img src="attachments/ten.png" />\n' \
+              f'<a href="attachments/eleven.pdf">example-attachment.pdf</a>\n' \
+              f'![copyable](attachments/file%20twelve.pdf)\n' \
+              f'<a href="attachments/file%20thirteen.pdf">example-attachment.pdf</a>\n' \
+              f'<img src="attachments/file%20fourteen.png" />'
+
+    expected_content = f'![copyable|600]({str(tmp_path)}/some_folder/data/my_notebook/attachments/one.png)\n' \
+                       f'![non-existing|600]({str(tmp_path)}/some_folder/two.png)\n' \
+                       f'![non-copyable|600]({str(tmp_path)}/some_folder/three.png)\n' \
+                       f'![non-copyable|600]({str(tmp_path)}/some_folder/three.png)\n' \
+                       f'![non-existing|600](attachments/three.pdf)\n' \
+                       f'![copyable|600](attachments/eight.pdf)\n' \
+                       f'![copyable](../attachments/two.csv)\n' \
+                       f'![non-copyable]({str(tmp_path)}/some_folder/attachments/four.csv)\n' \
+                       f'![non-existing](../my_notebook/seven.csv)\n' \
+                       f'![copyable](../my_notebook/six.csv)\n' \
+                       f'![copyable](../my_other_notebook/attachments/five.pdf "test tool tip text")\n' \
+                       f'![note link](nine.md)\n' \
+                       f'[a web link](https:\\www.google.com "google")\n' \
+                       f'<img src="attachments/ten.png" />\n' \
+                       f'<a href="attachments/eleven.pdf">example-attachment.pdf</a>\n' \
+                       f'![copyable](attachments/file%20twelve.pdf)\n' \
+                       f'<a href="attachments/file%20thirteen.pdf">example-attachment.pdf</a>\n' \
+                       f'<img src="attachments/file%20fourteen.png" />'
+
+    conversion_settings = ConversionSettings()
+    conversion_settings.source = Path(tmp_path, 'some_folder/data')
+    conversion_settings.export_folder = Path(tmp_path, 'some_folder/export')
+    conversion_settings.export_format = 'obsidian'
+    conversion_settings.make_absolute = True
+    file_converter = HTMLToMDConverter(conversion_settings, 'files_to_convert')
+    file_converter._file = file_path
+    file_converter._files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md')}
+    result_content = file_converter.handle_attachment_paths(content)
+
+    assert Path(tmp_path,
+                'some_folder/data/my_other_notebook/attachments/five.pdf') in file_converter._copyable_attachment_absolute_path_set
+    assert Path(tmp_path,
+                'some_folder/data/my_notebook/attachments/one.png') in file_converter._copyable_attachment_absolute_path_set
+    assert Path(tmp_path,
+                'some_folder/data/my_notebook/six.csv') in file_converter._copyable_attachment_absolute_path_set
+    assert Path(tmp_path,
+                'some_folder/data/attachments/two.csv') in file_converter._copyable_attachment_absolute_path_set
+    assert Path(tmp_path,
+                'some_folder/data/my_notebook/attachments/eight.pdf') in file_converter._copyable_attachment_absolute_path_set
+    assert Path(tmp_path,
+                'some_folder/data/my_notebook/attachments/ten.png') in file_converter._copyable_attachment_absolute_path_set
+    assert Path(tmp_path,
+                'some_folder/data/my_notebook/attachments/eleven.pdf') in file_converter._copyable_attachment_absolute_path_set
+    assert Path(tmp_path,
+                'some_folder/data/my_notebook/attachments/file twelve.pdf') in file_converter._copyable_attachment_absolute_path_set
+    assert Path(tmp_path,
+                'some_folder/data/my_notebook/attachments/file fourteen.png') in file_converter._copyable_attachment_absolute_path_set
+    assert len(file_converter._copyable_attachment_absolute_path_set) == 9
+
+    assert Path(tmp_path, 'some_folder/two.png') in file_converter._non_existing_links_set
+    assert Path(tmp_path,
+                'some_folder/data/my_notebook/attachments/three.pdf') in file_converter._non_existing_links_set
+    assert Path(tmp_path, 'some_folder/data/my_notebook/seven.csv') in file_converter._non_existing_links_set
+    assert Path(tmp_path,
+                'some_folder/data/my_notebook/attachments/file thirteen.pdf') in file_converter._non_existing_links_set
+    assert len(file_converter._non_existing_links_set) == 4
+
+    assert Path('../../attachments/four.csv') in file_converter._non_copyable_attachment_path_set
+    assert Path(tmp_path, 'some_folder/three.png') in file_converter._non_copyable_attachment_path_set
+    # There is no 3rd path to test as three.png is used twice, once with relative path and once with absolute path
+    assert len(file_converter._non_copyable_attachment_path_set) == 3
 
     assert result_content == expected_content

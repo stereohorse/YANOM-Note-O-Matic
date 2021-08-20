@@ -158,6 +158,7 @@ class ConfigData(ConfigParser):
         self._conversion_settings.filename_spaces_replaced_by = self['file_options']['filename_spaces_replaced_by']
         self._conversion_settings.maximum_file_or_directory_name_length = self['file_options']['maximum_file_or_directory_name_length']
         self._conversion_settings.orphans = self['file_options']['orphans']
+        self._conversion_settings.make_absolute = self.getboolean('file_options', 'make_absolute')
 
     def _write_config_file(self):
         try:
@@ -320,6 +321,11 @@ class ConfigData(ConfigParser):
                 '    # ignore - orphan files are left where they are and are not moved to an export folder.': None,
                 '    # copy - orphan files are coppied to the export folder in the same relative locations as the source.': None,
                 '    # orphan - orphan files are moved to a directory named orphan in the export folder.': None,
+                'make_absolute': self._conversion_settings.make_absolute,
+                '    # Links to files that are not in the path forwards of the source directory will be ': None,
+                '    # changed to absolute links if set to True.  For example "../../someplace/some_file.pdf"': None,
+                '    # becomes /root/path/to/someplace/some_file.pdf"': None,
+                '    # False will leave these links unchanged as relative links': None,
             }
         }
 

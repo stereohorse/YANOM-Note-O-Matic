@@ -90,6 +90,11 @@ orphans = ignore
     # ignore - orphan files are left where they are and are not moved to an export folder.
     # copy - orphan files are coppied to the export folder in the same relative locations as the source.
     # orphan - orphan files are moved to a directory named orphan in the export folder.
+make_absolute = False
+    # links to files that are not in the path forwards of the source directory will be 
+    # changed to absolute links if set to true.  for example "../../someplace/some_file.pdf"
+    # becomes /root/path/to/someplace/some_file.pdf"
+    # false will leave these links unchanged as relative links
 """
 
 
@@ -174,6 +179,11 @@ orphans = ignore
     # ignore - orphan files are left where they are and are not moved to an export folder.
     # copy - orphan files are coppied to the export folder in the same relative locations as the source.
     # orphan - orphan files are moved to a directory named orphan in the export folder.
+make_absolute = False
+    # links to files that are not in the path forwards of the source directory will be 
+    # changed to absolute links if set to true.  for example "../../someplace/some_file.pdf"
+    # becomes /root/path/to/someplace/some_file.pdf"
+    # false will leave these links unchanged as relative links
 """
 
 
@@ -259,6 +269,7 @@ def test_validate_good_config_ini_no_notes_or_attachment_folder(tmp_path, good_c
         ('chart_options', 'chart_data_table', 'bad-value-1234'),
         ('file_options', 'creation_time_in_exported_file_name', 'bad-value-1234'),
         ('file_options', 'orphans', 'invalid-value'),
+        ('file_options', 'make_absolute', 'invalid-value'),
     ]
 )
 def test_validate_config_file_bad_values(tmp_path, good_config_ini, key1, key2, bad_value):
@@ -312,6 +323,7 @@ def test_validate_config_file_missing_keys_and_sections(tmp_path, good_config_in
         ('file_options', 'attachment_folder_name', 'attachment_orig', 'attachment_new', Path('attachment_new')),
         ('file_options', 'creation_time_in_exported_file_name', 'True', 'False', False),
         ('file_options', 'orphans', 'copy', 'ignore', 'ignore'),
+        ('file_options', 'make_absolute', 'True', 'False', False),
     ]
 )
 def test_generate_conversion_settings_from_parsed_config_file_data(good_config_ini, tmp_path, key1, key2, start_value,
@@ -505,7 +517,7 @@ def test_str(good_config_ini, tmp_path):
     cd.parse_config_file()
 
     result = str(cd)
-    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'False', 'maximum_file_or_directory_name_length': '255', 'orphans': 'ignore'}}"
+    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'False', 'maximum_file_or_directory_name_length': '255', 'orphans': 'ignore', 'make_absolute': 'False'}}"
 
 
 def test_repr(good_config_ini, tmp_path):
@@ -515,7 +527,7 @@ def test_repr(good_config_ini, tmp_path):
     cd.parse_config_file()
 
     result = repr(cd)
-    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'False', 'maximum_file_or_directory_name_length': '255', 'orphans': 'ignore'}}"
+    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'False', 'maximum_file_or_directory_name_length': '255', 'orphans': 'ignore', 'make_absolute': 'False'}}"
 
 
 def test_generate_conversion_settings_using_quick_settings_string(good_config_ini, tmp_path):

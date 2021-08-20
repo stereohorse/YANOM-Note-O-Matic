@@ -36,6 +36,7 @@ def test_create_notebook_folder_folder_already_exist(tmp_path, nsx, caplog):
         notebook = sn_notebook.Notebook(nsx, 'abcd')
 
         notebook.conversion_settings.export_folder = 'export-folder'
+        notebook.conversion_settings.renaming = 'rename'
         notebook.folder_name = 'notebook1'
 
         Path(tmp_path, config.yanom_globals.data_dir, notebook.conversion_settings.export_folder, notebook.folder_name).mkdir(parents=True, exist_ok=True)

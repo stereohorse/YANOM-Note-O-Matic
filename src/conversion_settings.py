@@ -81,8 +81,11 @@ class ConversionSettings:
     _source_absolute_root: Path
         An absolute path to the source files
     _orphans: str
-        String indicating what action to take when dealing with orpahn files int he source directory.  Orphan files
+        String indicating what action to take when dealing with orphan files int he source directory.  Orphan files
         are any files that are not a note file or linked to file/attachment
+    _make_absolute : bool
+        Boolean for making non-copyable attachment links absolute if they are relative links.  True for absolute,
+        False leave as relative
 
     Methods
     -------
@@ -141,6 +144,7 @@ class ConversionSettings:
             'creation_time_in_exported_file_name': ('True', 'False'),
             'maximum_file_or_directory_name_length': '',
             'orphans': ('ignore', 'copy', 'orphan'),
+            'make_absolute': ('True', 'False'),
         }
     }
 
@@ -186,7 +190,8 @@ class ConversionSettings:
         self._export_folder_absolute = Path(self._working_directory, config.yanom_globals.data_dir, self._export_folder)
         self.logger.debug(environment_message)
         self._source_absolute_root = None
-        self._orphans = ''
+        self._orphans = 'orphan'
+        self._make_absolute = False
 
     def __str__(self):
         return f"{self.__class__.__name__}(valid_conversion_inputs={self.valid_conversion_inputs}, " \
@@ -376,6 +381,7 @@ class ConversionSettings:
             Path(self._working_directory, config.yanom_globals.data_dir)
         )
         self._orphans = 'copy'
+        self._make_absolute = False
 
     def _get_folder_paths(self, provided_folder: Path, root_path: Path):
         """
@@ -716,3 +722,11 @@ class ConversionSettings:
         raise ValueError(f'Invalid value provided for for orphan file option. '
                          f'Attempted to use invalid value - "{value}", '
                          f'valid values are - "{self._valid_orphan_values}')
+
+    @property
+    def make_absolute(self):
+        return self._make_absolute
+
+    @make_absolute.setter
+    def make_absolute(self, value: bool):
+        self._make_absolute = value

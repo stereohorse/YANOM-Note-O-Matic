@@ -123,6 +123,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
                 else:
                     self._ask_and_set_tag_prefix()
             self._ask_and_set_orphans_option()
+            self._ask_make_relative_links_absolute()
 
     def _ask_html_conversion_options(self):
         self._ask_and_set_conversion_quick_setting()
@@ -135,6 +136,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             if self._current_conversion_settings.front_matter_format != 'none':
                 self._ask_and_set_metadata_schema()
             self._ask_and_set_orphans_option()
+            self._ask_make_relative_links_absolute()
 
     def _ask_and_set_orphans_option(self):
         orphans_choices = self._default_settings.valid_orphan_values
@@ -150,6 +152,20 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         answer = prompt(orphans, style=self.style)
         _exit_if_keyboard_interrupt(answer)
         self._current_conversion_settings.orphans = answer['orphans']
+
+    def _ask_make_relative_links_absolute(self):
+        questions = [
+            {
+                'type': 'confirm',
+                'message': 'Make relative links absolute for links to files outside of the source directory?',
+                'name': 'make_absolute',
+                'default': self._default_settings.make_absolute,
+            }
+        ]
+
+        answer = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
+        self._current_conversion_settings.make_absolute = answer['make_absolute']
 
     def _nothing_to_convert(self):
         self.logger.warning('Input and output formats are the same nothing to convert. Exiting.')

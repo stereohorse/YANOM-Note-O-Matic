@@ -361,10 +361,11 @@ class FileConverter(ABC):
 
     def _update_content_with_new_attachment_paths(self, content, non_copyable_attachment_path_set):
         """
-        Update content with a new relative path for non_copyable attachment files
+        Update content with a new relative path or absoliute path for non_copyable attachment files
 
-        Relative paths in the content to files that can not be copied are updated with new paths that are relative
-        to the export folder
+        Using the conversion setting 'make_absolute' relative paths in the content to files that can not be copied are
+        updated with new paths that are relative to the export folder when make_absolute is False, or absolute paths
+        when make_absolute is True
 
         """
         for link in non_copyable_attachment_path_set:
@@ -372,13 +373,16 @@ class FileConverter(ABC):
                 continue
 
             attachment_absolute_path = self._absolute_path_from_relative_path(self._file, str(link))
+            new_path = attachment_absolute_path
 
-            new_relative_path = self._calculate_relative_path(
-                absolute_link=attachment_absolute_path,
-                target_root=self._conversion_settings.export_folder_absolute,
-            )
+            if not self._conversion_settings.make_absolute:
+                new_relative_path = self._calculate_relative_path(
+                    absolute_link=attachment_absolute_path,
+                    target_root=self._conversion_settings.export_folder_absolute,
+                )
+                new_path = new_relative_path
 
-            content = self._update_content_with_new_link(str(new_relative_path), str(link), content)
+            content = self._update_content_with_new_link(str(new_path), str(link), content)
 
         return content
 
