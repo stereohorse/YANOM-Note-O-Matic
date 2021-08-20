@@ -1,8 +1,8 @@
 """Locate, remove, and reinsert HTML iframes
 
 Pandoc does not handle iframes when converting from HTML into Markdown.
-This module allows iframes to be retained when converting HTML-Markdown, the pre and post porocess functions
-would be called before and aftger pandoc conversion
+This module allows iframes to be retained when converting HTML-Markdown, the pre and post process functions
+would be called before and after pandoc conversion
 
 """
 from bs4 import BeautifulSoup
@@ -58,7 +58,7 @@ def post_process_iframes_to_markdown(content, iframes_dict) -> str:
     """
     for key, value in iframes_dict.items():
         search_for = rf'\ *{key}'  # including leading spaces to leave a blank line
-        replace_with = f'\n{value}\n' # new line either side of html code is required for some readers
+        replace_with = f'\n{value}\n'  # new line either side of html code is required for some readers
         content = re.sub(search_for, replace_with, content)
 
     return content

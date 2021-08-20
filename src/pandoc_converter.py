@@ -128,5 +128,3 @@ class PandocConverter:
 
     def _pandoc_older_than_v_2_11_2(self):
         return version.parse(self._pandoc_version) < version.parse('2.11.2')
-
-

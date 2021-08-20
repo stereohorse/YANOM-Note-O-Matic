@@ -85,5 +85,3 @@ def _error_handling(e, target_filename, zip_filename, message=''):
     logger.warning(traceback_text)
     if not config.yanom_globals.is_silent:
         print(msg)
-
-

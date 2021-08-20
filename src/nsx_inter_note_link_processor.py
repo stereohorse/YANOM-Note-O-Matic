@@ -152,8 +152,10 @@ class NSXInterNoteLinkProcessor:
         for raw_link in raw_note_links:
             if raw_link in replacement_links:
                 replacement_links[raw_link].generate_new_links()
-                content = content.replace(raw_link,
-                                    self.generate_html_code_for_new_links(replacement_links[raw_link].replacement_text))
+                content = content.replace(
+                    raw_link,
+                    self.generate_html_code_for_new_links(replacement_links[raw_link].replacement_text)
+                )
 
         return content
 
