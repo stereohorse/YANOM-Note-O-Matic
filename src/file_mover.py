@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-def create_target_file_path(file_path, source_absolute_root, target_path_root, target_suffix):
+def create_target_absolute_file_path(file_path, source_absolute_root, target_path_root, target_suffix):
     """
     Create an absolute path to a file.
 
@@ -29,16 +29,20 @@ def create_target_file_path(file_path, source_absolute_root, target_path_root, t
 
     """
 
-    if source_absolute_root == target_path_root:
-        # files are being created in the source folders export path == source path
-        return Path(file_path).with_suffix(target_suffix)
+    # if source_absolute_root == target_path_root:
+    #     # files are being created in the source folders export path == source path
+    #     return Path(file_path).with_suffix(target_suffix)
 
     if Path(file_path).is_relative_to(source_absolute_root):
         target_relative_path_to_source_root = Path(file_path).relative_to(source_absolute_root)
         # target_relative_path_to_source_root is the relative path that will be added onto the export folder path
         return Path(target_path_root, target_relative_path_to_source_root).with_suffix(target_suffix)
 
-    # file is not in the source path return the file path with the new extension
+    if not Path(file_path).is_absolute():
+        # path is relative add target path_root and new suffix
+        return Path(target_path_root, file_path).with_suffix(target_suffix)
+
+    # file is not in the source path return the file path with the new suffix
     return Path(file_path).with_suffix(target_suffix)
 
 #

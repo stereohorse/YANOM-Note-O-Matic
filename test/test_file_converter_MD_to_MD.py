@@ -1,10 +1,12 @@
-import unittest
 from pathlib import Path
+import unittest
+
 from testfixtures import TempDirectory
 
-import file_mover
+from content_link_management import get_attachment_paths
 from src.conversion_settings import ConversionSettings
 from src.file_converter_MD_to_MD import MDToMDConverter
+import file_mover
 from src.metadata_processing import MetaDataProcessor
 
 
@@ -210,6 +212,25 @@ class TestMDToMDConverter(unittest.TestCase):
                                      self.file_converter._pre_processed_content,
                                      test_set[3])
 
+    def test_pre_process_content2_rename_existing_file_and_its_link_in_content(self):
+        self.file_converter._file_content = '[existing_md](a-file.md)'
+        self.file_converter._metadata_schema = ['title']
+        self.file_converter._file = Path('a-file.md')
+        self.file_converter._conversion_settings.export_format = 'gfm'
+        self.file_converter._conversion_settings.conversion_input = 'markdown'
+        with TempDirectory() as d:
+            self.file_converter._conversion_settings.source = Path(d.path)
+            self.file_converter._conversion_settings.export_folder = Path(d.path)
+            Path(d.path, 'a-file.md').touch()
+
+            self.file_converter.pre_process_content()
+            assert Path(d.path, 'a-file-old-1.md').exists()
+
+            self.assertTrue('a-file-old-1.md'
+                            in self.file_converter._pre_processed_content,
+                            'Failed to rename existing file link placeholders',
+                            )
+
     def test_post_process_obsidian_image_links_if_required(self):
         test_strings = [
             ('<img src="filepath/image.png" width="600">',
@@ -301,28 +322,16 @@ class TestMDToMDConverter(unittest.TestCase):
         self.file_converter._conversion_settings = ConversionSettings()
         self.file_converter._conversion_settings.set_quick_setting('obsidian')
         with TempDirectory() as d:
+            self.file_converter._conversion_settings.source = Path(d.path)
+            self.file_converter._conversion_settings.export_folder = Path(d.path, 'export')
+            Path(d.path, 'export').mkdir()
             source_file = Path(d.path, 'some_markdown.md')
             source_file.write_text('<img src="filepath/image.png" width="600">')
-            self.file_converter._conversion_settings.source = Path(d.path)
-            self.file_converter._conversion_settings.export_folder = Path(d.path)
 
             self.file_converter.convert_note(source_file)
 
-            result = Path(self.file_converter._conversion_settings.export_folder, 'some_markdown.md').read_text()
+            result = self.file_converter._post_processed_content
             self.assertEqual('![|600](filepath/image.png)', result, 'failed to convert file')
-
-
-def test_scan_md_content_for_attachments(tmp_path):
-    content = '![|600](attachments/one.png)\n![some text](attachments/two.csv)\n![some text|600](/usr/something/something/data/attachments/three.pdf)'
-    expected = {Path('attachments/one.png'), Path('attachments/two.csv'),
-                Path('/usr/something/something/data/attachments/three.pdf')}
-    conversion_settings = ConversionSettings()
-    conversion_settings.export_format = 'obsidian'
-    file_converter = MDToMDConverter(conversion_settings, [Path(tmp_path, 'hello.html')])
-    file_converter._file = Path(tmp_path, 'hello.html')
-    result = file_converter.scan_content_for_attachments(content)
-
-    assert result == expected
 
 
 def test_generate_set_of_attachment_paths_markdown_export_format(tmp_path):
@@ -357,30 +366,30 @@ def test_generate_set_of_attachment_paths_markdown_export_format(tmp_path):
               f'![copyable](../my_notebook/six.csv)\n' \
               f'![copyable](../my_other_notebook/attachments/five.pdf "test tool tip text")\n' \
               f'![note link](nine.md)\n' \
-              f'[a web link](https:\\www.google.com "google")\n' \
+              f'[a web link](https://www.google.com "google")\n' \
               f'<img src="attachments/ten.png" />\n' \
               f'<a href="attachments/eleven.pdf">example-attachment.pdf</a>\n' \
               f'![copyable](attachments/file%20twelve.pdf)\n' \
               f'<a href="attachments/file%20thirteen.pdf">example-attachment.pdf</a>\n' \
               f'<img src="attachments/file%20fourteen.png" />'
-
-    expected_content = f'![copyable|600]({str(tmp_path)}/some_folder/data/my_notebook/attachments/one.png)\n' \
-                       f'![non-existing|600]({str(tmp_path)}/some_folder/two.png)\n' \
-                       f'![non-copyable|600]({str(tmp_path)}/some_folder/three.png)\n' \
-                       f'![non-existing|600](attachments/three.pdf)\n' \
-                       f'![copyable|600](attachments/eight.pdf)\n' \
-                       f'![copyable](../attachments/two.csv)\n' \
-                       f'![non-copyable](../attachments/four.csv)\n' \
-                       f'![non-existing](../my_notebook/seven.csv)\n' \
-                       f'![copyable](../my_notebook/six.csv)\n' \
-                       f'![copyable](../my_other_notebook/attachments/five.pdf "test tool tip text")\n' \
-                       f'![note link](nine.md)\n' \
-                       f'[a web link](https:\\www.google.com "google")\n' \
-                       f'<img src="attachments/ten.png" />\n' \
-                       f'<a href="attachments/eleven.pdf">example-attachment.pdf</a>\n' \
-                       f'![copyable](attachments/file%20twelve.pdf)\n' \
-                       f'<a href="attachments/file%20thirteen.pdf">example-attachment.pdf</a>\n' \
-                       f'<img src="attachments/file%20fourteen.png" />'
+    #
+    # expected_content = f'![copyable|600]({str(tmp_path)}/some_folder/data/my_notebook/attachments/one.png)\n' \
+    #                    f'![non-existing|600]({str(tmp_path)}/some_folder/two.png)\n' \
+    #                    f'![non-copyable|600]({str(tmp_path)}/some_folder/three.png)\n' \
+    #                    f'![non-existing|600](attachments/three.pdf)\n' \
+    #                    f'![copyable|600](attachments/eight.pdf)\n' \
+    #                    f'![copyable](../attachments/two.csv)\n' \
+    #                    f'![non-copyable](../attachments/four.csv)\n' \
+    #                    f'![non-existing](../my_notebook/seven.csv)\n' \
+    #                    f'![copyable](../my_notebook/six.csv)\n' \
+    #                    f'![copyable](../my_other_notebook/attachments/five.pdf "test tool tip text")\n' \
+    #                    f'![note link](nine.md)\n' \
+    #                    f'[a web link](https://www.google.com "google")\n' \
+    #                    f'<img src="attachments/ten.png" />\n' \
+    #                    f'<a href="attachments/eleven.pdf">example-attachment.pdf</a>\n' \
+    #                    f'![copyable](attachments/file%20twelve.pdf)\n' \
+    #                    f'<a href="attachments/file%20thirteen.pdf">example-attachment.pdf</a>\n' \
+    #                    f'<img src="attachments/file%20fourteen.png" />'
 
     conversion_settings = ConversionSettings()
     conversion_settings.source = Path(tmp_path, 'some_folder/data')
@@ -389,57 +398,59 @@ def test_generate_set_of_attachment_paths_markdown_export_format(tmp_path):
     file_converter = MDToMDConverter(conversion_settings, 'files_to_convert')
     file_converter._file = file_path
     file_converter._files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md')}
-    result_content = file_converter.handle_attachment_paths(content)
+    attachment_links = get_attachment_paths(file_converter._conversion_settings.source_absolute_root,
+                                            file_converter._conversion_settings.export_format,
+                                            file_converter._file,
+                                            file_converter._files_to_convert, content)
 
     assert Path(tmp_path, 'some_folder/data/my_other_notebook/attachments/five.pdf') \
-           in file_converter._copyable_attachment_absolute_path_set
+           in attachment_links.copyable_absolute
 
     assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png') \
-           in file_converter._copyable_attachment_absolute_path_set
+           in attachment_links.copyable_absolute
 
     assert Path(tmp_path,
                 'some_folder/data/my_notebook/six.csv') \
-           in file_converter._copyable_attachment_absolute_path_set
+           in attachment_links.copyable_absolute
 
     assert Path(tmp_path, 'some_folder/data/attachments/two.csv') \
-           in file_converter._copyable_attachment_absolute_path_set
+           in attachment_links.copyable_absolute
 
     assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf') \
-           in file_converter._copyable_attachment_absolute_path_set
+           in attachment_links.copyable_absolute
 
     assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png') \
-           in file_converter._copyable_attachment_absolute_path_set
+           in attachment_links.copyable_absolute
 
     assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf') \
-           in file_converter._copyable_attachment_absolute_path_set
+           in attachment_links.copyable_absolute
 
     assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf') \
-           in file_converter._copyable_attachment_absolute_path_set
+           in attachment_links.copyable_absolute
 
     assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png') \
-           in file_converter._copyable_attachment_absolute_path_set
+           in attachment_links.copyable_absolute
 
-    assert len(file_converter._copyable_attachment_absolute_path_set) == 9
+    assert len(attachment_links.copyable_absolute) == 9
 
-    assert Path(tmp_path, 'some_folder/two.png') in file_converter._non_existing_links_set
+    assert Path(tmp_path, 'some_folder/two.png') in attachment_links.non_existing
 
     assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/three.pdf') \
-           in file_converter._non_existing_links_set
+           in attachment_links.non_existing
 
-    assert Path(tmp_path, 'some_folder/data/my_notebook/seven.csv') in file_converter._non_existing_links_set
+    assert Path(tmp_path, 'some_folder/data/my_notebook/seven.csv') in attachment_links.non_existing
 
     assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/file thirteen.pdf') \
-           in file_converter._non_existing_links_set
+           in attachment_links.non_existing
 
-    assert len(file_converter._non_existing_links_set) == 4
+    assert len(attachment_links.non_existing) == 4
 
     # NOTE for the "some_folder/attachments/four.csv" attachment the content should be updated to a new relative link
     # assert Path(tmp_path, 'some_folder/attachments/four.csv') in file_converter._non_copyable_attachment_path_set
-    assert Path('../../attachments/four.csv') in file_converter._non_copyable_attachment_path_set
-    assert Path(tmp_path, 'some_folder/three.png') in file_converter._non_copyable_attachment_path_set
-    assert len(file_converter._non_copyable_attachment_path_set) == 2
-
-    assert result_content == expected_content
+    assert Path('../../attachments/four.csv') in attachment_links.non_copyable_relative
+    assert Path(tmp_path, 'some_folder/three.png') in attachment_links.non_copyable_absolute
+    assert len(attachment_links.non_copyable_relative) == 1
+    assert len(attachment_links.non_copyable_absolute) == 1
 
 
 def test_generate_set_of_attachment_paths_html_export_format(tmp_path):
@@ -457,21 +468,21 @@ def test_generate_set_of_attachment_paths_html_export_format(tmp_path):
     file_path = Path(tmp_path, 'some_folder/data/my_notebook/note.md')
     content = f'![copyable](../my_other_notebook/attachments/five.pdf "test tool tip text")\n' \
               f'![note link](nine.md)\n' \
-              f'[a web link](https:\\www.google.com "google")\n' \
+              f'[a web link](https://www.google.com "google")\n' \
               f'<img src="attachments/ten.png" />\n' \
               f'<a href="attachments/eleven.pdf">example-attachment.pdf</a>\n' \
               f'![copyable](attachments/file%20twelve.pdf)\n' \
               f'<a href="attachments/file%20thirteen.pdf">example-attachment.pdf</a>\n' \
               f'<img src="attachments/file%20fourteen.png" />'
 
-    expected_content = f'![copyable](../my_other_notebook/attachments/five.pdf "test tool tip text")\n' \
-                       f'![note link](nine.md)\n' \
-                       f'[a web link](https:\\www.google.com "google")\n' \
-                       f'<img src="attachments/ten.png" />\n' \
-                       f'<a href="attachments/eleven.pdf">example-attachment.pdf</a>\n' \
-                       f'![copyable](attachments/file%20twelve.pdf)\n' \
-                       f'<a href="attachments/file%20thirteen.pdf">example-attachment.pdf</a>\n' \
-                       f'<img src="attachments/file%20fourteen.png" />'
+    # expected_content = f'![copyable](../my_other_notebook/attachments/five.pdf "test tool tip text")\n' \
+    #                    f'![note link](nine.md)\n' \
+    #                    f'[a web link](https://www.google.com "google")\n' \
+    #                    f'<img src="attachments/ten.png" />\n' \
+    #                    f'<a href="attachments/eleven.pdf">example-attachment.pdf</a>\n' \
+    #                    f'![copyable](attachments/file%20twelve.pdf)\n' \
+    #                    f'<a href="attachments/file%20thirteen.pdf">example-attachment.pdf</a>\n' \
+    #                    f'<img src="attachments/file%20fourteen.png" />'
 
     conversion_settings = ConversionSettings()
     conversion_settings.source = Path(tmp_path, 'some_folder/data')
@@ -480,22 +491,29 @@ def test_generate_set_of_attachment_paths_html_export_format(tmp_path):
     file_converter = MDToMDConverter(conversion_settings, 'files_to_convert')
     file_converter._file = file_path
     file_converter._files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md')}
-    result_content = file_converter.handle_attachment_paths(content)
+    attachment_links = get_attachment_paths(file_converter._conversion_settings.source_absolute_root,
+                                            file_converter._conversion_settings.conversion_input,
+                                            file_converter._file,
+                                            file_converter._files_to_convert, content)
 
     assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png') \
-           in file_converter._copyable_attachment_absolute_path_set
+           in attachment_links.copyable_absolute
 
     assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf') \
-           in file_converter._copyable_attachment_absolute_path_set
+           in attachment_links.copyable_absolute
 
     assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png') \
-           in file_converter._copyable_attachment_absolute_path_set
+           in attachment_links.copyable_absolute
 
-    assert len(file_converter._copyable_attachment_absolute_path_set) == 3
+    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf') \
+           in attachment_links.copyable_absolute
+
+    assert Path(tmp_path, 'some_folder/data/my_other_notebook/attachments/five.pdf') \
+           in attachment_links.copyable_absolute
+
+    assert len(attachment_links.copyable_absolute) == 5
 
     assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/file thirteen.pdf') \
-           in file_converter._non_existing_links_set
+           in attachment_links.non_existing
 
-    assert len(file_converter._non_existing_links_set) == 1
-
-    assert result_content == expected_content
+    assert len(attachment_links.non_existing) == 1

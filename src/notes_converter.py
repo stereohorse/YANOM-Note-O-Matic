@@ -9,6 +9,7 @@ import config
 from file_converter_HTML_to_MD import HTMLToMDConverter
 from file_converter_MD_to_HTML import MDToHTMLConverter
 from file_converter_MD_to_MD import MDToMDConverter
+import file_mover
 from interactive_cli import StartUpCommandLineInterface
 from nsx_file_converter import NSXFile
 from pandoc_converter import PandocConverter
@@ -51,6 +52,7 @@ class NotesConvertor:
         self._set_of_created_note_files = set()
         self._set_of_renamed_note_files = set()
         self._set_of_not_found_attachments = set()
+        self._attachment_details = {}
 
     def convert_notes(self):
         self.evaluate_command_line_arguments()
@@ -120,55 +122,48 @@ class NotesConvertor:
             sys.exit(0)
 
     def process_files(self, files_to_convert, file_converter):
+        self._set_files_to_convert = set(files_to_convert)
         file_count = 0
         self._attachment_count = 0
-        set_of_attachments = set()
-        set_created_note_files = set()
-        not_found_attachments = set()
-        renamed_note_files = set()
 
         if not config.yanom_globals.is_silent:
             print(f"Processing note pages")
-        with alive_bar(len(files_to_convert), bar='blocks') as bar:
+        with alive_bar(len(files_to_convert), bar='blocks') as file_bar:
             for file in files_to_convert:
                 file_converter.convert_note(file)
-                set_created_note_files.add(file_converter.created_note_path)
-                set_of_attachments.update(file_converter.copyable_attachment_absolute_path_set)
-                not_found_attachments.update(file_converter.non_existing_links_set)
                 if file_converter.renamed_note_file:
-                    renamed_note_files.add(file_converter.renamed_note_file)
+                    self._set_of_renamed_note_files.add(file_converter.renamed_note_file)
                 file_converter.write_post_processed_content()
                 file_count += 1
+
+                if not self.conversion_settings.source_absolute_root == self.conversion_settings.export_folder_absolute:
+                    for attachment in file_converter.current_note_attachment_links.copyable_absolute:
+                        self._copy_attachment(attachment)
+
+                self._attachment_details[file] = {
+                    'all': file_converter.current_note_attachment_links.all,
+                    'existing': file_converter.current_note_attachment_links.existing,
+                    'non_existing': file_converter.current_note_attachment_links.non_existing,
+                    'copyable': file_converter.current_note_attachment_links.copyable,
+                    'copyable_absolute': file_converter.current_note_attachment_links.copyable_absolute,
+                    'non_copyable_relative': file_converter.current_note_attachment_links.non_copyable_relative,
+                    'non_copyable_absolute': file_converter.current_note_attachment_links.non_copyable_absolute,
+                }
+
                 if not config.yanom_globals.is_silent:
-                    bar()
-                # TODO to handle the case of new note replaced by attachment
-                #  if there is an attachment in the folder the notes are coming from
-                #  and that attachment has the same name as a converted note,
-                #  then the attachment will overwrite the note
+                    file_bar()
 
-        if not self.conversion_settings.source_absolute_root == self.conversion_settings.export_folder_absolute:
-            if not config.yanom_globals.is_silent:
-                print(f"Copying attachments")
-            with alive_bar(len(set_of_attachments), bar='blocks') as bar:
-                for attachment in set_of_attachments:
-                    attachment_path_relative_to_source = attachment.relative_to(
-                        self.conversion_settings.source_absolute_root)
-                    target_attachment_absolute_path = Path(self.conversion_settings.export_folder_absolute,
-                                                           attachment_path_relative_to_source
-                                                           )
-                    target_attachment_absolute_path.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy(attachment, target_attachment_absolute_path)
+                self._note_page_count = file_count
 
-                    if not config.yanom_globals.is_silent:
-                        bar()
+    def _copy_attachment(self, attachment):
+        attachment_path_relative_to_source = attachment.relative_to(
+            self.conversion_settings.source_absolute_root)
+        target_attachment_absolute_path = Path(self.conversion_settings.export_folder_absolute,
+                                               attachment_path_relative_to_source)
 
-        self._note_page_count = file_count
+        target_attachment_absolute_path.parent.mkdir(parents=True, exist_ok=True)
 
-        self._set_of_found_attachments = set_of_attachments
-        self._set_of_not_found_attachments = not_found_attachments
-        self._set_files_to_convert = set(files_to_convert)
-        self._set_of_created_note_files = set(set_created_note_files)
-        self._set_of_renamed_note_files = set(renamed_note_files)
+        shutil.copy(attachment, target_attachment_absolute_path)
 
     def get_list_of_orphan_files(self):
         set_of_all_files = {
@@ -178,11 +173,20 @@ class NotesConvertor:
             if Path(file).is_file()
         }
 
-        orphans = set_of_all_files \
-                  - self._set_files_to_convert \
-                  - self._set_of_found_attachments \
-                  - self._set_of_created_note_files \
-                  - self._set_of_renamed_note_files
+        export_file_suffix = file_mover.get_file_suffix_for(self.conversion_settings.export_format)
+        set_of_new_export_files = {
+            Path(self.conversion_settings.export_folder_absolute, f'{file.stem}{export_file_suffix}')
+            for file in self._set_files_to_convert
+        }
+
+        orphans = set_of_all_files
+        for file, attachments in self._attachment_details.items():
+            orphans = orphans \
+                      - self._set_files_to_convert \
+                      - set_of_new_export_files \
+                      - attachments['copyable_absolute'] \
+                      - attachments['non_copyable_absolute'] \
+                      - self._set_of_renamed_note_files
 
         return orphans
 

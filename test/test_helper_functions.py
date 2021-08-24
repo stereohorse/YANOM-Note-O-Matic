@@ -188,6 +188,37 @@ def test_generate_clean_filename(value, filename_options, expected, tmp_path):
     assert Path(tmp_path, result).exists()
 
 
+def test_clean_path_parts():
+    filename_options = helper_functions.FileNameOptions(max_length=64,
+                                                        allow_unicode=True,
+                                                        allow_uppercase=True,
+                                                        allow_non_alphanumeric=True,
+                                                        allow_spaces=False, space_replacement='-')
+    result = helper_functions.clean_path_parts(filename_options, ['hello hello', ''])
+
+    assert result == ['hello-hello', '']
+
+@pytest.mark.parametrize(
+    'parts, expected, max_length', [
+        (['123456789', '123456789'],
+         ['1', '12345678'],
+         9,
+         ),
+        (['123', '123'],
+         ['123', '123'],
+         64,
+         ),
+        (['1234', '1234567890'],
+         ['1234', '12345678'],
+         13,
+         ),
+    ]
+)
+def test_shorten_filename(parts, expected, max_length):
+    result = helper_functions.shorten_filename(parts, max_length)
+    assert result == expected
+
+
 @pytest.mark.parametrize(
     'string_to_test, filename_options, expected', [
         ("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
@@ -450,6 +481,14 @@ def test_next_available_directory_name_empty_dir(tmp_path):
     result = helper_functions.next_available_directory_name(empty)
 
     assert result == Path(tmp_path, 'empty')
+
+
+def test_next_available_directory_name_existing_file(tmp_path):
+    file = Path(tmp_path, 'existing_file')
+    file.touch()
+
+    with pytest.raises(ValueError):
+        result = helper_functions.next_available_directory_name(file)
 
 
 def test_next_available_directory_name_check_casting(tmp_path):

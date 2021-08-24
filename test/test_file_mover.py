@@ -26,7 +26,7 @@ import file_mover
     ]
 )
 def test_create_target_path(file_path, source_absolute, target_root, suffix, expected):
-    result = file_mover.create_target_file_path(file_path, source_absolute, target_root, suffix)
+    result = file_mover.create_target_absolute_file_path(file_path, source_absolute, target_root, suffix)
 
     assert result == Path(expected)
 

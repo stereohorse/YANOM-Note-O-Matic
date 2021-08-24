@@ -21,7 +21,7 @@ FileNameOptions = namedtuple('FileNameOptions',
                              )
 
 
-def file_uri_to_path(file_uri, path_class=PurePath):
+def file_uri_to_path(file_uri: str, path_class=PurePath):
     """
     This function returns a pathlib.PurePath object for the supplied file URI.
 
@@ -334,7 +334,7 @@ def find_valid_full_file_path(path_to_file: Path) -> Path:
     Parameters
     ----------
     path_to_file:
-        PAth object of the absolute path to a file
+        Path object of the absolute path to a file
 
     Returns
     -------
@@ -507,7 +507,7 @@ def file_extension_from_bytes(file_bytes: bytes) -> Optional[str]:
 
 
 def is_available_to_use(path_to_dir: Union[str, Path]) -> bool:
-    """Test if a directry is empty or does not exist.
+    """Test if a directory is empty or does not exist.
 
      A directory is considered available if it contains no files or directories other than hidden
      files beginning with dot '.'.  If the directory does not exist it is also available.
@@ -652,12 +652,12 @@ def is_pathname_valid(pathname: str) -> bool:
 
 def absolute_path_for(provided_path: Path, root_path: Path) -> Path:
     """
-    Return an absolute path inclding root_path if provided path is a relative path, else return provided_path
+    Return an absolute path including root_path if provided path is a relative path, else return provided_path
 
     Parameters
     ----------
     provided_path : Path
-        absolute or relative apth
+        absolute or relative path
     root_path : Path
         absolute path a provided relative path will be added to
 
@@ -665,7 +665,7 @@ def absolute_path_for(provided_path: Path, root_path: Path) -> Path:
     -------
     Path
         Absolute path if provided_path is relative and root_path is absolute.  Else will return
-        the provided_path whcih is an absolute path not on root_path.
+        the provided_path which is an absolute path not on root_path.
 
 
     """
@@ -682,7 +682,7 @@ def relative_path_for(provided_path: Path, root_path: Path) -> Path:
     Parameters
     ----------
     provided_path : Path
-        absolute or relative apth
+        absolute or relative path
     root_path : Path
         absolute path the relative path will stem from
 

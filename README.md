@@ -93,7 +93,10 @@ Future versions will support conversion from additional proprietary file formats
     - Option to include creation time in file name
     - Add file extension for filenames, for common file types, where extension is missing. This may occur when there are sync issues between desktop and server note station versions.
     - File name cleaning options - in manual mode user can choose to keep/remove spaces, unicode characters, uppercase characters, choose what character to replace spaces with.
-    - File name lengths - User can set a maximum file name length. Long note titles can cause issues on Windows where long paths are not enabled, on these systems YANOM restricts file names to 64 characters.  
+    - File name lengths - User can set a maximum file name length. Long note titles can cause issues on Windows where long paths are not enabled, on these systems YANOM restricts file names to 64 characters.
+    - Retrieve meta data
+    - Some ability to handle nsx files from systems with synchronisation issues, such as attachments with no names or extensions, missing data fields describing the data, however final exported content will be variable quality depending on the synchronisation issue.
+
 
 The formatting for QOwnNotes and Obsidian are variations on common Markdown formats optimised for those note systems.
 

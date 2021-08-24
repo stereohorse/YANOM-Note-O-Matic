@@ -316,7 +316,6 @@ def test_convert_html(tmp_path):
     nc.conversion_settings._source_absolute_root = Path(tmp_path)
 
     nc.convert_html()
-
     assert Path(tmp_path, 'file1.html').exists()
     assert Path(tmp_path, 'notes', 'file1.md').exists()
 
@@ -330,11 +329,16 @@ def test_convert_html_rename_existing_file(tmp_path):
     nc.conversion_settings.orphans = 'orphan'
     nc.conversion_settings._working_directory = Path(tmp_path)
     nc.conversion_settings.export_folder = Path(tmp_path, 'notes')
+    nc.conversion_settings.orphans = 'orphan'
 
     touch(Path(tmp_path, 'file1.html'))
+    # add link to existing file so it does not get moved to orphans
+    content_for_source = f'<a href="file1.md">existing file</a><a href="{Path(tmp_path, "notes", "file1.md")}">existing file</a>'
+    Path(tmp_path, 'file1.html').write_text(content_for_source)
+    # create the notes export folder and create the existing file
     Path(tmp_path, 'notes').mkdir()
     touch(Path(tmp_path, 'notes', 'file1.md'))
-    Path(nc.conversion_settings.export_folder).mkdir(exist_ok=True)
+
     nc.conversion_settings._source = Path(tmp_path, 'file1.html')
     nc.conversion_settings._source_absolute_root = Path(tmp_path)
 
@@ -344,7 +348,7 @@ def test_convert_html_rename_existing_file(tmp_path):
     assert Path(tmp_path, 'notes', 'file1.md').exists()
     assert Path(tmp_path, 'notes', 'file1-old-1.md').exists()
     assert Path(tmp_path, 'notes', 'file1-old-1.md').stat().st_size == 0
-    assert Path(tmp_path, 'notes', 'file1.md').stat().st_size == 1
+    assert Path(tmp_path, 'notes', 'file1.md').stat().st_size > 0
 
 
 def test_process_files(tmp_path):
@@ -362,6 +366,61 @@ def test_process_files(tmp_path):
     nc.process_files(files_to_convert, file_converter)
 
     assert nc._note_page_count == 1
+
+
+def test_process_files_copy_attachments(tmp_path):
+    args = {'source': tmp_path}
+    touch(Path(tmp_path, 'file1.html'))
+    file1_content = '<a href="attachments/a-file.pdf">an attachment</a>'
+    Path(tmp_path, 'file1.html').write_text(file1_content)
+    Path(tmp_path, 'attachments').mkdir()
+    Path(tmp_path, 'attachments', 'a-file.pdf').touch()
+
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
+    nc = notes_converter.NotesConvertor(args, cd)
+    nc.conversion_settings = conversion_settings.ConversionSettings()
+    nc.conversion_settings.export_folder = Path(tmp_path, 'notes')
+    nc.conversion_settings._source = Path(tmp_path, 'file1.html')
+    nc.conversion_settings._source_absolute_root = Path(tmp_path)
+
+    files_to_convert = [Path(tmp_path, 'file1.html')]
+    file_converter = file_converter_HTML_to_MD.HTMLToMDConverter(nc.conversion_settings, files_to_convert)
+
+    nc.process_files(files_to_convert, file_converter)
+
+    assert nc._note_page_count == 1
+    assert Path(tmp_path, 'notes', 'file1.md').exists()
+    assert Path(tmp_path, 'notes', 'attachments').exists()
+    assert Path(tmp_path, 'notes', 'attachments', 'a-file.pdf').exists()
+
+@pytest.mark.parametrize(
+    'silent', [True, False]
+)
+def test_process_files_copy_attachments_source_and_export_same_folder(tmp_path, silent):
+    config.yanom_globals.is_silent = silent
+    args = {'source': tmp_path}
+
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
+    nc = notes_converter.NotesConvertor(args, cd)
+    nc.conversion_settings = conversion_settings.ConversionSettings()
+    nc.conversion_settings.export_folder = Path(tmp_path)
+
+    touch(Path(tmp_path, 'file1.html'))
+    file1_content = '<a href="attachments/a-file.pdf">an attachment</a>'
+    Path(tmp_path, 'file1.html').write_text(file1_content)
+    Path(tmp_path, 'attachments').mkdir()
+    Path(tmp_path, 'attachments', 'a-file.pdf').touch()
+
+    nc.conversion_settings._source = Path(tmp_path, 'file1.html')
+    nc.conversion_settings._source_absolute_root = Path(tmp_path)
+
+    files_to_convert = [Path(tmp_path, 'file1.html')]
+    file_converter = file_converter_HTML_to_MD.HTMLToMDConverter(nc.conversion_settings, files_to_convert)
+
+    nc.process_files(files_to_convert, file_converter)
+
+    assert nc._note_page_count == 1
+    assert Path(tmp_path, 'file1.md').exists()
 
 
 @pytest.mark.parametrize(
@@ -507,12 +566,17 @@ def test_get_list_of_orphan_files(tmp_path):
     nc._set_files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md'),
                                 Path(tmp_path, 'some_folder/data/my_notebook/note.md'),
                                 }
-    nc._set_of_found_attachments = {
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png'),
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf'),
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf'),
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png'),
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf')
+    nc._attachment_details = {
+        'nine.md': {
+            'copyable_absolute': {
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png'),
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf'),
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf'),
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png'),
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf'),
+            },
+            'non_copyable_absolute': {'fake'},
+        },
     }
     files = nc.get_list_of_orphan_files()
 
@@ -550,12 +614,17 @@ def test_handle_orphan_files_as_required_orphans_set_to_orphans_folder(tmp_path)
     nc._set_files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md'),
                                 Path(tmp_path, 'some_folder/data/my_notebook/note.md'),
                                 }
-    nc._set_of_found_attachments = {
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png'),
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf'),
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf'),
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png'),
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf')
+    nc._attachment_details = {
+        'nine.md': {
+            'copyable_absolute': {
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png'),
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf'),
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf'),
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png'),
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf'),
+            },
+            'non_copyable_absolute': {'fake'},
+        },
     }
     nc.conversion_settings.orphans = 'orphan'
 
@@ -603,12 +672,17 @@ def test_handle_orphan_files_as_required_orphans_copy(tmp_path):
     nc._set_files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md'),
                                 Path(tmp_path, 'some_folder/data/my_notebook/note.md'),
                                 }
-    nc._set_of_found_attachments = {
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png'),
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf'),
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf'),
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png'),
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf')
+    nc._attachment_details = {
+        'nine.md': {
+            'copyable_absolute': {
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png'),
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf'),
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf'),
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png'),
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf'),
+            },
+            'non_copyable_absolute': {'fake'},
+        },
     }
     nc.conversion_settings.orphans = 'copy'
 
@@ -654,13 +728,19 @@ def test_handle_orphan_files_as_required_orphans_ignore(tmp_path):
     nc.conversion_settings._source_absolute_root = Path(tmp_path)
     nc.conversion_settings.export_folder = Path(tmp_path, 'notes')
     nc._set_files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md'),
-                                Path(tmp_path, 'some_folder/data/my_notebook/note.md')}
-    nc._set_of_found_attachments = {
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png'),
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf'),
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf'),
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png'),
-        Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf')
+                                Path(tmp_path, 'some_folder/data/my_notebook/note.md'),
+                                }
+    nc._attachment_details = {
+        'nine.md': {
+            'copyable_absolute': {
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png'),
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf'),
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf'),
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png'),
+                Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf'),
+            },
+            'non_copyable_absolute': {'fake'},
+        },
     }
     nc.conversion_settings.orphans = 'ignore'
 

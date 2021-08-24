@@ -91,22 +91,22 @@ class NSXFile:
         if not config.yanom_globals.is_silent:
             print(msg)
 
-    def build_list_of_attachments(self) -> list[Attachment]:
-        """
-        Generate and return a list of namedtuple of attachment details.
-
-        Returns
-        =======
-        list[Attachment]
-            list of Attachment named tuples that hold sn_attachment objects and the note title
-            the attachment comes from.
-
-        """
-
-        return [Attachment(attachment, self._note_pages[note_page_id].title)
-                for note_page_id in self._note_pages
-                for attachment in self._note_pages[note_page_id].attachments.values()
-                ]
+    # def build_list_of_attachments(self) -> list[Attachment]:
+    #     """
+    #     Generate and return a list of namedtuple of attachment details.
+    #
+    #     Returns
+    #     =======
+    #     list[Attachment]
+    #         list of Attachment named tuples that hold sn_attachment objects and the note title
+    #         the attachment comes from.
+    #
+    #     """
+    #
+    #     return [Attachment(attachment, self._note_pages[note_page_id].title)
+    #             for note_page_id in self._note_pages
+    #             for attachment in self._note_pages[note_page_id].attachments.values()
+    #             ]
 
     def build_dictionary_of_inter_note_links(self):
         all_note_pages = list(self._note_pages.values())
