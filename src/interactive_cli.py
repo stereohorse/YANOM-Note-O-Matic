@@ -1,4 +1,5 @@
 import os
+import sys
 from abc import ABC, abstractmethod
 import copy
 import logging
@@ -73,7 +74,6 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
 
     def run_cli(self):
         self.logger.debug("Running start up interactive command line")
-        show_app_title()
 
         self._ask_and_set_conversion_input()
 
@@ -88,15 +88,19 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         return self._current_conversion_settings
 
     def _ask_and_set_conversion_input(self):
+        choices = self._default_settings.valid_conversion_inputs
+        choices.append('quit')
         conversion_input_prompt = {
             'type': 'list',
             'name': 'conversion_input',
             'message': 'What do you wish to convert?',
-            'choices': self._default_settings.valid_conversion_inputs,
+            'choices': choices,
             'default': self._default_settings.conversion_input,
         }
         answer = prompt(conversion_input_prompt, style=self.style)
         _exit_if_keyboard_interrupt(answer)
+        if answer['conversion_input'] == 'quit':
+            sys.exit(0)
         self._current_conversion_settings.conversion_input = answer['conversion_input']
         if answer['conversion_input'] == 'nsx':
             self._current_conversion_settings.metadata_schema = 'title, ctime, mtime, tag'

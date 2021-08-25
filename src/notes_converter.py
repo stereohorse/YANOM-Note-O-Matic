@@ -54,7 +54,7 @@ class NotesConvertor:
 
         self.output_results_if_not_silent_mode()
         self.log_results()
-        self.logger.info("Processing Completed - exiting normally")
+        self.logger.info("Processing Completed")
 
     def convert_markdown(self):
         with Timer(name="md_conversion", logger=self.logger.info, silent=bool(config.yanom_globals.is_silent)):

@@ -10,6 +10,7 @@ import sys
 import config
 from config_data import ConfigData
 from helper_functions import find_working_directory
+import interactive_cli
 from notes_converter import NotesConvertor
 
 
@@ -112,21 +113,36 @@ def setup_logging(working_path):
 
 def main(command_line_sys_argv=sys.argv):
     working_directory, working_directory_message = find_working_directory()
+
     logger = setup_logging(working_directory)
     logger.info('\n\n\n\n\n\n')
     logger.info(f'YANOM startup - version {config.yanom_globals.version}\n')
     logger.debug(working_directory_message)
     command_line_args = command_line_parser(command_line_sys_argv[1:], logger)
     set_logging_level(command_line_args['log'], logger)
+
+    if command_line_args['silent'] and not command_line_args['ini']:
+        command_line_args['ini'] = True
+
     config.yanom_globals.is_silent = command_line_args['silent']
+
     run_yanom(command_line_args)
 
 
 def run_yanom(command_line_args):
+    if not command_line_args['silent']:
+        interactive_cli.show_app_title()
+
     config_data = ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     config_data.parse_config_file()
+
     notes_converter = NotesConvertor(command_line_args, config_data)
-    notes_converter.convert_notes()
+
+    if not command_line_args['ini']:
+        while True:
+            notes_converter.convert_notes()
+    else:
+        notes_converter.convert_notes()
 
 
 def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
