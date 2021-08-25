@@ -3,7 +3,7 @@
 This Dockerfile will 
  - Build an image based off an official python image
  - Uses the YANOM source code to build a pyinstaller package
- - Moves the package into a folder caled `yanom`, adds a `data` directory to it and a copy of `config.ini`
+ - Moves the package into a folder called `yanom`, adds a `data` directory to it and a copy of `config.ini`
  - Creates a tarball of the yanom folder
 
 
@@ -12,16 +12,14 @@ This docker file is used along with the `yanom-prod-deb10-slim-buster` dockerfil
 There is a script `scripts/build-docker-image.sh` that will automate the process
 
 ## Additional files in this folder
-`.dockerignore` can be used to minimise the ammount coppied to the image
-`yanom.spec` is a yanom.spec file that is used by pyinstaller inside the docker image.  
+`.dockerignore` can be used to minimise the amount copied to the image
+`yanom.spec` is a file that is used by Pyinstaller inside the docker image.  
 
-Note- a generic yanom.spec can not be created on the fly as pyinstaller can not find `pyfiglets` or 
+Note- a generic `yanom.spec` can not be created on the fly as Pyinstaller can not find `pyfiglets` or 
 
-Modifications are in the dats line and 3 lines related to hidden imports
+Modifications are in the datas line and 3 lines related to hidden imports
 
-
-
-
+# Modification 1
 Add value to `datas` to find the `pyfiglet` fonts
 
 ```

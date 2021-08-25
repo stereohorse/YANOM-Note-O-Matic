@@ -12,7 +12,7 @@
 # to the version image tag e.g. `1.2.0-2`.  If the second argument is zero or missing push will push latest and
 # an image tag image e.g. `1.2.0`
 APP_NAME="yanom"
-VERSION="1.4.0"
+VERSION="1.4.1"
 APP_TAR="yanom-$VERSION-debian10-slim-buster.tar.gz"
 DOCKER_REPO="thehistorianandthegeek"
 DEV_IMAGE="yanom-dev-deb10"
