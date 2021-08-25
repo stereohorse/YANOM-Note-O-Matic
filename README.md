@@ -124,7 +124,9 @@ The packaged versions include the required python environment and pandoc.
 
 Packaged versions of YANOM are available.  Please see the wiki for how to install and use them.
 
-Also, please note the Mac OSX package is slow to start and can take 15 or more seconds to launch. Running a second time from the same terminal window it is usually just a few seconds.
+Also, please note the Mac OSX package is slow to start and can take 20 or more seconds to launch.   The windows versoin takes around 10 seconds to start.
+
+The Mac OSX version is code signed and has beennotarised by apple and should not give any security warnings.
 
 ### Using the docker image
 A docker image has been created and is available on [docker hub](https://hub.docker.com/r/thehistorianandthegeek/yanom).
@@ -137,7 +139,7 @@ Download the source code from [git hub](https://github.com/kevindurston21/YANOM-
 
 Un-zip the downloaded file.
 
-Use `pipenv install` to configure a virtual environment and install the required dependencies.  If you are going to develop the code use `pipenv install --dev` to install additional development dependencies.
+Use `pip install -r requirements.txt` to install the required dependencies to  run the code.  If you are going to develop the code use `pip install -r requirements_dev.txt` to install additional development dependencies.
 
 >NOTE it has been seen in some linux versions that a dependency for the package `toml` was not installed automatically.   The symptoms seen were that when a file was converted using `toml` as the front matter format YANOM would crash.  The workaround was to use `pipenv install toml` and then YANOM would run OK.
 
@@ -159,7 +161,7 @@ You can run all tests and create html coverage report if you use this command in
 
 `pytest --cov-report html:cov_html test/ --cov=src`
 
-Current coverage is currently 93%
+Current coverage is currently 91%
 
 ### End-to-end tests
 

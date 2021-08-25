@@ -9,7 +9,21 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Increment the major version when significantly overhaul the user interface, or rewrite all internals.
 
 
-## [1.4.0]  20201-08-14
+## [1.4.1]  2021-08-26
+
+### Added
+- Mac package is now code signed and notarised by apple. There should be no security alerts when run.
+- YANOM now loops back to the command line interface after a conversion.  Choose 'quit' to exit.  If using the `-i` option for using `config.ini` yanom only runs once and exits.
+
+### Fixed
+- Windows build script updated and is consistent in folders used for the build.
+
+### Other Changes
+- Mac package now has a set of python based build modules to build, notarise and create a deployment zip file, instead of the bash script previously used.
+- Mac and windows packages are now both one-file packages rather than one-directory packages.
+
+
+## [1.4.0]  2021-08-14
 
 ### Added
 - Options to select file and directory name cleaning
