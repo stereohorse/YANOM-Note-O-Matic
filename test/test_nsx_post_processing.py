@@ -91,7 +91,6 @@ title: Page 1 title
 
 - [x] Check 1
 
-
 Pie Chart
 
 ![](attachments/replaced_id_number.png)
@@ -142,7 +141,6 @@ def test_post_process_note_page_no_front_matter_and_no_iframe_included_in_result
     note_1._attachments = {'an_attachment': attachments}
 
     expected = """- [x] Check 1
-
 
 Pie Chart
 
@@ -197,7 +195,6 @@ title: Page 1 title
 ---
 
 - [x] Check 1
-
 
 Pie Chart
 

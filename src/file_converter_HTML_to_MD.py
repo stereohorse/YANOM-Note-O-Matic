@@ -26,15 +26,15 @@ class HTMLToMDConverter(FileConverter):
     def post_process_content(self):
         self._post_processed_content = self._converted_content
         self.post_process_obsidian_image_links_if_required()
-        self.add_check_lists()
+        self.update_checklists()
         self.add_meta_data_if_required()
         if self._iframes_dict:
             self.logger.debug(f'Add iframes to Markdown content')
             self._post_processed_content = post_process_iframes_to_markdown(self._post_processed_content, self._iframes_dict)
         self.add_one_last_line_break()
 
-    def add_check_lists(self):
-        self._post_processed_content = self._checklist_processor.add_checklist_items_to(self._post_processed_content)
+    def update_checklists(self):
+        self._post_processed_content = self._checklist_processor.checklist_post_processing(self._post_processed_content)
 
     def add_one_last_line_break(self):
         self._post_processed_content = f'{self._post_processed_content}\n'

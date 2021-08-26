@@ -36,7 +36,7 @@ class TestHTMLToMDConverter(unittest.TestCase):
         self.file_converter.convert_content()
         self.file_converter._metadata_processor._conversion_settings.front_matter_format = 'toml'  # set toml and confirm content is forced back into yaml
         self.file_converter.post_process_content()
-        self.assertEqual('---\ntitle: this is test2\n---\n\n- [x] Check 1\n- [ ] Check 2\n<img src="filepath/image.png" width="600" />\n\n\n<iframe allowfullscreen="" anchorhref="https://www.youtube.com/watch?v=SqdxNUMO2cg" frameborder="0" height="315" src="https://www.youtube.com/embed/SqdxNUMO2cg" width="420" youtube="true"> </iframe>\n\n',
+        self.assertEqual('---\ntitle: this is test2\n---\n\n- [x] Check 1\n\n- [ ] Check 2\n\n<img src="filepath/image.png" width="600" />\n\n\n<iframe allowfullscreen="" anchorhref="https://www.youtube.com/watch?v=SqdxNUMO2cg" frameborder="0" height="315" src="https://www.youtube.com/embed/SqdxNUMO2cg" width="420" youtube="true"> </iframe>\n\n',
                          self.file_converter._post_processed_content,
                          'post processing failed'
                          )
@@ -49,7 +49,7 @@ class TestHTMLToMDConverter(unittest.TestCase):
         self.file_converter.pre_process_content()
         self.file_converter.convert_content()
         self.file_converter.post_process_content()
-        assert self.file_converter._post_processed_content == '---\ntitle: this is test2\n---\n\n- [x] Check 1\n- [ ] Check 2\n![|600](filepath/image.png)\n'
+        assert self.file_converter._post_processed_content == '---\ntitle: this is test2\n---\n\n- [x] Check 1\n\n- [ ] Check 2\n\n![|600](filepath/image.png)\n'
 
     def test_parse_metadata_if_required(self):
         self.file_converter._conversion_settings.export_format = 'obsidian'

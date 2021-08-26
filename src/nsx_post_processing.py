@@ -1,5 +1,6 @@
 import logging
 
+import checklist_processing
 import config
 from iframe_processing import post_process_iframes_to_markdown
 
@@ -34,7 +35,7 @@ class NoteStationPostProcessing:
     def _add_check_lists(self):
         if self._note.pre_processor.checklist_processor.list_of_checklist_items:
             self.logger.debug(f"Adding checklists to page")
-            self._post_processed_content = self._note.pre_processor.checklist_processor.add_checklist_items_to(self._post_processed_content)
+            self._post_processed_content = self._note.pre_processor.checklist_processor.checklist_post_processing(self._post_processed_content)
 
     def _add_iframes(self):
         if self._note.pre_processor.iframes_dict:
