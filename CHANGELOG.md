@@ -8,6 +8,26 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Increment the minor version number when adding a new feature or set of features and any current bug fixes not yet released
 - Increment the major version when significantly overhaul the user interface, or rewrite all internals.
 
+## [1.5.0]  2021-08-27
+
+### Added
+- Checklists in NSX files formatted in html code other than the synology checklist format now also export as checklists.
+- Checklists in HTML/NSX files formatted as unordered lists, with checkboxes as list items, now convert to Markdown.
+- Checklist items now maintain links, such as to web page or email, as working links when converted to Markdown.
+- Checklist items on the same line in HTML/NSX will be converted and in Markdown.  Checklist items following the first one on a line will be indented as child checklist items
+```
+        [x] An item [x] another item
+        becomes,
+        - [x] An item
+            - [x] another item
+```
+
+### Fixed
+- Checklist items in HTML/NSX on the same line will now be converted
+- Markdown to HTML conversions - checklist items are now enabled in the exported html.  Previously the status was set to disabled and were not clickable.
+
+### Other Changes
+- Rewrite of checklist processing.
 
 ## [1.4.1]  2021-08-26
 

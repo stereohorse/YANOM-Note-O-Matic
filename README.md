@@ -71,6 +71,7 @@ Future versions will support conversion from additional proprietary file formats
   - Bulleted lists
   - Numbered lists
   - Checklists
+    - Checklist items that have hyperlinks will maintain the links in exported markdown
   - Tables
   - Images 
   - Image width where supported in Markdown 
@@ -126,7 +127,7 @@ Packaged versions of YANOM are available.  Please see the wiki for how to instal
 
 Also, please note the Mac OSX package is slow to start and can take 20 or more seconds to launch.   The windows versoin takes around 10 seconds to start.
 
-The Mac OSX version is code signed and has beennotarised by apple and should not give any security warnings.
+The Mac OSX version is code signed and has been notarised by apple, and should not give any security warnings.
 
 ### Using the docker image
 A docker image has been created and is available on [docker hub](https://hub.docker.com/r/thehistorianandthegeek/yanom).

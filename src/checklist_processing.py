@@ -187,10 +187,10 @@ class HTMLInputMDOutputChecklistProcessor(ChecklistProcessor):
         on that line.
         These sibling inputtags need an indent to make them a child checklist item.
         so,
-        [x] An item [x] and another item
+        [x] An item [x] another item
         becomes,
-        -[x] An item
-            -[x] and another item
+        - [x] An item
+            - [x] another item
 
         Return a dict with the key = index of the sibling and indent value = 1 e.g. {2:1, 3:1}.
 
