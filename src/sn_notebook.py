@@ -16,7 +16,10 @@ def what_module_is_this():
 
 class Notebook:
     def __init__(self, nsx_file, notebook_id):
-        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.'
+                                        f'{what_module_is_this()}.'
+                                        f'{self.__class__.__name__}'
+                                        )
         self.logger.setLevel(config.yanom_globals.logger_level)
         self.nsx_file = nsx_file
         self.notebook_id = notebook_id
@@ -124,7 +127,7 @@ class Notebook:
             try:
                 Path(self.full_path_to_notebook, self.conversion_settings.attachment_folder_name).mkdir()
             except FileNotFoundError as e:
-                msg = f'Unable to create attcahment folder there is a problem with the path.\n{e}'
+                msg = f'Unable to create attachment folder there is a problem with the path.\n{e}'
                 if helper_functions.are_windows_long_paths_disabled():
                     msg = f"{msg}\n Windows long path names are not enabled check path length"
                 self.logger.error(f'{msg}')

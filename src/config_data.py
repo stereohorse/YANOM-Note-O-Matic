@@ -34,7 +34,10 @@ class ConfigData(ConfigParser):
     def __init__(self, config_file, default_quick_setting, **kwargs):
         super().__init__(**kwargs)
         # Note: allow_no_value=True  allows for #comments in the ini file
-        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.'
+                                        f'{what_module_is_this()}.'
+                                        f'{self.__class__.__name__}'
+                                        )
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._config_file = config_file
         self._default_quick_setting = default_quick_setting
@@ -156,7 +159,7 @@ class ConfigData(ConfigParser):
         self._conversion_settings.allow_non_alphanumeric_in_filenames = \
             self.getboolean('file_options', 'allow_non_alphanumeric_in_filenames')
         self._conversion_settings.filename_spaces_replaced_by = self['file_options']['filename_spaces_replaced_by']
-        self._conversion_settings.maximum_file_or_directory_name_length = self['file_options']['maximum_file_or_directory_name_length']
+        self._conversion_settings.max_file_or_directory_name_length = self['file_options']['max_file_or_directory_name_length']
         self._conversion_settings.orphans = self['file_options']['orphans']
         self._conversion_settings.make_absolute = self.getboolean('file_options', 'make_absolute')
 
@@ -314,7 +317,7 @@ class ConfigData(ConfigParser):
                 'allow_non_alphanumeric_in_filenames': self._conversion_settings.allow_non_alphanumeric_in_filenames,
                 'creation_time_in_exported_file_name': self._conversion_settings.allow_uppercase_in_filenames,
                 '    # If True creation time as `yyyymmddhhmm-` will be added as prefix to file name': None,
-                'maximum_file_or_directory_name_length': self._conversion_settings.maximum_file_or_directory_name_length,
+                'max_file_or_directory_name_length': self._conversion_settings.max_file_or_directory_name_length,
                 '    # The following options apply to directory names, and currently only apply to html and markdown conversions.': None,
                 'orphans': self._conversion_settings.orphans,
                 '    # orphans are files that are not linked to any notes.  Valid Values are': None,

@@ -5,6 +5,7 @@ import copy
 import logging
 from pathlib import Path
 
+from conversion_settings import ConversionSettings
 from pyfiglet import Figlet
 from PyInquirer.prompt import prompt
 import PyInquirer
@@ -60,17 +61,28 @@ class InquireCommandLineInterface(ABC):
 
 class StartUpCommandLineInterface(InquireCommandLineInterface):
     """
-    Command line interface to run on program startup.
+    Command line interface to run on program startup and set user conversion settings.
 
-    Returns a configured child of ConversionSettings class
+    A ConversionSettings object with default values to be used to display defaults in questions.  A copy of the
+    default conversion settings is made and is modified by the user selections.  The user configured conversion
+    settings object with the user selected changes is returned.
+
+    Parameters
+    ----------
+    default_conversion_settings : ConversionSettings
+        A ConversionSettings object with default values to be used to display defaults in questions.
+
     """
-    def __init__(self, config_ini_conversion_settings):
+    def __init__(self, default_conversion_settings: ConversionSettings):
         super(StartUpCommandLineInterface, self).__init__()
-        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.'
+                                        f'{what_module_is_this()}.'
+                                        f'{self.__class__.__name__}'
+                                        )
         self.logger.setLevel(config.yanom_globals.logger_level)
-        self._default_settings = config_ini_conversion_settings
-        self._current_conversion_settings = copy.deepcopy(self._default_settings)
-        self._current_conversion_settings.set_quick_setting('manual')
+        self._default_settings = default_conversion_settings
+        self._cli_conversion_settings = copy.deepcopy(self._default_settings)
+        self._cli_conversion_settings.set_quick_setting('manual')
         pass
 
     def run_cli(self):
@@ -78,15 +90,15 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
 
         self._ask_and_set_conversion_input()
 
-        if self._current_conversion_settings.conversion_input == 'markdown':
+        if self._cli_conversion_settings.conversion_input == 'markdown':
             self._ask_markdown_conversion_options()
-        if self._current_conversion_settings.conversion_input == 'html':
+        if self._cli_conversion_settings.conversion_input == 'html':
             self._ask_html_conversion_options()
-        if self._current_conversion_settings.conversion_input == 'nsx':
+        if self._cli_conversion_settings.conversion_input == 'nsx':
             self._ask_nsx_conversion_options()
 
-        self.logger.info(f"Returning settings for {self._current_conversion_settings}")
-        return self._current_conversion_settings
+        self.logger.info(f"Returning settings for {self._cli_conversion_settings}")
+        return self._cli_conversion_settings
 
     def _ask_and_set_conversion_input(self):
         choices = self._default_settings.valid_conversion_inputs
@@ -102,22 +114,22 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         _exit_if_keyboard_interrupt(answer)
         if answer['conversion_input'] == 'quit':
             sys.exit(0)
-        self._current_conversion_settings.conversion_input = answer['conversion_input']
+        self._cli_conversion_settings.conversion_input = answer['conversion_input']
         if answer['conversion_input'] == 'nsx':
-            self._current_conversion_settings.metadata_schema = 'title, ctime, mtime, tag'
+            self._cli_conversion_settings.metadata_schema = 'title, ctime, mtime, tag'
 
     def _ask_markdown_conversion_options(self):
         self._ask_and_set_markdown_input_format()
         self._ask_and_set_source()
         self._ask_and_set_export_folder_name()
 
-        if self._current_conversion_settings.quick_setting == 'manual':
+        if self._cli_conversion_settings.quick_setting == 'manual':
             self._ask_and_set_export_format()
-            if self._current_conversion_settings.export_format == self._current_conversion_settings.markdown_conversion_input:
+            if self._cli_conversion_settings.export_format == self._cli_conversion_settings.markdown_conversion_input:
                 self._nothing_to_convert()
-            if not self._current_conversion_settings.export_format == 'html':
+            if not self._cli_conversion_settings.export_format == 'html':
                 self._ask_and_set_front_matter_format()
-                if self._current_conversion_settings.front_matter_format != 'none':
+                if self._cli_conversion_settings.front_matter_format != 'none':
                     self._ask_and_set_metadata_details()
                     self._ask_and_set_metadata_schema()
                 else:
@@ -130,17 +142,17 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         self._ask_and_set_source()
         self._ask_and_set_export_folder_name()
 
-        if self._current_conversion_settings.quick_setting == 'manual':
+        if self._cli_conversion_settings.quick_setting == 'manual':
             self._ask_and_set_export_format()
             self._ask_and_set_front_matter_format()
-            if self._current_conversion_settings.front_matter_format != 'none':
+            if self._cli_conversion_settings.front_matter_format != 'none':
                 self._ask_and_set_metadata_schema()
             self._ask_and_set_orphans_option()
             self._ask_make_relative_links_absolute()
 
     def _ask_and_set_orphans_option(self):
         orphans_choices = self._default_settings.valid_orphan_values
-        if self._current_conversion_settings.source_absolute_root == self._current_conversion_settings.export_folder_absolute:
+        if self._cli_conversion_settings.source_absolute_root == self._cli_conversion_settings.export_folder_absolute:
             orphans_choices.remove('move')
         orphans = {
             'type': 'list',
@@ -151,7 +163,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         }
         answer = prompt(orphans, style=self.style)
         _exit_if_keyboard_interrupt(answer)
-        self._current_conversion_settings.orphans = answer['orphans']
+        self._cli_conversion_settings.orphans = answer['orphans']
 
     def _ask_make_relative_links_absolute(self):
         questions = [
@@ -165,7 +177,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
 
         answer = prompt(questions, style=self.style)
         _exit_if_keyboard_interrupt(answer)
-        self._current_conversion_settings.make_absolute = answer['make_absolute']
+        self._cli_conversion_settings.make_absolute = answer['make_absolute']
 
     def _nothing_to_convert(self):
         self.logger.warning('Input and output formats are the same nothing to convert. Exiting.')
@@ -183,11 +195,11 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         }
         answer = prompt(markdown_conversion_input, style=self.style)
         _exit_if_keyboard_interrupt(answer)
-        self._current_conversion_settings.markdown_conversion_input = answer['markdown_conversion_input']
+        self._cli_conversion_settings.markdown_conversion_input = answer['markdown_conversion_input']
 
     def _ask_and_set_front_matter_format(self):
-        if self._current_conversion_settings.export_format == 'pandoc_markdown':
-            self._current_conversion_settings.front_matter_format = 'yaml'
+        if self._cli_conversion_settings.export_format == 'pandoc_markdown':
+            self._cli_conversion_settings.front_matter_format = 'yaml'
             return
 
         front_matter_format = {
@@ -199,16 +211,16 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         }
         answer = prompt(front_matter_format, style=self.style)
         _exit_if_keyboard_interrupt(answer)
-        self._current_conversion_settings.front_matter_format = answer['front_matter_format']
+        self._cli_conversion_settings.front_matter_format = answer['front_matter_format']
 
     def _ask_nsx_conversion_options(self):
         self._ask_and_set_conversion_quick_setting()
         self._ask_and_set_source()
         self._ask_and_set_export_folder_name()
 
-        if self._current_conversion_settings.quick_setting == 'manual':
+        if self._cli_conversion_settings.quick_setting == 'manual':
             self._ask_and_set_export_format()
-            if self._current_conversion_settings.export_format != 'html':
+            if self._cli_conversion_settings.export_format != 'html':
                 self._ask_markdown_metadata_questions()
             self._ask_and_set_table_details()
             self._ask_and_set_chart_options()
@@ -219,9 +231,9 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
 
     def _ask_markdown_metadata_questions(self):
         self._ask_and_set_front_matter_format()
-        if self._current_conversion_settings.front_matter_format != 'none':
+        if self._cli_conversion_settings.front_matter_format != 'none':
             self._ask_and_set_metadata_details()
-            if self._current_conversion_settings.front_matter_format == 'text':
+            if self._cli_conversion_settings.front_matter_format == 'text':
                 self._ask_and_set_tag_prefix()
             self._ask_and_set_metadata_schema()
 
@@ -235,8 +247,8 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         }
         answer = prompt(quick_setting_prompt, style=self.style)
         _exit_if_keyboard_interrupt(answer)
-        self._current_conversion_settings.set_quick_setting(answer['quick_setting'])
-        self._current_conversion_settings.conversion_input = self._current_conversion_settings.conversion_input
+        self._cli_conversion_settings.set_quick_setting(answer['quick_setting'])
+        self._cli_conversion_settings.conversion_input = self._cli_conversion_settings.conversion_input
 
     def _ask_and_set_export_format(self):
         export_format_prompt = {
@@ -248,14 +260,14 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         }
         answer = prompt(export_format_prompt, style=self.style)
         _exit_if_keyboard_interrupt(answer)
-        self._current_conversion_settings.export_format = answer['export_format']
+        self._cli_conversion_settings.export_format = answer['export_format']
 
     def _set_meta_data_for_html(self):
-        self._current_conversion_settings.include_meta_data = True
-        self._current_conversion_settings.insert_title = True
-        self._current_conversion_settings.insert_creation_time = True
-        self._current_conversion_settings.insert_modified_time = True
-        self._current_conversion_settings.include_tags = True
+        self._cli_conversion_settings.include_meta_data = True
+        self._cli_conversion_settings.insert_title = True
+        self._cli_conversion_settings.insert_creation_time = True
+        self._cli_conversion_settings.insert_modified_time = True
+        self._cli_conversion_settings.include_tags = True
 
     def _ask_and_set_metadata_details(self):
         questions = [
@@ -281,23 +293,24 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         _exit_if_keyboard_interrupt(answers)
 
         if 'Spaces in tags' in answers['metadata_details']:
-            self._current_conversion_settings.spaces_in_tags = True
+            self._cli_conversion_settings.spaces_in_tags = True
 
         if 'Split tags' in answers['metadata_details']:
-            self._current_conversion_settings.split_tags = True
+            self._cli_conversion_settings.split_tags = True
 
     def _ask_and_set_metadata_schema(self):
         questions = [
             {
                 'type': 'input',
                 'name': 'metadata_schema',
-                'message': 'Enter comma delimited list of metadata tags to look for.  Leave blank to use any tags found.',
-                'default': ", ".join(self._current_conversion_settings.metadata_schema)
+                'message': 'Enter comma delimited list of metadata tags to search for.  '
+                           'Leave blank to use any tags found.',
+                'default': ", ".join(self._cli_conversion_settings.metadata_schema)
             },
         ]
         answer = prompt(questions, style=self.style)
         _exit_if_keyboard_interrupt(answer)
-        self._current_conversion_settings.metadata_schema = answer['metadata_schema']
+        self._cli_conversion_settings.metadata_schema = answer['metadata_schema']
 
     def _ask_and_set_table_details(self):
         questions = [
@@ -323,10 +336,10 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         _exit_if_keyboard_interrupt(answers)
 
         if 'First row of table as header row' in answers['table_options']:
-            self._current_conversion_settings.first_row_as_header = True
+            self._cli_conversion_settings.first_row_as_header = True
 
         if 'First column of table as header column' in answers['table_options']:
-            self._current_conversion_settings.first_column_as_header = True
+            self._cli_conversion_settings.first_column_as_header = True
 
     def _ask_and_set_chart_options(self):
         questions = [
@@ -355,9 +368,10 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         answers = prompt(questions, style=self.style)
         _exit_if_keyboard_interrupt(answers)
 
-        self._current_conversion_settings.chart_image = 'Include an image of chart' in answers['chart_options']
-        self._current_conversion_settings.chart_csv = 'Include a csv file of chart data' in answers['chart_options']
-        self._current_conversion_settings.chart_data_table = 'Include a data table of chart data' in answers['chart_options']
+        self._cli_conversion_settings.chart_image = 'Include an image of chart' in answers['chart_options']
+        self._cli_conversion_settings.chart_csv = 'Include a csv file of chart data' in answers['chart_options']
+        self._cli_conversion_settings.chart_data_table = 'Include a data table of chart data' \
+                                                         in answers['chart_options']
 
     def _ask_and_set_tag_prefix(self):
         questions = [
@@ -371,14 +385,14 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
 
         answer = prompt(questions, style=self.style)
         _exit_if_keyboard_interrupt(answer)
-        self._current_conversion_settings.tag_prefix = answer['tag_prefix']
+        self._cli_conversion_settings.tag_prefix = answer['tag_prefix']
 
     def _ask_and_set_source(self):
         def make_absolute(path):
             if path.is_absolute():
                 return path
 
-            return Path(self._current_conversion_settings.working_directory,
+            return Path(self._cli_conversion_settings.working_directory,
                         config.yanom_globals.data_dir,
                         path
                         )
@@ -401,7 +415,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             _exit_if_keyboard_interrupt(answer)
             path_to_test = make_absolute(Path(answer['source']))
 
-        self._current_conversion_settings.source = answer['source']
+        self._cli_conversion_settings.source = answer['source']
 
     def _ask_and_set_export_folder_name(self):
         default_folder_name = str(self._default_settings.export_folder)
@@ -419,10 +433,10 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         _exit_if_keyboard_interrupt(answer)
         if answer['export_folder'] == '':
             answer['export_folder'] = 'notes'
-        self._current_conversion_settings.export_folder = answer['export_folder']
+        self._cli_conversion_settings.export_folder = answer['export_folder']
 
-        if str(self._current_conversion_settings.export_folder) != answer['export_folder']:
-            self._ask_to_confirm_changed_path_name(self._current_conversion_settings.export_folder,
+        if str(self._cli_conversion_settings.export_folder) != answer['export_folder']:
+            self._ask_to_confirm_changed_path_name(self._cli_conversion_settings.export_folder,
                                                    self._ask_and_set_export_folder_name)
 
     def _ask_and_set_attachment_folder_name(self):
@@ -434,7 +448,8 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             {
                 'type': 'input',
                 'name': 'attachment_folder_name',
-                'message': 'Enter a directory name for notes to be exported to (blank entry "attachments" will be used)',
+                'message': 'Enter a directory name for notes to be exported to '
+                           '(blank entry "attachments" will be used)',
                 'default': default_folder_name
             },
         ]
@@ -442,10 +457,10 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         _exit_if_keyboard_interrupt(answer)
         if answer['attachment_folder_name'] == '':
             answer['attachment_folder_name'] = 'attachments'
-        self._current_conversion_settings.attachment_folder_name = answer['attachment_folder_name']
+        self._cli_conversion_settings.attachment_folder_name = answer['attachment_folder_name']
 
-        if not str(self._current_conversion_settings.attachment_folder_name) == answer['attachment_folder_name']:
-            self._ask_to_confirm_changed_path_name(self._current_conversion_settings.attachment_folder_name,
+        if not str(self._cli_conversion_settings.attachment_folder_name) == answer['attachment_folder_name']:
+            self._ask_to_confirm_changed_path_name(self._cli_conversion_settings.attachment_folder_name,
                                                    self._ask_and_set_attachment_folder_name)
 
     def _ask_to_confirm_changed_path_name(self, new_path, not_accept_change_function):
@@ -498,15 +513,15 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
 
         answers = prompt(questions, style=self.style)
         _exit_if_keyboard_interrupt(answers)
-        self._current_conversion_settings.allow_spaces_in_filenames = \
+        self._cli_conversion_settings.allow_spaces_in_filenames = \
             'Allow spaces in file and directory names' in answers['filename_options']
-        self._current_conversion_settings.allow_spaces_in_filenames = \
+        self._cli_conversion_settings.allow_spaces_in_filenames = \
             'Allow unicode characters' in answers['filename_options']
-        self._current_conversion_settings.allow_uppercase_in_filenames = \
+        self._cli_conversion_settings.allow_uppercase_in_filenames = \
             'Allow uppercase characters' in answers['filename_options']
-        self._current_conversion_settings.allow_non_alphanumeric_in_filenames = \
+        self._cli_conversion_settings.allow_non_alphanumeric_in_filenames = \
             'Allow non-alphanumeric characters' in answers['filename_options']
-        self._current_conversion_settings._creation_time_in_exported_file_name = \
+        self._cli_conversion_settings._creation_time_in_exported_file_name = \
             'Include creation time in the file name' in answers['filename_options']
 
     def _ask_and_set_space_replacement_character(self):
@@ -520,7 +535,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         ]
         answer = prompt(questions, style=self.style)
         _exit_if_keyboard_interrupt(answer)
-        self._current_conversion_settings.filename_spaces_replaced_by = answer['filename_spaces_replaced_by']
+        self._cli_conversion_settings.filename_spaces_replaced_by = answer['filename_spaces_replaced_by']
 
     def _ask_and_set_maximum_filename_length(self):
         msg = 'Enter the maximum length for file and directory names (max 255)'
@@ -529,20 +544,21 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             if helper_functions.are_windows_long_paths_disabled():
                 windows_long_names_text = 'Windows long path names are NOT enabled on this computer'
 
-            msg = f'Enter the maximum length for file and directory names\n{windows_long_names_text}\n(max 64 for windows without long file names enabled else, 255)'
+            msg = f'Enter the maximum length for file and directory names\n{windows_long_names_text}\n' \
+                  f'(max 64 for windows without long file names enabled else, 255)'
 
         questions = [
             {
                 'type': 'input',
-                'name': 'maximum_file_or_directory_name_length',
+                'name': 'max_file_or_directory_name_length',
                 'message': msg,
-                'default': str(self._default_settings.maximum_file_or_directory_name_length)
+                'default': str(self._default_settings.max_file_or_directory_name_length)
             },
         ]
         answer = prompt(questions, style=self.style)
         _exit_if_keyboard_interrupt(answer)
-        if 'maximum_file_or_directory_name_length' in answer:
-            self._current_conversion_settings.maximum_file_or_directory_name_length = answer['maximum_file_or_directory_name_length']
+        if 'max_file_or_directory_name_length' in answer:
+            self._cli_conversion_settings.max_file_or_directory_name_length = answer['max_file_or_directory_name_length']
 
     def _ask_and_set_creation_time_in_file_name(self):
         questions = [
@@ -556,7 +572,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
 
         answer = prompt(questions, style=self.style)
         _exit_if_keyboard_interrupt(answer)
-        self._current_conversion_settings.creation_time_in_exported_file_name = \
+        self._cli_conversion_settings.creation_time_in_exported_file_name = \
             answer['creation_time_in_exported_file_name']
 
 

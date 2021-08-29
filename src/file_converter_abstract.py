@@ -2,14 +2,10 @@ from abc import ABC, abstractmethod
 from collections import namedtuple
 import logging
 from pathlib import Path
-from typing import Iterable
 
 import config
 import content_link_management
 import helper_functions
-# from content_link_management import scan_markdown_content_for_all_paths, scan_html_content_for_all_paths
-# from content_link_management import update_content_with_new_paths
-# from content_link_management import process_attachments
 import file_writer
 import file_mover
 import image_processing
@@ -27,8 +23,10 @@ RenamedFile = namedtuple('RenamedFile',
 
 class FileConverter(ABC):
     def __init__(self, conversion_settings, files_to_convert):
-        self.logger = logging.getLogger(
-            f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.'
+                                        f'{what_module_is_this()}.'
+                                        f'{self.__class__.__name__}'
+                                        )
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._file = None
         self._files_to_convert = files_to_convert
@@ -153,10 +151,16 @@ class FileConverter(ABC):
         target_path.replace(new_target_path)  # rename the existing target file with the new -old-'n' name
         self._renamed_note_file = new_target_path
 
-        original_absolute = helper_functions.absolute_path_for(Path(target_path.name), self._conversion_settings.source_absolute_root)
+        original_absolute = helper_functions.absolute_path_for(Path(target_path.name),
+                                                               self._conversion_settings.source_absolute_root
+                                                               )
         new_absolute = new_target_path
-        original_relative = helper_functions.relative_path_for(Path(target_path.name), self._conversion_settings.source_absolute_root)
-        new_relative = helper_functions.relative_path_for(new_target_path, self._conversion_settings.export_folder_absolute)
+        original_relative = helper_functions.relative_path_for(Path(target_path.name),
+                                                               self._conversion_settings.source_absolute_root
+                                                               )
+        new_relative = helper_functions.relative_path_for(new_target_path,
+                                                          self._conversion_settings.export_folder_absolute
+                                                          )
 
         return RenamedFile(original_absolute, original_relative, new_absolute, new_relative)
 
@@ -186,100 +190,9 @@ class FileConverter(ABC):
                 renamed_file.new_relative,
             )
 
-    # def find_local_file_paths_in_content(self, content):
-    #     if self._conversion_settings.conversion_input == 'html':
-    #         return scan_html_content_for_all_paths(content)
-    #
-    #     return scan_markdown_content_for_all_paths(content)
-    #
-    # def get_attachment_paths(self, content) -> namedtuple:
-    #     """
-    #     Generate sets of attachment links that can be used to move attachment files where applicable and change
-    #     links in content when required so that the links work to the new attachment file locations.
-    #
-    #     Absolute attachment links
-    #     Absolute links are not changed in the content.
-    #     If the file exists the path is added to self._non_copyable_attachment_path_set
-    #     If the file does not exist the path is added to self._non_existing_links_set
-    #
-    #     Relative attachment links
-    #     Links may be changed in the note content
-    #     If the file does not exist the path is added to self._non_existing_links_set
-    #     If the file for the relative link exists then:-
-    #     If the relative link is with in the path of conversion_settings.source then it is
-    #     NOT changed in the note content and the path to the attachment is added
-    #     to self._copyable_attachment_absolute_path_set
-    #     If the relative link is to a file not on the path of conversion_settings.source it is
-    #     recalculated and IS changed in the content and the path to the attachment is added
-    #     to self._non_copyable_attachment_path_set
-    #
-    #     Parameters
-    #     ==========
-    #     content : str
-    #         Note content
-    #
-    #     Returns
-    #     =======
-    #     namedtuple attachment_links:
-    #         named tuple containing
-    #         all_links - set of all links to local files attached to the note page
-    #         existing - set of links to files that exist on the local file system
-    #         non_existing - set of links to files that do not exist on the local file system
-    #         copyable - set of links to files that are in the same path as the source of the content
-    #         non_copyable - set of links to files that are NOT in the same path as the source of the content and can not
-    #         be moved during note conversion
-    #
-    #     """
-    #     set_of_links = self.find_local_file_paths_in_content(content)
-    #
-    #     attachment_links = process_attachments(self._file,
-    #                                            set_of_links,
-    #                                            set(self._files_to_convert),
-    #                                            self._conversion_settings.source_absolute_root)
-    #
-    #     return attachment_links
-    #
-    # def update_paths_in_content(self, content: str, links: Iterable[Path]) -> str:
-    #     """
-    #     Update the content string by updating links to attachment files that will not be move
-    #
-    #     Parameters
-    #     ==========
-    #     content : str
-    #         str containing note content
-    #     links : Iterable[Path]
-    #         Iterable of path objects for the paths to the non_movable files
-    #
-    #     Returns
-    #     =======
-    #
-    #
-    #     """
-    #     updated_content = update_content_with_new_paths(content,
-    #                                                     self._file,
-    #                                                     links,
-    #                                                     self._conversion_settings.make_absolute,
-    #                                                     self._conversion_settings.export_folder_absolute
-    #                                                     )
-    #
-    #     return updated_content
-
-    # @property
-    # def copyable_attachment_absolute_path_set(self):
-    #     return self._copyable_attachment_absolute_path_set
-    #
-    # @property
-    # def created_note_path(self):
-    #     return self._created_note_path
-    #
     @property
     def renamed_note_file(self):
         return self._renamed_note_file
-
-    #
-    # @property
-    # def non_existing_links_set(self):
-    #     return self._non_existing_links_set
 
     @property
     def current_note_attachment_links(self):

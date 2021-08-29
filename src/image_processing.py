@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Optional
 
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 
 import config
 
@@ -14,7 +14,7 @@ def what_module_is_this():
 logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}')
 
 
-def clean_html_image_tag(tag: Tag, src_path=None):
+def clean_html_image_tag(tag, src_path=None):
     """
     Generate a clean tag object attrs dictionary
 
@@ -49,7 +49,7 @@ def clean_html_image_tag(tag: Tag, src_path=None):
     return new_attrs
 
 
-def generate_obsidian_image_markdown_link(tag: Tag) -> Optional[str]:
+def generate_obsidian_image_markdown_link(tag) -> Optional[str]:
     """
     Generate an obsidian image markdown link string.
 

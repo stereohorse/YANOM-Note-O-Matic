@@ -79,7 +79,8 @@ def _error_handling(e, target_filename, zip_filename, message=''):
         sys.exit(1)
 
     if isinstance(e, KeyError):
-        msg = f'Warning - For the note "{message}" - unable to find the file "{target_filename}" in the zip file "{zip_filename}"'
+        msg = f'Warning - For the note "{message}" ' \
+              f'- unable to find the file "{target_filename}" in the zip file "{zip_filename}"'
 
     logger.warning(msg)
     logger.warning(traceback_text)

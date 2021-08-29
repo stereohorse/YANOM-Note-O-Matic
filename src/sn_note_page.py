@@ -15,7 +15,10 @@ def what_module_is_this():
 
 class NotePage:
     def __init__(self, nsx_file, note_id, note_json):
-        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.'
+                                        f'{what_module_is_this()}.'
+                                        f'{self.__class__.__name__}'
+                                        )
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._title = None
         self._raw_content = None
@@ -76,7 +79,8 @@ class NotePage:
                              f"Using a placeholder id of '{self._parent_notebook_id}'.  "
                              f"Notes will be in the Recycle bin notebook")
             if not config.yanom_globals.is_silent:
-                print(f"No parent notebook ID was found in '{self._note_id}'.  Note will be in the Recycle Bin notebook")
+                print(f"No parent notebook ID was found in '{self._note_id}'.  "
+                      f"Note will be in the Recycle Bin notebook")
 
     def format_ctime_and_mtime_if_required(self):
         if self._conversion_settings.front_matter_format != 'none' \

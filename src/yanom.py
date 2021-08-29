@@ -21,7 +21,9 @@ def what_module_is_this():
 def command_line_parser(args, logger):
     parser = argparse.ArgumentParser(description="YANOM Note-O-Matic notes convertor")
 
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s Version {}'.format(config.yanom_globals.version))
+    parser.add_argument('-v', '--version', action='version',
+                        version='%(prog)s Version {}'.format(config.yanom_globals.version)
+                        )
     parser.add_argument("-s", "--silent", action="store_true",
                         help="No output to console. WILL also use ini file settings.")
     parser.add_argument('--source', nargs='?', default='',
@@ -35,7 +37,7 @@ def command_line_parser(args, logger):
                              'used with the -i option')
     parser.add_argument('--export', nargs='?', default='',
                         help='Sub directory of "data" directory, or an absolute path to a directory '
-                             'that the converted content and attachements will be exported to.  '
+                             'that the converted content and attachments will be exported to.  '
                              'For example "--export_notes" or "--source /usr/somewhere/exports/notes" '
                              'If not provided a folder "data" will be used in the working directory.'
                              'When --export is provided it WILL override config.ini setting when '
@@ -55,7 +57,7 @@ def command_line_parser(args, logger):
                                           "This is the default if no argument is provided.")
 
     command_line_args = vars(parser.parse_args(args))
-    logger.info(f"Commnad line argumenrts used are '{command_line_args}'")
+    logger.info(f"Command line arguments used are '{command_line_args}'")
     return command_line_args
 
 

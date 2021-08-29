@@ -25,7 +25,10 @@ Attachment = namedtuple('Attachment', 'attachment, note_title')
 class NSXFile:
 
     def __init__(self, file, conversion_settings, pandoc_converter):
-        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.'
+                                        f'{what_module_is_this()}.'
+                                        f'{self.__class__.__name__}'
+                                        )
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._conversion_settings = conversion_settings
         self._nsx_file_name = file
@@ -69,8 +72,6 @@ class NSXFile:
         self.generate_note_page_filename_and_path()
         self.build_dictionary_of_inter_note_links()
         self.process_notebooks()
-        # attachments = self.build_list_of_attachments()
-        # self.store_attachments(attachments)
         self.save_note_pages()
         self.logger.info(f"Processing of {self._nsx_file_name} complete.")
 
@@ -90,23 +91,6 @@ class NSXFile:
         self.logger.warning(msg)
         if not config.yanom_globals.is_silent:
             print(msg)
-
-    # def build_list_of_attachments(self) -> list[Attachment]:
-    #     """
-    #     Generate and return a list of namedtuple of attachment details.
-    #
-    #     Returns
-    #     =======
-    #     list[Attachment]
-    #         list of Attachment named tuples that hold sn_attachment objects and the note title
-    #         the attachment comes from.
-    #
-    #     """
-    #
-    #     return [Attachment(attachment, self._note_pages[note_page_id].title)
-    #             for note_page_id in self._note_pages
-    #             for attachment in self._note_pages[note_page_id].attachments.values()
-    #             ]
 
     def build_dictionary_of_inter_note_links(self):
         all_note_pages = list(self._note_pages.values())

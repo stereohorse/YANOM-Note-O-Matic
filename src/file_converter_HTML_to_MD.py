@@ -16,8 +16,9 @@ class HTMLToMDConverter(FileConverter):
         self._checklist_processor = HTMLInputMDOutputChecklistProcessor(self._file_content)
         self._pre_processed_content = self._checklist_processor.processed_html
         self._pre_processed_content = update_href_link_suffix_in_content(self._pre_processed_content,
-                                                                                                 self._output_extension,
-                                                                                                 self._files_to_convert)
+                                                                         self._output_extension,
+                                                                         self._files_to_convert
+                                                                         )
         self.parse_metadata_if_required()
         self.logger.debug(f'Search for iframes')
         self._pre_processed_content, self._iframes_dict = pre_process_iframes_from_html(self._pre_processed_content)

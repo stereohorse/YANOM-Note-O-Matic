@@ -26,7 +26,10 @@ class NoteStationPreProcessing:
     """
 
     def __init__(self, note):
-        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.'
+                                        f'{what_module_is_this()}.'
+                                        f'{self.__class__.__name__}'
+                                        )
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._note = note
         self.pre_processed_content = note.raw_content
@@ -34,15 +37,11 @@ class NoteStationPreProcessing:
         self._image_attachments = []
         self._image_tags = {}
         self._obsidian_image_tags = {}
-        # self._image_tag_processors = []
-        # self._image_ref_to_image_path = {}
         self._iframes_dict = {}
         self._checklist_processor = None
         self._charts = []
         self._metadata_processor = None
         self.soup = None
-        # self.pre_process_note_page()
-        pass
 
     @property
     def metadata_processor(self):
@@ -217,7 +216,8 @@ class NoteStationPreProcessing:
 
     def _generate_links_to_other_note_pages(self):
         self.logger.debug(f"Creating links between pages")
-        self.pre_processed_content = self._note.nsx_file.inter_note_link_processor.update_content(self.pre_processed_content)
+        self.pre_processed_content = \
+            self._note.nsx_file.inter_note_link_processor.update_content(self.pre_processed_content)
 
     def _add_file_attachment_links(self):
         self.logger.debug(f"Add attachment links to page content")

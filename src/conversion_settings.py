@@ -142,7 +142,7 @@ class ConversionSettings:
             'allow_uppercase_in_filenames': ('True', 'False'),
             'allow_non_alphanumeric_in_filenames': ('True', 'False'),
             'creation_time_in_exported_file_name': ('True', 'False'),
-            'maximum_file_or_directory_name_length': '',
+            'max_file_or_directory_name_length': '',
             'orphans': ('ignore', 'copy', 'orphan'),
             'make_absolute': ('True', 'False'),
         }
@@ -151,8 +151,10 @@ class ConversionSettings:
     def __init__(self):
         # if you change any of the following values changes are likely to affect the quick settings method
         # and the validation_values class variable
-        self.logger = logging.getLogger(
-            f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.'
+                                        f'{what_module_is_this()}.'
+                                        f'{self.__class__.__name__}'
+                                        )
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._valid_conversion_inputs = list(self.validation_values['conversion_inputs']['conversion_input'])
         self._valid_markdown_conversion_inputs = list(
@@ -383,7 +385,8 @@ class ConversionSettings:
         self._orphans = 'copy'
         self._make_absolute = False
 
-    def _get_folder_paths(self, provided_folder: Path, root_path: Path):
+    @staticmethod
+    def _get_folder_paths(provided_folder: Path, root_path: Path):
         """
         Calculate relative or absolute path based on the provided_folder path
 
@@ -419,7 +422,7 @@ class ConversionSettings:
     @property
     def filename_options(self):
 
-        return helper_functions.FileNameOptions(self.maximum_file_or_directory_name_length,
+        return helper_functions.FileNameOptions(self.max_file_or_directory_name_length,
                                                 self.allow_unicode_in_filenames,
                                                 self.allow_uppercase_in_filenames,
                                                 self.allow_non_alphanumeric_in_filenames,
@@ -472,7 +475,8 @@ class ConversionSettings:
             self.logger.info(f'Using {self._source_absolute_root} as source path')
             return
 
-        msg = f"Invalid source location - {provided_source} - Check command line argument OR config.ini entry - Exiting program"
+        msg = f"Invalid source location - {provided_source} " \
+              f"- Check command line argument OR config.ini entry - Exiting program"
         if not config.yanom_globals.is_silent:
             print(msg)
         self.logger.error(msg)
@@ -638,7 +642,8 @@ class ConversionSettings:
             value = yanom_globals.default_attachment_folder
         self._attachment_folder_name = Path(generate_clean_directory_name(value, self.filename_options))
         self.logger.info(
-            f'For the provided attachment folder name of "{value}" the cleaned name used is {self._attachment_folder_name}')
+            f'For the provided attachment folder name of "{value}" '
+            f'the cleaned name used is {self._attachment_folder_name}')
 
     @property
     def working_directory(self):
@@ -701,11 +706,11 @@ class ConversionSettings:
         self._creation_time_in_exported_file_name = value
 
     @property
-    def maximum_file_or_directory_name_length(self):
+    def max_file_or_directory_name_length(self):
         return self._maximum_file_or_directory_name_length
 
-    @maximum_file_or_directory_name_length.setter
-    def maximum_file_or_directory_name_length(self, value: int):
+    @max_file_or_directory_name_length.setter
+    def max_file_or_directory_name_length(self, value: int):
         value = min(int(value), yanom_globals.path_part_max_length)
         self._maximum_file_or_directory_name_length = value
 

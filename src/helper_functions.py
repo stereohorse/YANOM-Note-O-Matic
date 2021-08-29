@@ -530,7 +530,7 @@ def next_available_directory_name(path_to_dir: Union[str, Path]) -> Union[str, P
     """
     Return the name of the next available empty or unused directory name available by incrementing the name if required.
 
-    A directory is considered empty is it contains no files or directories other than hidden files beginning with dot '.'
+    A directory is considered empty if it contains no files or directories other than hidden files i.e. ".files".
     If the directory provided is not empty increment the directory name by adding "-number" e.g. directory-1
     If the directory is empty it is returned unchanged.
     If the directory ends in a number the number will be incremented so "directory1" becomes "directory2",

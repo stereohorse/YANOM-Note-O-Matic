@@ -1,6 +1,5 @@
 import logging
 
-import checklist_processing
 import config
 from iframe_processing import post_process_iframes_to_markdown
 
@@ -11,7 +10,10 @@ def what_module_is_this():
 
 class NoteStationPostProcessing:
     def __init__(self, note):
-        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.'
+                                        f'{what_module_is_this()}.'
+                                        f'{self.__class__.__name__}'
+                                        )
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._note = note
         self._conversion_settings = note.conversion_settings
@@ -30,12 +32,14 @@ class NoteStationPostProcessing:
 
     def _add_meta_data(self):
         self.logger.debug(f"Adding meta-data to page")
-        self._post_processed_content = self._note.pre_processor.metadata_processor.add_metadata_md_to_content(self._post_processed_content)
+        self._post_processed_content = \
+            self._note.pre_processor.metadata_processor.add_metadata_md_to_content(self._post_processed_content)
 
     def _add_check_lists(self):
         if self._note.pre_processor.checklist_processor.list_of_checklist_items:
             self.logger.debug(f"Adding checklists to page")
-            self._post_processed_content = self._note.pre_processor.checklist_processor.checklist_post_processing(self._post_processed_content)
+            self._post_processed_content = \
+                self._note.pre_processor.checklist_processor.checklist_post_processing(self._post_processed_content)
 
     def _add_iframes(self):
         if self._note.pre_processor.iframes_dict:

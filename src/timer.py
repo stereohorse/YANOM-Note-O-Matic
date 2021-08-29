@@ -17,7 +17,8 @@ class Timer(ContextDecorator):
 
     To use as a decorator: just add above definitions: @Timer() or @Timer(name="name_of_timer") etc
 
-    Arguments:
+    Constructor Arguments
+    ---------------------
         name : str
             Optional - name for the timer, stored in a dict of timers so can reference them later
         silent : bool

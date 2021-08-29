@@ -14,7 +14,10 @@ def what_module_is_this():
 
 class PandocConverter:
     def __init__(self, conversion_settings):
-        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.'
+                                        f'{what_module_is_this()}.'
+                                        f'{self.__class__.__name__}'
+                                        )
         self.logger.setLevel(config.yanom_globals.logger_level)
         self.conversion_settings = conversion_settings
         self.output_file_format = self.conversion_settings.export_format
@@ -48,7 +51,6 @@ class PandocConverter:
         self._pandoc_path = 'pandoc'
 
     def check_and_set_pandoc_options_if_required(self):
-        # Early returns for conversion not needing pandoc
         if self.conversion_settings.conversion_input == 'nsx' and self.conversion_settings.export_format == 'html':
             return
         if self.conversion_settings.conversion_input == 'html' and self.conversion_settings.export_format == 'html':
@@ -100,7 +102,7 @@ class PandocConverter:
     def _calculate_input_format(self):
         if self.conversion_settings.conversion_input == 'nsx' or self.conversion_settings.conversion_input == 'html':
             return 'html'
-        # if not nsx or html must be markdown
+
         return self.pandoc_conversion_options[self.conversion_settings.markdown_conversion_input]
 
     def convert_using_strings(self, input_data, note_title):

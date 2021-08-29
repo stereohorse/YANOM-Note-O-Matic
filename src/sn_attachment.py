@@ -14,8 +14,10 @@ def what_module_is_this():
 
 class NSAttachment(ABC):
     def __init__(self, note, attachment_id):
-        self.logger = logging.getLogger(
-            f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.'
+                                        f'{what_module_is_this()}.'
+                                        f'{self.__class__.__name__}'
+                                        )
         self.logger.setLevel(config.yanom_globals.logger_level)
         self._attachment_id = attachment_id
         self._nsx_file = note.nsx_file
@@ -62,15 +64,14 @@ class NSAttachment(ABC):
     def is_duplicate_file(self):
         """Compare md5 and file name to see if current attachment is a duplicate of an existing attachment"""
         return (self._json['attachment'][self._attachment_id]['md5']
-            in self._parent_notebook.attachment_md5_file_name_dict
-            and self._json['attachment'][self._attachment_id]['name']
-                == self._parent_notebook.attachment_md5_file_name_dict[self._json['attachment'][self._attachment_id]['md5']])
+                in self._parent_notebook.attachment_md5_file_name_dict
+                and self._json['attachment'][self._attachment_id]['name']
+                == self._parent_notebook.attachment_md5_file_name_dict[
+                    self._json['attachment'][self._attachment_id]['md5']])
 
     @abstractmethod
     def store_file(self):  # pragma: no cover
-        # file_writer.store_file(self._full_path, self.get_content_to_save())
-       pass
-
+        pass
 
     @property
     def notebook_folder_name(self):
@@ -124,7 +125,8 @@ class FileNSAttachment(NSAttachment):
                 f'Original attachment name was "{self._name}" the cleaned name used is "{self._file_name}"')
 
     def add_suffix_if_possible(self):
-        suffix = helper_functions.file_extension_from_bytes(zip_file_reader.read_binary_file(self._nsx_file.nsx_file_name, self.filename_inside_nsx, self._note_title))
+        suffix = helper_functions.file_extension_from_bytes(
+            zip_file_reader.read_binary_file(self._nsx_file.nsx_file_name, self.filename_inside_nsx, self._note_title))
         if suffix:
             self._file_name = self._file_name.with_suffix(suffix)
 

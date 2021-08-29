@@ -10,7 +10,7 @@ from file_converter_HTML_to_MD import HTMLToMDConverter
 from file_converter_MD_to_HTML import MDToHTMLConverter
 from file_converter_MD_to_MD import MDToMDConverter
 import file_mover
-from interactive_cli import StartUpCommandLineInterface
+import interactive_cli
 from nsx_file_converter import NSXFile
 from pandoc_converter import PandocConverter
 from timer import Timer
@@ -32,8 +32,10 @@ class NotesConvertor:
     """
 
     def __init__(self, args, config_data):
-        self.logger = logging.getLogger(
-            f'{config.yanom_globals.app_name}.{what_module_is_this()}.{self.__class__.__name__}')
+        self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.'
+                                        f'{what_module_is_this()}.'
+                                        f'{self.__class__.__name__}'
+                                        )
         self.logger.setLevel(config.yanom_globals.logger_level)
         self.logger.info(f'Conversion startup')
         self.command_line_args = args
@@ -237,7 +239,7 @@ class NotesConvertor:
         self.run_interactive_command_line_interface()
 
     def run_interactive_command_line_interface(self):
-        command_line_interface = StartUpCommandLineInterface(self.conversion_settings)
+        command_line_interface = interactive_cli.StartUpCommandLineInterface(self.conversion_settings)
         self.conversion_settings = command_line_interface.run_cli()
         self.config_data.conversion_settings = self.conversion_settings  # this will save the setting in the ini file
         self.logger.info("Using conversion settings from interactive command line tool")
