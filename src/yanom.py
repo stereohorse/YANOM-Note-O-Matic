@@ -80,12 +80,12 @@ def set_logging_level(log_level: str, logger):
 
 
 def setup_logging(working_path):
-    Path(working_path, config.yanom_globals.data_dir, 'logs').mkdir(parents=True, exist_ok=True)
+    Path(working_path, 'logs').mkdir(parents=True, exist_ok=True)
 
-    log_filename = f"{working_path}/{config.yanom_globals.data_dir}/logs/normal.log"
-    error_log_filename = f"{working_path}/{config.yanom_globals.data_dir}/logs/error.log"
-    debug_log_filename = f"{working_path}/{config.yanom_globals.data_dir}/logs/debug.log"
-    warning_log_filename = f"{working_path}/{config.yanom_globals.data_dir}/logs/warning.log"
+    log_filename = f"{working_path}/logs/normal.log"
+    error_log_filename = f"{working_path}/logs/error.log"
+    debug_log_filename = f"{working_path}/logs/debug.log"
+    warning_log_filename = f"{working_path}/logs/warning.log"
 
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
@@ -144,7 +144,7 @@ def run_yanom(command_line_args):
     if not command_line_args['silent']:
         interactive_cli.show_app_title()
 
-    config_data = ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
+    config_data = ConfigData(f"config.ini", 'gfm', allow_no_value=True)
     config_data.parse_config_file()
 
     notes_converter = NotesConvertor(command_line_args, config_data)

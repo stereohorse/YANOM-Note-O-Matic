@@ -14,7 +14,7 @@ WORKDIR /app/src
 RUN rm -rf /app/src/dist && rm -rf /app/src/build && \
     pyinstaller yanom.spec  && \
     cp /app/src/dist/yanom /app/yanom/ && \
-    cp /app/src/data/config.ini /app/yanom/data && \
+    cp /app/src/config.ini /app/yanom && \
     chown -R app /app/yanom
 WORKDIR /app
 RUN tar -zcvf $APP_TAR yanom

@@ -141,3 +141,4 @@ dmypy.json
 /src/data/test.nsx
 /cov_html/
 /scripts/mac-osx-build/secrets.py
+/src/logs/

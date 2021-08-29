@@ -60,7 +60,7 @@ def copy_config_file_to_data_folder():
         sys.exit(1)
 
     print("Copy config.ini")
-    shutil.copy('../../src/config.ini', 'dist/data')
+    shutil.copy('../../src/config.ini', 'dist')
 
 
 def check_signing():
