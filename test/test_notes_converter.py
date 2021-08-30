@@ -640,6 +640,21 @@ def test_handle_orphan_files_as_required_orphans_set_to_orphans_folder(tmp_path)
     assert Path(tmp_path, 'notes/orphan/some_folder/data/my_other_notebook/attachments/five.pdf').exists()
     assert Path(tmp_path, 'notes/orphan/some_folder/data/my_notebook/six.csv').exists()
 
+    # Also check original files are alos inplace - the originals are not moved we only copy them
+    Path(tmp_path, 'some_folder/data/my_notebook/note.md').exists()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png').exists()
+    Path(tmp_path, 'some_folder/data/attachments/two.csv').exists()
+    Path(tmp_path, 'some_folder/three.png').exists()
+    Path(tmp_path, 'some_folder/attachments/four.csv').exists()
+    Path(tmp_path, 'some_folder/four.csv').exists()
+    Path(tmp_path, 'some_folder/data/my_other_notebook/attachments/five.pdf').exists()
+    Path(tmp_path, 'some_folder/data/my_notebook/six.csv').exists()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf').exists()
+    Path(tmp_path, 'some_folder/data/my_notebook/nine.md').exists()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png').exists()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf').exists()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf').exists()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png').exists()
 
 def test_handle_orphan_files_as_required_orphans_copy(tmp_path):
     Path(tmp_path, 'some_folder/data/my_notebook/attachments').mkdir(parents=True)
@@ -697,6 +712,24 @@ def test_handle_orphan_files_as_required_orphans_copy(tmp_path):
     assert Path(tmp_path, 'notes/some_folder/four.csv').exists()
     assert Path(tmp_path, 'notes/some_folder/data/my_other_notebook/attachments/five.pdf').exists()
     assert Path(tmp_path, 'notes/some_folder/data/my_notebook/six.csv').exists()
+
+    # Also check original files are alos inplace - the originals are not moved we only copy them
+    Path(tmp_path, 'some_folder/data/my_notebook/note.md').exists()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png').exists()
+    Path(tmp_path, 'some_folder/data/attachments/two.csv').exists()
+    Path(tmp_path, 'some_folder/three.png').exists()
+    Path(tmp_path, 'some_folder/attachments/four.csv').exists()
+    Path(tmp_path, 'some_folder/four.csv').exists()
+    Path(tmp_path, 'some_folder/data/my_other_notebook/attachments/five.pdf').exists()
+    Path(tmp_path, 'some_folder/data/my_notebook/six.csv').exists()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf').exists()
+    Path(tmp_path, 'some_folder/data/my_notebook/nine.md').exists()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png').exists()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf').exists()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf').exists()
+    Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png').exists()
+
+
 
 
 def test_handle_orphan_files_as_required_orphans_ignore(tmp_path):
