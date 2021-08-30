@@ -381,7 +381,7 @@ def test_add_note_pages_to_notebooks(conv_setting, caplog, note_pages, notebooks
 
 
 def test_process_notebooks(conv_setting, notebooks):
-
+    notebooks['note_book1']._null_attachment_list = ['page1']
     nsx_fc = nsx_file_converter.NSXFile('fake_file', conv_setting, 'fake_pandoc_converter')
     nsx_fc._notebooks = notebooks
 
@@ -390,6 +390,7 @@ def test_process_notebooks(conv_setting, notebooks):
 
         mock_process_notebook_pages.assert_called()
         assert nsx_fc._note_book_count == 2
+        assert nsx_fc._null_attachments == {'notebook 1': ['page1']}
 
 
 def test_get_notebook_ids(conv_setting):

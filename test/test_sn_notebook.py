@@ -155,7 +155,7 @@ def test_pair_up_note_pages_and_notebooks_note_title_already_exists(nsx):
         (False, "Processing 'notebook1' Notebook")
     ]
 )
-def test_process_notebook_pages(all_notes, tmp_path, nsx, silent_mode, expected, capsys, caplog):
+def test_process_notebook_pages(all_notes, nsx, silent_mode, expected, capsys, caplog):
     config.yanom_globals.is_silent = silent_mode
     notebook_title = 'notebook1'
     with patch('zip_file_reader.read_json_data', autospec=True, return_value={'title': notebook_title}):
@@ -172,6 +172,29 @@ def test_process_notebook_pages(all_notes, tmp_path, nsx, silent_mode, expected,
 
     captured = capsys.readouterr()
     assert expected in captured.out
+
+
+def test_process_notebook_pages_json_null_attachments( nsx):
+    config.yanom_globals.is_silent = True
+    note_page_1_json = {'parent_id': 'note_book1', 'title': 'Page 1 title', 'mtime': 1619298559, 'ctime': 1619298539, 'content': 'content', 'tag': ['1'], 'attachment': None}
+    note_page_1 = sn_note_page.NotePage(nsx, 1, note_page_1_json)
+    note_page_1.notebook_folder_name = 'note_book1'
+    note_page_1._file_name = 'page-1-title.md'
+    note_page_1._raw_content = """<div>Below is a hyperlink to the internet</div><div><a href=\"https://github.com/kevindurston21/YANOM-Note-O-Matic\">https://github.com/kevindurston21/YANOM-Note-O-Matic</a></div>"""
+    notebook_title = 'notebook1'
+    with patch('zip_file_reader.read_json_data', autospec=True, return_value={'title': notebook_title}):
+        notebook = sn_notebook.Notebook(nsx, 'notebook_id_abcd')
+        notebook.folder_name = 'notebook_folder'
+        notebook.note_pages = [note_page_1]
+
+        with patch('sn_note_page.NotePage.process_note', spec=True) as mock_process_note:
+            notebook.process_notebook_pages()
+
+        mock_process_note.assert_called()
+
+    assert len(notebook._null_attachment_list) == 1
+
+
 
 
 @pytest.mark.parametrize(

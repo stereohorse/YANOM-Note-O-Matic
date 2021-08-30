@@ -6,6 +6,7 @@ import sys
 from alive_progress import alive_bar
 
 import config
+from content_link_management import find_local_file_links_in_content, process_attachments
 from file_converter_HTML_to_MD import HTMLToMDConverter
 from file_converter_MD_to_HTML import MDToHTMLConverter
 from file_converter_MD_to_MD import MDToMDConverter
@@ -55,6 +56,7 @@ class NotesConvertor:
         self._set_of_renamed_note_files = set()
         self._set_of_not_found_attachments = set()
         self._attachment_details = {}
+        self._nsx_null_attachments = {}
 
     def convert_notes(self):
         self.evaluate_command_line_arguments()
@@ -65,7 +67,7 @@ class NotesConvertor:
             self.convert_markdown()
         else:
             self.convert_nsx()
-
+            self.check_nsx_attachment_links()
         self.output_results_if_not_silent_mode()
         self.log_results()
         self.logger.info("Processing Completed")
@@ -215,6 +217,7 @@ class NotesConvertor:
             for nsx_file in self._nsx_backups:
                 nsx_file.process_nsx_file()
                 self.update_processing_stats(nsx_file)
+                self._nsx_null_attachments.update(nsx_file.null_attachments)
                 self._encrypted_notes += nsx_file.encrypted_notes
 
     def update_processing_stats(self, nsx_file):
@@ -222,6 +225,33 @@ class NotesConvertor:
         self._note_book_count += nsx_file.note_book_count
         self._image_count += nsx_file.image_count
         self._attachment_count += nsx_file.attachment_count
+
+    def check_nsx_attachment_links(self):
+        if not config.yanom_globals.is_silent:
+            print(f"Analysing note page links")
+        notes_to_check = self.generate_file_list(file_mover.get_file_suffix_for(self.conversion_settings.export_format))
+        with alive_bar(len(notes_to_check), bar='blocks') as bar:
+            for note in notes_to_check:
+                content = note.read_text(encoding='utf-8')
+                all_attachments_paths = find_local_file_links_in_content(self.conversion_settings.export_format, content)
+                attachment_links = process_attachments(note,
+                                                       all_attachments_paths,
+                                                       notes_to_check,
+                                                       self.conversion_settings.export_folder_absolute
+                                                       )
+
+                self._attachment_details[note] = {
+                    'all': attachment_links.all,
+                    'existing': attachment_links.existing,
+                    'non_existing': attachment_links.non_existing,
+                    'copyable': attachment_links.copyable,
+                    'copyable_absolute': attachment_links.copyable_absolute,
+                    'non_copyable_relative': attachment_links.non_copyable_relative,
+                    'non_copyable_absolute': attachment_links.non_copyable_absolute,
+                }
+
+                if not config.yanom_globals.is_silent:
+                    bar()
 
     def evaluate_command_line_arguments(self):
         self.configure_for_ini_settings()

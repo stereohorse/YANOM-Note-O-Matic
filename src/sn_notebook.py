@@ -32,6 +32,7 @@ class Notebook:
         self.note_pages = []
         self.note_titles = []
         self._attachment_md5_file_name_dict = {}
+        self._null_attachment_list = []
 
     def process_notebook_pages(self):
         self.logger.info(f"Processing note book {self.title} - {self.notebook_id}")
@@ -41,6 +42,8 @@ class Notebook:
         with alive_bar(len(self.note_pages), bar='blocks') as bar:
             for note_page in self.note_pages:
                 note_page.process_note()
+                if note_page.attachments_json is None:
+                    self._null_attachment_list.append(note_page.title)
                 if not config.yanom_globals.is_silent:
                     bar()
 
@@ -153,3 +156,10 @@ class Notebook:
     @property
     def attachment_md5_file_name_dict(self):
         return self._attachment_md5_file_name_dict
+
+    def add_attachment_md5_file_name_dict(self, md5, file_name):
+        self._attachment_md5_file_name_dict[md5] = file_name
+
+    @property
+    def null_attachment_list(self):
+        return self._null_attachment_list

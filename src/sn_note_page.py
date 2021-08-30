@@ -67,6 +67,8 @@ class NotePage:
             self.logger.warning(
                 f"Note - '{self._title}' - Has Null set for attachments. "
                 f"There may be a sync issues between desktop and web version of Note Station.")
+            return
+
         if not self._attachments_json:
             self._attachments_json = {}
             self.logger.info(f"No attachments were found in note id '{self._note_id}'.")
@@ -287,3 +289,7 @@ class NotePage:
     @property
     def pre_processor(self):
         return self._pre_processor
+
+    @property
+    def attachments_json(self):
+        return self._attachments_json

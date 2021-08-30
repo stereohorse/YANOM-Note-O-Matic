@@ -79,6 +79,7 @@ class FakeNSXFile:
         self.note_book_count = 2
         self.image_count = 3
         self.attachment_count = 4
+        self.null_attachments = []
         self.encrypted_notes = []
 
     @staticmethod
@@ -655,6 +656,7 @@ def test_handle_orphan_files_as_required_orphans_set_to_orphans_folder(tmp_path)
     Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf').exists()
     Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf').exists()
     Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png').exists()
+
 
 def test_handle_orphan_files_as_required_orphans_copy(tmp_path):
     Path(tmp_path, 'some_folder/data/my_notebook/attachments').mkdir(parents=True)

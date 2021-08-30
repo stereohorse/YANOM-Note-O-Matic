@@ -44,6 +44,7 @@ class NSXFile:
         self._attachment_count = 0
         self._pandoc_converter = pandoc_converter
         self._inter_note_link_processor = NSXInterNoteLinkProcessor()
+        self._null_attachments = {}
         self._encrypted_notes = []
 
     def process_nsx_file(self):
@@ -237,6 +238,10 @@ class NSXFile:
 
         for notebooks_id in self._notebooks:
             self._notebooks[notebooks_id].process_notebook_pages()
+            if self._notebooks[notebooks_id].null_attachment_list:
+                self._null_attachments[self._notebooks[notebooks_id].title] \
+                    = self._null_attachments.get(self._notebooks[notebooks_id].title, []) \
+                      + self._notebooks[notebooks_id].null_attachment_list
 
     def save_note_pages(self):
         if not config.yanom_globals.is_silent:
@@ -283,6 +288,10 @@ class NSXFile:
     @property
     def inter_note_link_processor(self):
         return self._inter_note_link_processor
+
+    @property
+    def null_attachments(self):
+        return self._null_attachments
 
     @property
     def encrypted_notes(self):

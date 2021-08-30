@@ -322,14 +322,12 @@ def test_get_json_parent_notebook_key_missing_in_json(note_page_1, silent, expec
 
 
 def test_get_json_attachment_data_key_is_null(note_page_1, caplog):
-    note_page_1._note_json = {'attachment': None}
+    note_page_1._note_json['attachment'] = None
     note_page_1.get_json_attachment_data()
     expected_caplog_msg1 = f"Note - '{note_page_1._title}' - Has Null set for attachments. There may be a sync issues between desktop and web version of Note Station."
-    expected_caplog_msg2 = f"No attachments were found in note id '{note_page_1._note_id}'."
 
-    assert note_page_1._attachments_json == {}
+    assert note_page_1._attachments_json is None
     assert expected_caplog_msg1 in caplog.messages
-    assert expected_caplog_msg2 in caplog.messages
 
 @pytest.mark.parametrize(
     'ctime, mtime, expected_ctime, expected_mtime, format_time', [
