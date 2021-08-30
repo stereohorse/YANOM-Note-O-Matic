@@ -57,6 +57,7 @@ class NotesConvertor:
         self._set_of_not_found_attachments = set()
         self._attachment_details = {}
         self._nsx_null_attachments = {}
+        self._encrypted_notes = []
 
     def convert_notes(self):
         self.evaluate_command_line_arguments()
