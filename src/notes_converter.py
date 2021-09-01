@@ -166,14 +166,17 @@ class NotesConvertor:
                 self._note_page_count = file_count
 
     def _copy_attachment(self, attachment):
-        attachment_path_relative_to_source = attachment.relative_to(
-            self.conversion_settings.source_absolute_root)
-        target_attachment_absolute_path = Path(self.conversion_settings.export_folder_absolute,
-                                               attachment_path_relative_to_source)
+        if attachment.exists() and attachment.is_file():
+            attachment_path_relative_to_source = attachment.relative_to(
+                self.conversion_settings.source_absolute_root)
+            target_attachment_absolute_path = Path(self.conversion_settings.export_folder_absolute,
+                                                   attachment_path_relative_to_source)
 
-        target_attachment_absolute_path.parent.mkdir(parents=True, exist_ok=True)
+            target_attachment_absolute_path.parent.mkdir(parents=True, exist_ok=True)
 
-        shutil.copy(attachment, target_attachment_absolute_path)
+            shutil.copy(attachment, target_attachment_absolute_path)
+        else:
+            self.logger.warning(f'Unable to copy attachment "{attachment}" - It does not exist or is a directory.')
 
     def get_list_of_orphan_files(self, set_of_all_files):
         orphans = set_of_all_files
