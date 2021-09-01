@@ -9,8 +9,8 @@ import sys
 from typing import Literal
 
 import config
-import helper_functions
 from config import yanom_globals
+import helper_functions
 from helper_functions import generate_clean_directory_name, find_working_directory
 
 
@@ -206,11 +206,11 @@ class ConversionSettings:
                f"yaml_front_matter={self.front_matter_format}, metadata_schema='{self.metadata_schema}', " \
                f"tag_prefix='{self.tag_prefix}', " \
                f"first_row_as_header={self.first_row_as_header}, " \
-               f"first_column_as_header={self.first_column_as_header}" \
+               f"first_column_as_header={self.first_column_as_header}, " \
                f"spaces_in_tags={self.spaces_in_tags}, split_tags={self.split_tags}, " \
                f"export_folder='{self.export_folder}', " \
                f"attachment_folder_name='{self.attachment_folder_name}', " \
-               f"creation_time_in_exported_file_name='{self._creation_time_in_exported_file_name}'," \
+               f"creation_time_in_exported_file_name='{self._creation_time_in_exported_file_name}', " \
                f"orphans='{self._orphans})"
 
     def __repr__(self):
