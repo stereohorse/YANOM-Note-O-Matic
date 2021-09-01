@@ -9,8 +9,23 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Increment the major version when significantly overhaul the user interface, or rewrite all internals.
 
 ## [1.6.0] development
-- Improve error message when unable to find file in nsx zip file
+### Added
+- User can now enter a source and export folder path in command line options, the interactive command line interface or config.ini.  Paths can be relative to the yanom/data folder or an absolute path on the file system.  For Docker the file system is only the docker container file system so paths must be relative to the shared data folder.
+- When converting markdown or html files, conversions are now placed in the export folder rather than, being "converted in place" and, being placed in the source folder.  The source and export folders can be the same folder to do a "conversion in place".
+- When converting md or html files user can now specify an export location rather than converting in place and creating the new files' in the source directory.  Attachment files are also copied to the export folder.
+- Option to handle orphan files.  Orphan files are files in the source path that are not used in any links in the notes.  Option to ignore and not copy to the export folder, option to copy to the export folder, and an option to copy to an 'orphans' sub-directory in the export directory
+- Option to change relative links to files outside the path of the source directory to absolute links
+- For a Note Station NSX conversion check if an attachment uses the same md5 value and is a shared attachment between notes and no longer create a duplicated file on disk. 
+- Check for and filter out encrypted notes from nsx files.  The encrypted notes are not converted.
+- Check links in notes are valid for the current file system.
 
+### Fixed
+- File renaming for existing files with nsx export - was changing the exported file name now changes the existing file name.
+- In nsx export duplicate attachment file names no longer overwrite each other.
+- Creation time in file name is now fully implemented.
+
+### Other Changes
+- Improve error message when unable to find file in nsx zip file
 
 ## [1.5.0]  2021-08-27
 
