@@ -525,3 +525,91 @@ def test_is_pathname_valid_windows():
         assert result
         result = helper_functions.is_pathname_valid(r'c:\K<>hello')
         assert not result
+
+
+@pytest.mark.parametrize(
+    'path_to_test, expected', [
+        ('/hello/dog\0/cat', False),
+        ('file:///K:/SPSS%20info/', False),
+        ('file://K://SPSS%20info//', False),
+        ('c:/SPSS%20info', True),
+        ('c:\\windows', True),
+        ('attachments\example_file.pdf', True),
+        ('c:/SPSS%20info', True),
+        ('SPSS info', True),
+    ]
+)
+def test_is_path_valid_windows(path_to_test, expected):
+    if not os.name == 'nt':
+        return
+
+    result = helper_functions.is_path_valid(path_to_test)
+
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    'path_to_test, expected', [
+        ('/hello/dog\0/cat', False),
+        ('file:///K:/SPSS%20info/', True),
+        ('file://K://SPSS%20info//', True),
+        ('c:/SPSS%20info', True),
+        ('c:\\windows', True),
+        ('attachments\example_file.pdf', True),
+        ('c:/SPSS%20info', True),
+        ('SPSS info', True),
+        (None, False),
+        (['hello'], False),
+    ]
+)
+def test_is_path_valid_unix_like(path_to_test, expected):
+    if os.name == 'nt':
+        return
+
+    result = helper_functions.is_path_valid(path_to_test)
+
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    'path_to_test, expected', [
+        ('/hello/dog\0/cat', False),
+        ('file:///K:/SPSS%20info/', False),
+        ('file://K://SPSS%20info//', False),
+        ('c:/SPSS%20info', True),
+        ('c:\\windows', True),
+        ('attachments\example_file.pdf', True),
+        ('c:/SPSS%20info', True),
+        ('SPSS info', True),
+    ]
+)
+def test_is_path_valid_windows(path_to_test, expected):
+    if not os.name == 'nt':
+        return
+
+    result = helper_functions.is_path_valid(path_to_test)
+
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    'path_to_test, expected', [
+        ('/hello/dog\0/cat', False),
+        ('file:///K:/SPSS%20info/', True),
+        ('file://K://SPSS%20info//', True),
+        ('c:/SPSS%20info', True),
+        ('c:\\windows', True),
+        ('attachments\example_file.pdf', True),
+        ('c:/SPSS%20info', True),
+        ('SPSS info', True),
+        (None, False),
+        (['hello'], False),
+    ]
+)
+def test_is_path_valid_unix_like(path_to_test, expected):
+    if os.name == 'nt':
+        return
+
+    result = helper_functions.is_path_valid(path_to_test)
+
+    assert result == expected

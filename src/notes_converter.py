@@ -147,6 +147,8 @@ class NotesConvertor:
 
                 self._attachment_details[file] = {
                     'all': file_converter.current_note_attachment_links.all,
+                    'valid': file_converter.current_note_attachment_links.valid,
+                    'invalid': file_converter.current_note_attachment_links.invalid,
                     'existing': file_converter.current_note_attachment_links.existing,
                     'non_existing': file_converter.current_note_attachment_links.non_existing,
                     'copyable': file_converter.current_note_attachment_links.copyable,
@@ -243,6 +245,8 @@ class NotesConvertor:
 
                 self._attachment_details[note] = {
                     'all': attachment_links.all,
+                    'valid': attachment_links.valid,
+                    'invalid': attachment_links.invalid,
                     'existing': attachment_links.existing,
                     'non_existing': attachment_links.non_existing,
                     'copyable': attachment_links.copyable,

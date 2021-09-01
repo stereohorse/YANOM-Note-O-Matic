@@ -701,3 +701,75 @@ def relative_path_for(provided_path: Path, root_path: Path) -> Path:
             return provided_path.relative_to(root_path)
 
     return provided_path
+
+
+def is_path_valid(path: str) -> bool:
+# Modified from
+# https://gist.github.com/mo-han/240b3ef008d96215e352203b88be40db
+# whixh itself was modified from an answer by Cecil Curry at:
+# https://stackoverflow.com/questions/9532499/check-whether-a-path-is-valid-in-python-without-creating-a-file-at-the-paths-ta/34102855#34102855
+    try:
+        if not isinstance(path, str) or not path:
+            return False
+        if os.name == 'nt':
+            drive, path = os.path.splitdrive(path)
+            if not os.path.isdir(drive):
+                drive = os.environ.get('SystemDrive', 'C:')
+            # if not os.path.isdir(drive):
+            #     drive = ''
+        else:
+            drive = ''
+        parts = Path(path).parts
+        check_list = [os.path.join(*parts), *parts]
+        for x in check_list:
+            try:
+                os.lstat(drive + x)
+            except OSError as e:
+                if hasattr(e, 'winerror') and e.winerror == 123:
+                    return False
+                elif e.errno in {errno.ENAMETOOLONG, errno.ERANGE}:
+                    return False
+            except ValueError as exc:
+                return False
+                # If a "ValueError" exception was raised, it almost certainly has the
+                # error message "embedded NUL character" indicating an invalid pathname
+    except TypeError:
+        return False
+    else:
+        return True
+
+
+def is_path_valid(path: str) -> bool:
+# Modified from
+# https://gist.github.com/mo-han/240b3ef008d96215e352203b88be40db
+# whixh itself was modified from an answer by Cecil Curry at:
+# https://stackoverflow.com/questions/9532499/check-whether-a-path-is-valid-in-python-without-creating-a-file-at-the-paths-ta/34102855#34102855
+    try:
+        if not isinstance(path, str) or not path:
+            return False
+        if os.name == 'nt':
+            drive, path = os.path.splitdrive(path)
+            if not os.path.isdir(drive):
+                drive = os.environ.get('SystemDrive', 'C:')
+            # if not os.path.isdir(drive):
+            #     drive = ''
+        else:
+            drive = ''
+        parts = Path(path).parts
+        check_list = [os.path.join(*parts), *parts]
+        for x in check_list:
+            try:
+                os.lstat(drive + x)
+            except OSError as e:
+                if hasattr(e, 'winerror') and e.winerror == 123:
+                    return False
+                elif e.errno in {errno.ENAMETOOLONG, errno.ERANGE}:
+                    return False
+            except ValueError as exc:
+                return False
+                # If a "ValueError" exception was raised, it almost certainly has the
+                # error message "embedded NUL character" indicating an invalid pathname
+    except TypeError:
+        return False
+    else:
+        return True

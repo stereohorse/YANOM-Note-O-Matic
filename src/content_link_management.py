@@ -7,6 +7,8 @@ from urllib.parse import urlparse, unquote
 
 from bs4 import BeautifulSoup
 
+import helper_functions
+
 
 def absolute_path_from_relative_path(file: Path, link: str) -> Path:
     """Generate an absolute path given a relative link from a file and the absolute link to that file"""
@@ -404,6 +406,20 @@ def split_existing_links_copyable_non_copyable(content_file_path: Path,
     return copyable_status_links(copyable_attachment_path_set, non_copyable_relative, non_copyable_absolute)
 
 
+def split_valid_and_invalid_link_paths(all_paths):
+    valid_paths = set()
+    invalid_paths = set()
+    for path in all_paths:
+        if helper_functions.is_path_valid(str(path)):
+            valid_paths.add(path)
+            continue
+        invalid_paths.add(path)
+
+    validity_status_links = namedtuple('validity_status_links',
+                                       'valid, invalid')
+    return validity_status_links(valid_paths, invalid_paths)
+
+
 def update_content_with_new_paths(content: str,
                                   content_file_path: Path,
                                   path_set: Iterable[Path],
@@ -465,6 +481,8 @@ def process_attachments(path_to_content_file: Path, set_of_links: set[Path], not
 
     The sets of links based on the status of that links.
         all - all links found in the content that are not to other note files being converted.
+        valid_links - set of links that are invalid for the current file system.
+        invalid_links - set of links that are invalid for the current file system.
         non-existing - file is not found in file system.
         existing - file was found in file system.
         copyable - file is in the path of the source_absolute path.
@@ -503,6 +521,8 @@ def process_attachments(path_to_content_file: Path, set_of_links: set[Path], not
     namedtuple attachment_links:
         named tuple containing
         all_links - set of all links to local files attached to the note page
+        valid_links - set of links that are invalid for the current file system
+        invalid_links - set of links that are invalid for the current file system
         existing - set of links to files that exist on the local file system
         non_existing - set of links to files that do not exist on the local file system
         copyable - set of links to files that are in the same path as the source of the content
@@ -512,8 +532,10 @@ def process_attachments(path_to_content_file: Path, set_of_links: set[Path], not
 
     all_attachments = remove_content_links_from_links(path_to_content_file, note_paths, set_of_links)
 
+    link_validity = split_valid_and_invalid_link_paths(all_attachments)
+
     file_exists_status_links = split_set_existing_non_existing_links(path_to_content_file,
-                                                                     all_attachments)
+                                                                     link_validity.valid)
 
     copyable_status_links = split_existing_links_copyable_non_copyable(path_to_content_file,
                                                                        source_absolute_root,
@@ -524,14 +546,19 @@ def process_attachments(path_to_content_file: Path, set_of_links: set[Path], not
 
     attachment_links = namedtuple('attachment_links',
                                   'all, '
+                                  'valid, '
+                                  'invalid, '
                                   'existing, '
                                   'non_existing, '
                                   'copyable, '
                                   'non_copyable_relative, '
                                   'non_copyable_absolute, '
-                                  'copyable_absolute')
+                                  'copyable_absolute'
+                                  )
 
     return attachment_links(all_attachments,
+                            link_validity.valid,
+                            link_validity.invalid,
                             file_exists_status_links.existing,
                             file_exists_status_links.non_existing,
                             copyable_status_links.copyable,
@@ -553,6 +580,8 @@ def get_attachment_paths(source_absolute_root, file_type, file, files_to_convert
 
     The sets of links based on the status of that links.
         all - all links found in the content that are not to other note files being converted.
+        valid_links - set of links that are invalid for the current file system.
+        invalid_links - set of links that are invalid for the current file system.
         non-existing - file is not found in file system.
         existing - file was found in file system.
         copyable - file is in the path of the source_absolute path.
@@ -594,6 +623,8 @@ def get_attachment_paths(source_absolute_root, file_type, file, files_to_convert
     namedtuple attachment_links:
         named tuple containing
         all_links - set of all links to local files attached to the note page
+        valid_links - set of links that are invalid for the current file system
+        invalid_links - set of links that are invalid for the current file system
         existing - set of links to files that exist on the local file system
         non_existing - set of links to files that do not exist on the local file system
         copyable - set of links to files that are in the same path as the source of the content

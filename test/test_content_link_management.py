@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -490,3 +491,119 @@ def test_update_html_link_src():
     result = content_link_management.update_html_link_src(content, old, new)
 
     assert result == expected
+
+
+def test_split_valid_and_invalid_link_paths_windows():
+    if not os.name == 'nt':
+        return
+
+    all_attachments = [
+        Path('/hello/dog\0/cat'),
+        Path('file:///K:/SPSS%20info/'),
+        Path('c:/SPSS%20inf'),
+        Path('attachments\example_file.pdf'),
+        Path('c:\\windows'),
+    ]
+
+    expected_invalid = {
+        Path('/hello/dog\0/cat'),
+        Path('file:///K:/SPSS%20info/'),
+    }
+
+    expected_valid = {
+        Path('c:/SPSS%20inf'),
+        Path('attachments\example_file.pdf'),
+        Path('c:\\windows'),
+    }
+
+    result = content_link_management.split_valid_and_invalid_link_paths(all_attachments)
+
+    assert result.invalid == expected_invalid
+
+    assert result.valid == expected_valid
+
+
+def test_split_valid_and_invalid_link_paths_unix_like():
+    if os.name == 'nt':
+        return
+
+    all_attachments = [
+        Path('/hello/dog\0/cat'),
+        Path('file:///K:/SPSS%20info/'),
+        Path('c:/SPSS%20inf'),
+        Path('attachments\example_file.pdf'),
+    ]
+
+    expected_invalid = {
+        Path('/hello/dog\0/cat'),
+    }
+
+    expected_valid = {
+        Path('file:///K:/SPSS%20info/'),
+        Path('c:/SPSS%20inf'),
+        Path('attachments\example_file.pdf'),
+    }
+
+    result = content_link_management.split_valid_and_invalid_link_paths(all_attachments)
+
+    assert result.invalid == expected_invalid
+
+    assert result.valid == expected_valid
+
+
+def test_split_valid_and_invalid_link_paths_windows():
+    if not os.name == 'nt':
+        return
+
+    all_attachments = [
+        Path('/hello/dog\0/cat'),
+        Path('file:///K:/SPSS%20info/'),
+        Path('c:/SPSS%20inf'),
+        Path('attachments\example_file.pdf'),
+        Path('c:\\windows'),
+    ]
+
+    expected_invalid = {
+        Path('/hello/dog\0/cat'),
+        Path('file:///K:/SPSS%20info/'),
+    }
+
+    expected_valid = {
+        Path('c:/SPSS%20inf'),
+        Path('attachments\example_file.pdf'),
+        Path('c:\\windows'),
+    }
+
+    result = content_link_management.split_valid_and_invalid_link_paths(all_attachments)
+
+    assert result.invalid == expected_invalid
+
+    assert result.valid == expected_valid
+
+
+def test_split_valid_and_invalid_link_paths_unix_like():
+    if os.name == 'nt':
+        return
+
+    all_attachments = [
+        Path('/hello/dog\0/cat'),
+        Path('file:///K:/SPSS%20info/'),
+        Path('c:/SPSS%20inf'),
+        Path('attachments\example_file.pdf'),
+    ]
+
+    expected_invalid = {
+        Path('/hello/dog\0/cat'),
+    }
+
+    expected_valid = {
+        Path('file:///K:/SPSS%20info/'),
+        Path('c:/SPSS%20inf'),
+        Path('attachments\example_file.pdf'),
+    }
+
+    result = content_link_management.split_valid_and_invalid_link_paths(all_attachments)
+
+    assert result.invalid == expected_invalid
+
+    assert result.valid == expected_valid
