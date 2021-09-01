@@ -6,7 +6,7 @@ import sys
 from alive_progress import alive_bar
 
 import config
-from content_link_management import find_local_file_links_in_content, process_attachments
+from content_link_management import find_local_file_links_in_content, process_attachments, get_set_of_all_files
 from file_converter_HTML_to_MD import HTMLToMDConverter
 from file_converter_MD_to_HTML import MDToHTMLConverter
 from file_converter_MD_to_MD import MDToMDConverter
@@ -58,6 +58,7 @@ class NotesConvertor:
         self._attachment_details = {}
         self._nsx_null_attachments = {}
         self._encrypted_notes = []
+        self._exported_files = set()
 
     def convert_notes(self):
         self.evaluate_command_line_arguments()
@@ -68,7 +69,7 @@ class NotesConvertor:
             self.convert_markdown()
         else:
             self.convert_nsx()
-            self.check_nsx_attachment_links()
+            # self.check_nsx_attachment_links()
         self.output_results_if_not_silent_mode()
         self.log_results()
         self.logger.info("Processing Completed")
@@ -92,7 +93,8 @@ class NotesConvertor:
             self.handle_orphan_files_as_required()
 
     def handle_orphan_files_as_required(self):
-        self._orphan_files = self.get_list_of_orphan_files()
+        set_of_all_files = get_set_of_all_files(self.conversion_settings.source_absolute_root)
+        self._orphan_files = self.get_list_of_orphan_files(set_of_all_files)
         path_to_orphans = ''
 
         if self.conversion_settings.orphans == 'ignore':
@@ -138,7 +140,8 @@ class NotesConvertor:
                 file_converter.convert_note(file)
                 if file_converter.renamed_note_file:
                     self._set_of_renamed_note_files.add(file_converter.renamed_note_file)
-                file_converter.write_post_processed_content()
+                exported_file_path = file_converter.write_post_processed_content()
+                self._exported_files.add(exported_file_path)
                 file_count += 1
 
                 if not self.conversion_settings.source_absolute_root == self.conversion_settings.export_folder_absolute:
@@ -172,25 +175,12 @@ class NotesConvertor:
 
         shutil.copy(attachment, target_attachment_absolute_path)
 
-    def get_list_of_orphan_files(self):
-        set_of_all_files = {
-            Path(file)
-            for file
-            in self.conversion_settings.source_absolute_root.rglob('*')
-            if Path(file).is_file()
-        }
-
-        export_file_suffix = file_mover.get_file_suffix_for(self.conversion_settings.export_format)
-        set_of_new_export_files = {
-            Path(self.conversion_settings.export_folder_absolute, f'{file.stem}{export_file_suffix}')
-            for file in self._set_files_to_convert
-        }
-
+    def get_list_of_orphan_files(self, set_of_all_files):
         orphans = set_of_all_files
         for file, attachments in self._attachment_details.items():
             orphans = orphans \
                       - self._set_files_to_convert \
-                      - set_of_new_export_files \
+                      - set(self._exported_files) \
                       - attachments['copyable_absolute'] \
                       - attachments['non_copyable_absolute'] \
                       - self._set_of_renamed_note_files
@@ -222,6 +212,7 @@ class NotesConvertor:
                 self.update_processing_stats(nsx_file)
                 self._nsx_null_attachments.update(nsx_file.null_attachments)
                 self._encrypted_notes += nsx_file.encrypted_notes
+                self._exported_files.update(nsx_file.exported_notes)
 
     def update_processing_stats(self, nsx_file):
         self._note_page_count += nsx_file.note_page_count

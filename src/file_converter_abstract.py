@@ -115,7 +115,7 @@ class FileConverter(ABC):
         self.logger.info(f"Writing new file {target_path}")
         target_path.parent.mkdir(parents=True, exist_ok=True)
         file_writer.write_text(target_path, self._post_processed_content)
-        self._created_note_path = target_path
+        return target_path
 
     def rename_target_file_if_it_already_exists(self):
         """

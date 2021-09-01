@@ -666,3 +666,13 @@ def update_markdown_link_src(content: str, old_name: Path, new_name: Path) -> st
             content = content.replace(tag, new_image_tag)
 
     return content
+
+
+def get_set_of_all_files(path: Path):
+    set_of_all_files = {
+        Path(file)
+        for file
+        in path.rglob('*')
+        if Path(file).is_file()
+    }
+    return set_of_all_files

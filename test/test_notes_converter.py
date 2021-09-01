@@ -7,6 +7,7 @@ import pytest
 
 import config
 import config_data
+import content_link_management
 import conversion_settings
 import file_converter_HTML_to_MD
 import file_converter_MD_to_HTML
@@ -81,6 +82,7 @@ class FakeNSXFile:
         self.attachment_count = 4
         self.null_attachments = []
         self.encrypted_notes = []
+        self.exported_notes = []
 
     @staticmethod
     def process_nsx_file():
@@ -564,9 +566,9 @@ def test_get_list_of_orphan_files(tmp_path):
     nc.conversion_settings = conversion_settings.ConversionSettings()
     nc.conversion_settings._source = Path(tmp_path)
     nc.conversion_settings._source_absolute_root = Path(tmp_path)
-    nc._set_files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md'),
-                                Path(tmp_path, 'some_folder/data/my_notebook/note.md'),
-                                }
+    nc._exported_files = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md'),
+                          Path(tmp_path, 'some_folder/data/my_notebook/note.md'),
+                          }
     nc._attachment_details = {
         'nine.md': {
             'copyable_absolute': {
@@ -579,9 +581,21 @@ def test_get_list_of_orphan_files(tmp_path):
             'non_copyable_absolute': {'fake'},
         },
     }
-    files = nc.get_list_of_orphan_files()
+    expected_files = {Path(tmp_path, 'some_folder/attachments/four.csv'),
+                        Path(tmp_path, 'some_folder/data/my_notebook/six.csv'),
+                        Path(tmp_path, 'some_folder/data/my_other_notebook/attachments/five.pdf'),
+                        Path(tmp_path, 'some_folder/attachments/four.csv'),
+                        Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png'),
+                        Path(tmp_path, 'some_folder/data/attachments/two.csv'),
+                        Path(tmp_path, 'some_folder/three.png'),
+                        }
+
+    set_of_all_files = content_link_management.get_set_of_all_files(tmp_path)
+    files = nc.get_list_of_orphan_files(set_of_all_files)
 
     assert len(files) == 7
+    for file in expected_files:
+        assert file in files
 
 
 def test_handle_orphan_files_as_required_orphans_set_to_orphans_folder(tmp_path):
@@ -612,9 +626,8 @@ def test_handle_orphan_files_as_required_orphans_set_to_orphans_folder(tmp_path)
     nc.conversion_settings._source = Path(tmp_path)
     nc.conversion_settings._source_absolute_root = Path(tmp_path)
     nc.conversion_settings.export_folder = Path(tmp_path, 'notes')
-    nc._set_files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md'),
-                                Path(tmp_path, 'some_folder/data/my_notebook/note.md'),
-                                }
+    nc._exported_files = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md'),
+                          Path(tmp_path, 'some_folder/data/my_notebook/note.md')}
     nc._attachment_details = {
         'nine.md': {
             'copyable_absolute': {
@@ -686,9 +699,8 @@ def test_handle_orphan_files_as_required_orphans_copy(tmp_path):
     nc.conversion_settings._source = Path(tmp_path)
     nc.conversion_settings._source_absolute_root = Path(tmp_path)
     nc.conversion_settings.export_folder = Path(tmp_path, 'notes')
-    nc._set_files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md'),
-                                Path(tmp_path, 'some_folder/data/my_notebook/note.md'),
-                                }
+    nc._exported_files = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md'),
+                          Path(tmp_path, 'some_folder/data/my_notebook/note.md')}
     nc._attachment_details = {
         'nine.md': {
             'copyable_absolute': {
@@ -732,8 +744,6 @@ def test_handle_orphan_files_as_required_orphans_copy(tmp_path):
     Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png').exists()
 
 
-
-
 def test_handle_orphan_files_as_required_orphans_ignore(tmp_path):
     Path(tmp_path, 'some_folder/data/my_notebook/attachments').mkdir(parents=True)
     Path(tmp_path, 'some_folder/attachments').mkdir(parents=True)
@@ -762,9 +772,8 @@ def test_handle_orphan_files_as_required_orphans_ignore(tmp_path):
     nc.conversion_settings._source = Path(tmp_path)
     nc.conversion_settings._source_absolute_root = Path(tmp_path)
     nc.conversion_settings.export_folder = Path(tmp_path, 'notes')
-    nc._set_files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md'),
-                                Path(tmp_path, 'some_folder/data/my_notebook/note.md'),
-                                }
+    nc._exported_files = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md'),
+                          Path(tmp_path, 'some_folder/data/my_notebook/note.md')}
     nc._attachment_details = {
         'nine.md': {
             'copyable_absolute': {

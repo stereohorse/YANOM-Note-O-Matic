@@ -46,6 +46,7 @@ class NSXFile:
         self._inter_note_link_processor = NSXInterNoteLinkProcessor()
         self._null_attachments = {}
         self._encrypted_notes = []
+        self._exported_notes = []
 
     def process_nsx_file(self):
         self.logger.info(f"Processing {self._nsx_file_name}")
@@ -250,6 +251,7 @@ class NSXFile:
             for note_page_id in self._note_pages:
                 file_writer.store_file(self._note_pages[note_page_id].full_path,
                                        self._note_pages[note_page_id].converted_content)
+                self._exported_notes.append(self._note_pages[note_page_id].full_path)
                 if not config.yanom_globals.is_silent:
                     bar()
 
@@ -300,3 +302,7 @@ class NSXFile:
     @property
     def nsx_file_name(self):
         return self._nsx_file_name
+
+    @property
+    def exported_notes(self):
+        return self._exported_notes
