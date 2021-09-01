@@ -5,7 +5,6 @@ import pytest
 
 import sn_attachment
 import conversion_settings
-import sn_notebook
 
 
 class NSXFile:
@@ -13,7 +12,7 @@ class NSXFile:
     conversion_settings = 'conversion_settings'
 
     @staticmethod
-    def fetch_attachment_file(ignored, ignored2):
+    def fetch_attachment_file(_ignored, _ignored2):
         return 'file name in nsx'
 
 
@@ -26,15 +25,16 @@ class Note:
     def __init__(self):
         self.nsx_file = NSXFile()
         self.conversion_settings = conversion_settings.ConversionSettings()
-        self.note_json = {'attachment':
-                              {'1234':
-                                   {'ref': '54321',
-                                    'md5': 'qwerty',
-                                    'name': 'my_name',
-                                    'type': 'image/png',
-                                    }
-                               }
-                          }
+        self.note_json = {
+            'attachment': {
+                '1234':
+                    {'ref': '54321',
+                     'md5': 'qwerty',
+                     'name': 'my_name.png',
+                     'type': 'image/png',
+                     }
+            }
+        }
         self.notebook_folder_name = 'notebook_folder'
         self.title = 'note_title'
         self.parent_notebook = Notebook()
@@ -53,8 +53,8 @@ def test_FileNSAttachment_create_html_link():
     attachment_id = '1234'
     file_attachment = sn_attachment.FileNSAttachment(note, attachment_id)
 
-    file_attachment._file_name = 'my_file.png'
-    file_attachment._path_relative_to_notebook = 'attachments/my_file.png'
+    file_attachment._file_name = Path('my_file.png')
+    file_attachment._path_relative_to_notebook = Path('attachments/my_file.png')
     file_attachment.create_html_link()
 
     assert file_attachment.html_link == '<a href="attachments/my_file.png">my_file.png</a>'
@@ -92,7 +92,7 @@ def test_ImageNSAttachment_create_html_link():
     attachment_id = '1234'
     image_attachment = sn_attachment.ImageNSAttachment(note, attachment_id)
 
-    image_attachment._file_name = 'my_file.png'
+    image_attachment._file_name = Path('my_file.png')
     image_attachment.create_html_link()
 
     assert image_attachment.html_link == f'<img src="my_file.png" >'
@@ -242,49 +242,63 @@ def test_is_duplicate_file_is_a_duplicate():
     note = Note()
     attachment_id = '1234'
     image_attachment = sn_attachment.FileNSAttachment(note, attachment_id)
-    image_attachment._json = {'attachment':
-                                  {'1234':
-                                       {'md5': '0987', 'name': 'my_file.pdf'}
-                                   }
-                              }
+    image_attachment._json = {
+        'attachment':
+            {
+                '1234':
+                    {'md5': '0987', 'name': 'my_file.pdf'}
+            }
+    }
 
     note.parent_notebook.attachment_md5_file_name_dict = {'0987': "my_file.pdf"}
 
     assert image_attachment.is_duplicate_file() is True
 
 
-def test_store_file(monkeypatch):
-    def fake_store_file(ignored, ignored2):
+def test_store_file(monkeypatch, tmp_path):
+    def fake_store_file(_ignored, _ignored2):
         pass
 
     note = Note()
+    note.conversion_settings.export_folder = tmp_path
     attachment_id = '1234'
     image_attachment = sn_attachment.FileNSAttachment(note, attachment_id)
-    image_attachment._json = {'attachment':
-                                  {'1234':
-                                       {'md5': 'abcd', 'name': 'not_my_file.pdf'}
-                                   }
-                              }
+    image_attachment._json = {
+        'attachment':
+            {
+                '1234':
+                    {'md5': 'abcd', 'name': 'not_my_file.pdf'}
+            }
+    }
 
     note.parent_notebook.attachment_md5_file_name_dict = {'0987': "my_file.pdf"}
+
     monkeypatch.setattr(file_writer, 'store_file', fake_store_file)
+    image_attachment.create_file_name()
+    image_attachment.generate_relative_path_to_notebook()
+    image_attachment.generate_absolute_path()
+    assert image_attachment.file_name == Path('my_name.png')
+    assert image_attachment._full_path == Path(tmp_path, 'notebook_folder', 'attachments', 'my_name.png')
+
     image_attachment.store_file()
 
     assert len(note.parent_notebook.attachment_md5_file_name_dict) == 2
 
 
 def test_store_file_will_not_store_as_duplicate_md5_and_name(monkeypatch):
-    def fake_store_file(ignored, ignored2):
+    def fake_store_file(_ignored, _ignored2):
         pass
 
     note = Note()
     attachment_id = '1234'
     image_attachment = sn_attachment.FileNSAttachment(note, attachment_id)
-    image_attachment._json = {'attachment':
-                                  {'1234':
-                                       {'md5': '0987', 'name': 'my_file.pdf'}
-                                   }
-                              }
+    image_attachment._json = {
+        'attachment':
+            {
+                '1234':
+                    {'md5': '0987', 'name': 'my_file.pdf'}
+            }
+    }
 
     note.parent_notebook.attachment_md5_file_name_dict = {'0987': "my_file.pdf"}
     monkeypatch.setattr(file_writer, 'store_file', fake_store_file)

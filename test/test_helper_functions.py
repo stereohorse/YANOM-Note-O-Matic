@@ -198,6 +198,7 @@ def test_clean_path_parts():
 
     assert result == ['hello-hello', '']
 
+
 @pytest.mark.parametrize(
     'parts, expected, max_length', [
         (['123456789', '123456789'],
@@ -377,7 +378,13 @@ def test_are_windows_long_paths_enabled():
 
 
 def test_file_extension_from_bytes():
-    with open('test/fixtures/png_with_no_extension', "rb") as file:
+    # if run from root of project as full test of test folder
+    path_to_fixture_file = Path('test/fixtures/png_with_no_extension')
+
+    if Path.cwd().name == 'test':  # if run single this test alone in IDE this will be path
+        path_to_fixture_file = Path('fixtures/png_with_no_extension')
+
+    with open(path_to_fixture_file, "rb") as file:
         file_bytes = file.read(261)
 
         result = helper_functions.file_extension_from_bytes(file_bytes)
@@ -488,7 +495,7 @@ def test_next_available_directory_name_existing_file(tmp_path):
     file.touch()
 
     with pytest.raises(ValueError):
-        result = helper_functions.next_available_directory_name(file)
+        _ = helper_functions.next_available_directory_name(file)
 
 
 def test_next_available_directory_name_check_casting(tmp_path):
@@ -611,5 +618,60 @@ def test_is_path_valid_unix_like(path_to_test, expected):
         return
 
     result = helper_functions.is_path_valid(path_to_test)
+
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    'uri, path_type, expected', [
+        ('some_folder/some%20space/file%20space.pdf', PurePosixPath, PurePosixPath('some_folder/some space/file space.pdf')),
+        ('some_folder/some_space/file_space.pdf', PurePosixPath, PurePosixPath('some_folder/some_space/file_space.pdf')),
+        ('file:///Users/user/folder/attachments/example attachment.pdf', PurePosixPath, PurePosixPath('/Users/user/folder/attachments/example attachment.pdf')),
+        ('file:///Users/user/folder/attachments/example%20attachment.pdf', PurePosixPath, PurePosixPath('/Users/user/folder/attachments/example attachment.pdf')),
+        ('file://c:/users/files/a file.pdf', PurePosixPath, PurePosixPath('/users/files/a file.pdf')),
+        ('some_folder/some%20space/file%20space.pdf', PureWindowsPath, PureWindowsPath('some_folder/some space/file space.pdf')),
+        ('some_folder/some_space/file_space.pdf', PureWindowsPath, PureWindowsPath('some_folder/some_space/file_space.pdf')),
+        ('file:///Users/user/folder/attachments/example attachment.pdf', PureWindowsPath,
+         PureWindowsPath('/Users/user/folder/attachments/example attachment.pdf')),
+        ('file:///Users/user/folder/attachments/example%20attachment.pdf', PureWindowsPath,
+         PureWindowsPath('/Users/user/folder/attachments/example attachment.pdf')),
+        ('file://c:/users/files/a file.pdf', PureWindowsPath, PureWindowsPath('c:/users/files/a file.pdf')),
+        ]
+)
+def test_file_uri_to_path(uri, path_type, expected):
+    result = helper_functions.file_uri_to_path(uri, path_type)
+
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    'expected, path', [
+        ('some_folder/some_space/file_space.pdf', PurePosixPath('some_folder/some_space/file_space.pdf')),
+        ('/Users/user/folder/attachments/example%20attachment.pdf',
+         PurePosixPath('/Users/user/folder/attachments/example%20attachment.pdf')),
+        ('/Users/user/folder/attachments/example attachment.pdf',
+         PurePosixPath('/Users/user/folder/attachments/example attachment.pdf')),
+        ('/Users/user/folder/attachments/example attachment.pdf',
+         PurePosixPath('/Users/user/folder/attachments/example attachment.pdf')),
+        ('c:/users/files/a file.pdf', PurePosixPath('c:/users/files/a file.pdf')),
+        ('some_folder/some space/file%20space.pdf', PureWindowsPath('some_folder/some space/file%20space.pdf')),
+        ('some_folder/some space/file space.pdf', PureWindowsPath('some_folder/some space/file space.pdf')),
+        ('some_folder/some_space/file_space.pdf', PureWindowsPath('some_folder/some_space/file_space.pdf')),
+        ('/Users/user/folder/attachments/example attachment.pdf',
+         PureWindowsPath('/Users/user/folder/attachments/example attachment.pdf')),
+        ('/Users/user/folder/attachments/example attachment.pdf',
+         PureWindowsPath('\\Users\\user\\folder\\attachments\\example attachment.pdf')),
+        ('c:/users/files/a file.pdf',
+         PureWindowsPath('c:/users/files/a file.pdf')),
+        ('',
+         PureWindowsPath('')),
+        ('',
+         PurePosixPath('')),
+        ('',
+         ''),
+        ]
+)
+def test_path_to_posix_str(expected, path):
+    result = helper_functions.path_to_posix_str(path)
 
     assert result == expected

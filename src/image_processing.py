@@ -4,6 +4,7 @@ from typing import Optional
 
 from bs4 import BeautifulSoup
 
+import helper_functions
 import config
 
 
@@ -36,9 +37,11 @@ def clean_html_image_tag(tag, src_path=None):
     dict : attrs dict that can be used to replace an existing attrs dictionary of an img tag - "tag.attrs = new_attrs"
 
     """
-    new_attrs = {'src': src_path}
     if not src_path:
-        new_attrs['src'] = tag.attrs.get('src', "")
+        src_path = tag.attrs.get('src', "")
+
+    src_path = helper_functions.path_to_posix_str(src_path)
+    new_attrs = {'src': src_path}
 
     if 'width' in tag.attrs:
         new_attrs['width'] = tag.attrs['width']
@@ -53,7 +56,8 @@ def generate_obsidian_image_markdown_link(tag) -> Optional[str]:
     """
     Generate an obsidian image markdown link string.
 
-    Use the values in the tag.attrs dict to populate a obsidian image link and return as a string.
+    Use the values in the tag.attrs dict to populate a obsidian image link and return as a string.  The source path
+    in the returned link is formatted as a posix path (forward slashes).
 
     Parameters
     ==========
@@ -76,6 +80,7 @@ def generate_obsidian_image_markdown_link(tag) -> Optional[str]:
 
     alt = tag.attrs.get('alt', '')
     src = tag.attrs.get('src', '')
+    src = helper_functions.path_to_posix_str(src)
 
     obsidian_img_tag_markdown = f'![{width}]({src})'
     if alt:
@@ -86,7 +91,9 @@ def generate_obsidian_image_markdown_link(tag) -> Optional[str]:
 
 def replace_obsidian_image_links_with_html_img_tag(content: str) -> str:
     """
-    Reformat obsidian markdown formatted image links to markdown html img tag format in the provided content
+    Reformat obsidian markdown formatted image links to markdown html img tag format in the provided content.
+
+    The string provided is analysed, the source is formatted as a posix path and a html img tag string is generated.
 
     ![Some alt text|600](my_image.gif)
     becomes
@@ -123,13 +130,13 @@ def replace_obsidian_image_links_with_html_img_tag(content: str) -> str:
         if not width.isnumeric():
             continue  # skip ahead as this tag is not formatted for obsidian
 
-        src = tag.rsplit('(', 1)[1].rstrip(')')
-
         if alt_text:
             alt_text = f'alt="{alt_text}" '
 
         width = f' width="{width}"'
 
+        src = tag.rsplit('(', 1)[1].rstrip(')')
+        src = helper_functions.path_to_posix_str(src)
         src = f'src="{src}"'
 
         new_image_tag = f'<img {alt_text}{src}{width} />'
@@ -163,10 +170,15 @@ def replace_markdown_html_img_tag_with_obsidian_image_links(content: str) -> str
     replacements = {}
     for i in range(len(tags)):
         new_obsidian_link = generate_obsidian_image_markdown_link(tags[i])
-        if new_obsidian_link:  # confirm new link was returned
-            replacements[str(tags[i])] = new_obsidian_link
+        if not new_obsidian_link:  # no new link was returned skip ahead
+            continue
+
+        replacements[str(tags[i])] = new_obsidian_link
 
     new_content = str(soup)
+    # we use the str(soup) because the string in the replacements list may not be the same string as in the content
+    # as soup swaps parameters around etc
+
     for old, new in replacements.items():
         new_content = new_content.replace(old, new)
 

@@ -7,11 +7,12 @@ import content_link_management
 from content_link_management import get_attachment_paths, update_content_with_new_paths
 from conversion_settings import ConversionSettings
 from file_converter_HTML_to_MD import HTMLToMDConverter
+import helper_functions
 
 
 def test_absolute_path_from_relative_path(tmp_path):
     file_path = Path(tmp_path, 'some_folder/another_folder/file.txt')
-    link = '../a_different_folder/the_file.txt'
+    link = Path('../a_different_folder/the_file.txt')
 
     expected = Path(tmp_path, 'some_folder/a_different_folder/the_file.txt')
 
@@ -34,8 +35,8 @@ def test_calculate_relative_path(tmp_path):
 def test_update_content_with_new_link():
     content = '![non-copyable](../../attachments/four.csv)\n'
     expected = '![non-copyable](../attachments/four.csv)\n'
-    old_path = '../../attachments/four.csv'
-    new_path = '../attachments/four.csv'
+    old_path = Path('../../attachments/four.csv')
+    new_path = Path('../attachments/four.csv')
     result = content_link_management.update_content_with_new_link(old_path, new_path, content)
 
     assert result == expected
@@ -324,7 +325,7 @@ def test_update_content_with_new_paths_absolute_true(tmp_path):
     make_absolute = True
     root_for_absolute_paths = Path(tmp_path, 'some_folder/folder3')
 
-    expected = f'![something]({str(tmp_path)}/attachments/five.pdf)\n![something]({tmp_path}/attachments/one.pdf)'
+    expected = f'![something]({helper_functions.path_to_posix_str(tmp_path)}/attachments/five.pdf)\n![something]({tmp_path}/attachments/one.pdf)'
 
     result = content_link_management.update_content_with_new_paths(content,
                                                                    content_file_path,
@@ -335,7 +336,10 @@ def test_update_content_with_new_paths_absolute_true(tmp_path):
     assert result == expected
 
 
-def test_split_existing_links_copyable_non_copyable2():
+def test_split_existing_links_copyable_non_copyable2_posix_file_system():
+    if os.name == 'nt':
+        return
+
     source_absolute_root = Path('/Users/user/PycharmProjects/YANOM-Note-O-Matic/src/data/notes_big')
     link_set = {Path('/Users/user/PycharmProjects/YANOM-Note-O-Matic/src/data/notes_big/portsmouth/attachments/298991566137280954.png')}
     file = Path('/Users/user/PycharmProjects/YANOM-Note-O-Matic/src/data/notes_big/portsmouth/process-capability-geotsch.md')
@@ -343,6 +347,24 @@ def test_split_existing_links_copyable_non_copyable2():
     results = content_link_management.split_existing_links_copyable_non_copyable(file, source_absolute_root, link_set)
 
     assert results.copyable == {Path('/Users/user/PycharmProjects/YANOM-Note-O-Matic/src/data/notes_big/portsmouth/attachments/298991566137280954.png')}
+    assert len(results.non_copyable_relative) == 0
+    assert len(results.non_copyable_absolute) == 0
+
+
+def test_split_existing_links_copyable_non_copyable2_windows_file_system():
+    if not os.name == 'nt':
+        return
+
+    source_absolute_root = Path('c:/Users/user/PycharmProjects/YANOM-Note-O-Matic/src/data/notes_big')
+    link_set = {Path(
+        'c:/Users/user/PycharmProjects/YANOM-Note-O-Matic/src/data/notes_big/portsmouth/attachments/298991566137280954.png')}
+    file = Path(
+        'c:/Users/user/PycharmProjects/YANOM-Note-O-Matic/src/data/notes_big/portsmouth/process-capability-geotsch.md')
+
+    results = content_link_management.split_existing_links_copyable_non_copyable(file, source_absolute_root, link_set)
+
+    assert results.copyable == {Path(
+        'c:/Users/user/PycharmProjects/YANOM-Note-O-Matic/src/data/notes_big/portsmouth/attachments/298991566137280954.png')}
     assert len(results.non_copyable_relative) == 0
     assert len(results.non_copyable_absolute) == 0
 
@@ -368,9 +390,9 @@ def test_update_content_with_new_paths_for_non_movable_attachments(tmp_path):
     Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png').touch()
 
     file_path = Path(tmp_path, 'some_folder/data/my_notebook/note.md')
-    content = f'![copyable|600]({str(tmp_path)}/some_folder/data/my_notebook/attachments/one.png)\n' \
-              f'![non-existing|600]({str(tmp_path)}/some_folder/two.png)\n' \
-              f'![non-copyable|600]({str(tmp_path)}/some_folder/three.png)\n' \
+    content = f'![copyable|600]({helper_functions.path_to_posix_str(tmp_path)}/some_folder/data/my_notebook/attachments/one.png)\n' \
+              f'![non-existing|600]({helper_functions.path_to_posix_str(tmp_path)}/some_folder/two.png)\n' \
+              f'![non-copyable|600]({helper_functions.path_to_posix_str(tmp_path)}/some_folder/three.png)\n' \
               f'![non-copyable|600](../../three.png)\n' \
               f'![non-existing|600](attachments/three.pdf)\n' \
               f'![copyable|600](attachments/eight.pdf)\n' \
@@ -391,10 +413,10 @@ def test_update_content_with_new_paths_for_non_movable_attachments(tmp_path):
               f'<img src="" />\n' \
               f'<a href="">empty href link</a>'
 
-    expected_content = f'![copyable|600]({str(tmp_path)}/some_folder/data/my_notebook/attachments/one.png)\n' \
-                       f'![non-existing|600]({str(tmp_path)}/some_folder/two.png)\n' \
-                       f'![non-copyable|600]({str(tmp_path)}/some_folder/three.png)\n' \
-                       f'![non-copyable|600]({str(tmp_path)}/some_folder/three.png)\n' \
+    expected_content = f'![copyable|600]({helper_functions.path_to_posix_str(tmp_path)}/some_folder/data/my_notebook/attachments/one.png)\n' \
+                       f'![non-existing|600]({helper_functions.path_to_posix_str(tmp_path)}/some_folder/two.png)\n' \
+                       f'![non-copyable|600]({helper_functions.path_to_posix_str(tmp_path)}/some_folder/three.png)\n' \
+                       f'![non-copyable|600]({helper_functions.path_to_posix_str(tmp_path)}/some_folder/three.png)\n' \
                        f'![non-existing|600](attachments/three.pdf)\n' \
                        f'![copyable|600](attachments/eight.pdf)\n' \
                        f'![copyable](../attachments/two.csv)\n' \
@@ -424,7 +446,7 @@ def test_update_content_with_new_paths_for_non_movable_attachments(tmp_path):
     file_converter._file = file_path
     file_converter._files_to_convert = {Path(tmp_path, 'some_folder/data/my_notebook/nine.md')}
     attachment_links = get_attachment_paths(file_converter._conversion_settings.source_absolute_root,
-                                            file_converter._conversion_settings.conversion_input,
+                                            file_converter._conversion_settings.export_format,
                                             file_converter._file,
                                             file_converter._files_to_convert, content)
     result_content = update_content_with_new_paths(content,
@@ -491,64 +513,6 @@ def test_update_html_link_src():
     result = content_link_management.update_html_link_src(content, old, new)
 
     assert result == expected
-
-
-def test_split_valid_and_invalid_link_paths_windows():
-    if not os.name == 'nt':
-        return
-
-    all_attachments = [
-        Path('/hello/dog\0/cat'),
-        Path('file:///K:/SPSS%20info/'),
-        Path('c:/SPSS%20inf'),
-        Path('attachments\example_file.pdf'),
-        Path('c:\\windows'),
-    ]
-
-    expected_invalid = {
-        Path('/hello/dog\0/cat'),
-        Path('file:///K:/SPSS%20info/'),
-    }
-
-    expected_valid = {
-        Path('c:/SPSS%20inf'),
-        Path('attachments\example_file.pdf'),
-        Path('c:\\windows'),
-    }
-
-    result = content_link_management.split_valid_and_invalid_link_paths(all_attachments)
-
-    assert result.invalid == expected_invalid
-
-    assert result.valid == expected_valid
-
-
-def test_split_valid_and_invalid_link_paths_unix_like():
-    if os.name == 'nt':
-        return
-
-    all_attachments = [
-        Path('/hello/dog\0/cat'),
-        Path('file:///K:/SPSS%20info/'),
-        Path('c:/SPSS%20inf'),
-        Path('attachments\example_file.pdf'),
-    ]
-
-    expected_invalid = {
-        Path('/hello/dog\0/cat'),
-    }
-
-    expected_valid = {
-        Path('file:///K:/SPSS%20info/'),
-        Path('c:/SPSS%20inf'),
-        Path('attachments\example_file.pdf'),
-    }
-
-    result = content_link_management.split_valid_and_invalid_link_paths(all_attachments)
-
-    assert result.invalid == expected_invalid
-
-    assert result.valid == expected_valid
 
 
 def test_split_valid_and_invalid_link_paths_windows():

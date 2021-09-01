@@ -26,9 +26,9 @@ class NSAttachment(ABC):
         self._conversion_settings = note.conversion_settings
         self._note_title = note.title
         self._parent_notebook = note.parent_notebook
-        self._file_name = ''
-        self._path_relative_to_notebook = ''
-        self._full_path = ''
+        self._file_name = None
+        self._path_relative_to_notebook = None
+        self._full_path = None
         self._filename_inside_nsx = ''
         self._html_link = ''
         self._attachment_folder_name = self._conversion_settings.attachment_folder_name
@@ -111,7 +111,7 @@ class FileNSAttachment(NSAttachment):
         self.logger.debug(f'Attachment md5 is "{self._filename_inside_nsx}"')
 
     def create_html_link(self):
-        self._html_link = f'<a href="{self._path_relative_to_notebook}">{self.file_name}</a>'
+        self._html_link = f'<a href="{helper_functions.path_to_uri(self._path_relative_to_notebook)}">{self.file_name}</a>'
 
     def create_file_name(self):
         self._file_name = Path(helper_functions.generate_clean_filename(self._name,
@@ -172,7 +172,7 @@ class ImageNSAttachment(FileNSAttachment):
         return self._image_ref
 
     def create_html_link(self):
-        self._html_link = f'<img src="{self._file_name}" >'
+        self._html_link = f'<img src="{helper_functions.path_to_uri(Path(self._file_name))}" >'
 
     def create_file_name(self):
         self._name = self._name.replace('ns_attach_image_', '')
@@ -216,9 +216,9 @@ class ChartNSAttachment(NSAttachment):
 
 class ChartImageNSAttachment(ChartNSAttachment):
     def create_html_link(self):
-        self.html_link = f"<img src='{self.path_relative_to_notebook}'>"
+        self.html_link = f'<img src="{helper_functions.path_to_uri(self.path_relative_to_notebook)}">'
 
 
 class ChartStringNSAttachment(ChartNSAttachment):
     def create_html_link(self):
-        self.html_link = f"<a href='{self.path_relative_to_notebook}'>Chart data file</a>"
+        self.html_link = f'<a href="{helper_functions.path_to_uri(self.path_relative_to_notebook)}">Chart data file</a>'

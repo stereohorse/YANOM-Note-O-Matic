@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 import helper_functions
 
 
-def absolute_path_from_relative_path(file: Path, link: str) -> Path:
+def absolute_path_from_relative_path(file: Path, link: Path) -> Path:
     """Generate an absolute path given a relative link from a file and the absolute link to that file"""
     return Path(os.path.abspath(Path(file.parent, link)))
 
@@ -22,7 +22,7 @@ def calculate_relative_path(absolute_link, target_root) -> Path:
 
 def update_content_with_new_link(old_path, new_path, content: str) -> str:
     """Update provided content string with a new path to replace an old path"""
-    return content.replace(str(old_path), str(new_path))
+    return content.replace(helper_functions.path_to_posix_str(old_path), helper_functions.path_to_posix_str(new_path))
 
 
 def update_href_link_suffix_in_content(content: str, output_suffix: str, links_to_update: Iterable[Path]) -> str:
@@ -51,8 +51,8 @@ def update_href_link_suffix_in_content(content: str, output_suffix: str, links_t
     for a_tag in soup.findAll(href=True):
         url_path = Path(urlparse(a_tag['href']).path)
         if url_path in links_to_update:
-            link = str(url_path.with_suffix(output_suffix))
-            a_tag['href'] = str(link)
+            link = helper_functions.path_to_posix_str(url_path.with_suffix(output_suffix))
+            a_tag['href'] = link
 
     return str(soup)
 
@@ -81,7 +81,7 @@ def update_relative_links_to_absolute_links(content_file_path: Path, link_set: s
     new_link_set = set()
     for link in link_set:
         if not link.is_absolute():
-            link = absolute_path_from_relative_path(content_file_path, str(link))
+            link = absolute_path_from_relative_path(content_file_path, link)
 
         new_link_set.add(link)
 
@@ -133,8 +133,8 @@ def scan_markdown_content_for_all_paths(content: str):
     Link formats supported are
     [any text](../my_other_notebook/attachments/five.pdf "test tool tip text")
     [or empty](../my_other_notebook/attachments/five.pdf)
-    [any text](https:\\www.google.com "google")
-    [or empty](https:\\www.google.com)
+    [any text](https://www.google.com "google")
+    [or empty](https://www.google.com)
     <a href="../test-book-2/this-is-a-duplicated-title-1.md">This is a duplicated title</a>
     <img src="markdown_monster_icon.png" />
 
@@ -296,7 +296,7 @@ def remove_content_links_from_links(content_file_path: Path,
     for link in links:
         abs_link = link
         if not link.is_absolute():
-            abs_link = absolute_path_from_relative_path(content_file_path, str(link))
+            abs_link = absolute_path_from_relative_path(content_file_path, link)
 
         if abs_link in content_links:
             links_to_remove.add(link)
@@ -337,7 +337,7 @@ def split_set_existing_non_existing_links(content_file_path: Path, links: set[Pa
                 non_existing_links.add(link)
             continue
 
-        absolute_link = absolute_path_from_relative_path(content_file_path, str(link))
+        absolute_link = absolute_path_from_relative_path(content_file_path, link)
 
         if absolute_link.exists():
             existing_links.add(link)
@@ -388,7 +388,7 @@ def split_existing_links_copyable_non_copyable(content_file_path: Path,
     for link in links_to_split:
         abs_link = link
         if not link.is_absolute():
-            abs_link = absolute_path_from_relative_path(content_file_path, str(link))
+            abs_link = absolute_path_from_relative_path(content_file_path, link)
 
         if root_for_copyable_paths in abs_link.parents:
             copyable_attachment_path_set.add(link)
@@ -458,7 +458,7 @@ def update_content_with_new_paths(content: str,
         if original_link.is_absolute():
             continue
 
-        attachment_absolute_path = absolute_path_from_relative_path(content_file_path, str(original_link))
+        attachment_absolute_path = absolute_path_from_relative_path(content_file_path, original_link)
         new_path = attachment_absolute_path
 
         if not make_absolute:

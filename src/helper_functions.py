@@ -773,3 +773,23 @@ def is_path_valid(path: str) -> bool:
         return False
     else:
         return True
+
+
+def path_to_uri(path: Path) -> str:
+    if path.is_absolute() and os.name == 'nt':
+        return path.as_uri()
+
+    return path.as_posix()
+
+
+def path_to_posix_str(path: Union[Path, str]) -> str:
+    if isinstance(path, str):
+        path_as_posix_str = Path(path).as_posix()
+    else:
+        path_as_posix_str = path.as_posix()
+
+    if path_as_posix_str == '.':
+        return ""
+
+    return path_as_posix_str
+
