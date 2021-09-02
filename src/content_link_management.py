@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 import helper_functions
 
 
-def absolute_path_from_relative_path(file: Path, link: Path) -> Path:
+def absolute_path_from_relative_path(file: Path, link: str) -> Path:
     """Generate an absolute path given a relative link from a file and the absolute link to that file"""
     return Path(os.path.abspath(Path(file.parent, link)))
 
@@ -57,7 +57,7 @@ def update_href_link_suffix_in_content(content: str, output_suffix: str, links_t
     return str(soup)
 
 
-def update_relative_links_to_absolute_links(content_file_path: Path, link_set: set[Path]) -> set[Path]:
+def update_relative_links_to_absolute_links(content_file_path: Path, link_set: set[str]) -> set[Path]:
     """
     Change any relative file paths to absolute file paths and return a full set of absolute paths.
 
@@ -74,14 +74,15 @@ def update_relative_links_to_absolute_links(content_file_path: Path, link_set: s
 
     Returns
     =======
-    set[Path]
+    set[str]
         Set of links that are all absolute paths.
 
     """
     new_link_set = set()
     for link in link_set:
-        if not link.is_absolute():
-            link = absolute_path_from_relative_path(content_file_path, link)
+        link = Path(link)
+        if not Path(link).is_absolute():
+            link = absolute_path_from_relative_path(content_file_path, str(link))
 
         new_link_set.add(link)
 
@@ -180,7 +181,7 @@ def set_of_html_href_file_paths_from(content):
     soup = BeautifulSoup(content, 'html.parser')
 
     url_paths = {
-        Path(unquote(urlparse(a_tag['href']).path))
+        unquote(urlparse(a_tag['href']).path)
         for a_tag in soup.findAll(href=True)
         if
         (urlparse(a_tag['href']).scheme == "" or urlparse(a_tag['href']).scheme == "file")
@@ -191,7 +192,7 @@ def set_of_html_href_file_paths_from(content):
     return url_paths
 
 
-def set_of_html_img_file_paths_from(content: str) -> set[Path]:
+def set_of_html_img_file_paths_from(content: str) -> set[str]:
     """
     Search string for html img tag links and return a set of local file path objects.
 
@@ -205,14 +206,14 @@ def set_of_html_img_file_paths_from(content: str) -> set[Path]:
 
     Returns
     =======
-    set[Path]
-        set of local img link paths
+    set[str]
+        set of local img links
 
     """
 
     soup = BeautifulSoup(content, 'html.parser')
     url_paths = {
-        Path(unquote(urlparse(i_tag['src']).path))
+        unquote(urlparse(i_tag['src']).path)
         for i_tag in soup.findAll(src=True)
         if
         (urlparse(i_tag['src']).scheme == "" or urlparse(i_tag['src']).scheme == "file")
@@ -223,7 +224,7 @@ def set_of_html_img_file_paths_from(content: str) -> set[Path]:
     return url_paths
 
 
-def set_of_markdown_file_paths_from(content: str) -> set[Path]:
+def set_of_markdown_file_paths_from(content: str) -> set[str]:
     """
     Search string for markdown formatted image and file links and return a set of local file path objects.
 
@@ -242,8 +243,8 @@ def set_of_markdown_file_paths_from(content: str) -> set[Path]:
 
     Returns
     =======
-    set[Path]
-        set of local link paths
+    set[str]
+        set of local link strings
     """
 
     regex_md_pattern = re.compile(r'''
@@ -257,7 +258,7 @@ def set_of_markdown_file_paths_from(content: str) -> set[Path]:
     ''', re.MULTILINE | re.VERBOSE)
 
     matches_md = regex_md_pattern.findall(content)
-    set_of_md_formatted_links = {Path(unquote(match))
+    set_of_md_formatted_links = {unquote(match)
                                  for match in matches_md
                                  if
                                  not match.startswith("https://")
@@ -271,7 +272,7 @@ def set_of_markdown_file_paths_from(content: str) -> set[Path]:
 
 def remove_content_links_from_links(content_file_path: Path,
                                     content_links: Iterable[Path],
-                                    links: Iterable[Path]) -> set[Path]:
+                                    links: Iterable[str]) -> set[str]:
     """
     Remove any links that are links between note pages from the provided set of links.
 
@@ -281,21 +282,22 @@ def remove_content_links_from_links(content_file_path: Path,
         The Path to the final location of the file the provided links sets were generated from.  This path is used to
         calculate absolute paths for any relative paths provided.
     content_links : Iterable[Path}
-        Iterable of Path objects that are the links between content pages that will be removed from the links set
+        Iterable of Path objects for the paths each note being processed and will be removed from the
+        links set if present.
     links :
         Iterable of Path objects that contains a mixture of links between to note pages and to images and attachments.
 
     Returns
     =======
-    set[Path]
+    set[str]
         Set of links that does not contain links between note pages.
 
     """
     links = set(links)
     links_to_remove = set()
     for link in links:
-        abs_link = link
-        if not link.is_absolute():
+        abs_link = Path(link)
+        if not Path(link).is_absolute():
             abs_link = absolute_path_from_relative_path(content_file_path, link)
 
         if abs_link in content_links:
@@ -305,7 +307,7 @@ def remove_content_links_from_links(content_file_path: Path,
     return links
 
 
-def split_set_existing_non_existing_links(content_file_path: Path, links: set[Path]) -> namedtuple:
+def split_set_existing_non_existing_links(content_file_path: Path, links: set[str]) -> namedtuple:
     """
     Split a list of links into sets of existing and non-existing file links
 
@@ -317,8 +319,8 @@ def split_set_existing_non_existing_links(content_file_path: Path, links: set[Pa
     content_file_path : Path
         The Path to the final location of the file the provided links sets were generated from.  This path is used to
         calculate absolute paths for any relative paths provided.
-    links : set[Path]
-        set of links to be split into existing and non-existing sets of paths
+    links : set[str]
+        set of links to be split into existing and non-existing sets of links
 
     Returns
     =======
@@ -330,20 +332,20 @@ def split_set_existing_non_existing_links(content_file_path: Path, links: set[Pa
     non_existing_links = set()
 
     for link in links:
-        if link.is_absolute():
-            if link.exists():
+        if Path(link).is_absolute():
+            if Path(link).exists():
                 existing_links.add(link)
             else:
                 non_existing_links.add(link)
             continue
 
-        absolute_link = absolute_path_from_relative_path(content_file_path, link)
+        absolute_link_path = absolute_path_from_relative_path(content_file_path, link)
 
-        if absolute_link.exists():
+        if absolute_link_path.exists():
             existing_links.add(link)
             continue
 
-        non_existing_links.add(absolute_link)
+        non_existing_links.add(link)
 
     file_exists_status_links = namedtuple('file_exists_status_links', 'existing, non_existing')
     return file_exists_status_links(existing_links, non_existing_links)
@@ -351,7 +353,7 @@ def split_set_existing_non_existing_links(content_file_path: Path, links: set[Pa
 
 def split_existing_links_copyable_non_copyable(content_file_path: Path,
                                                root_for_copyable_paths: Path,
-                                               links_to_split: set[Path]) -> namedtuple:
+                                               links_to_split: set[str]) -> namedtuple:
     """
     Split the set of existing file links into two sets.  One set of links that will be copyable to the new export
     folder and one set that will not be copyable.
@@ -386,15 +388,15 @@ def split_existing_links_copyable_non_copyable(content_file_path: Path,
     non_copyable_absolute = set()
 
     for link in links_to_split:
-        abs_link = link
-        if not link.is_absolute():
+        abs_link = Path(link)
+        if not Path(link).is_absolute():
             abs_link = absolute_path_from_relative_path(content_file_path, link)
 
         if root_for_copyable_paths in abs_link.parents:
             copyable_attachment_path_set.add(link)
             continue
 
-        if link.is_absolute():
+        if Path(link).is_absolute():
             non_copyable_absolute.add(link)
             continue
 
@@ -406,11 +408,11 @@ def split_existing_links_copyable_non_copyable(content_file_path: Path,
     return copyable_status_links(copyable_attachment_path_set, non_copyable_relative, non_copyable_absolute)
 
 
-def split_valid_and_invalid_link_paths(all_paths):
+def split_valid_and_invalid_link_paths(all_paths: set[str]):
     valid_paths = set()
     invalid_paths = set()
     for path in all_paths:
-        if helper_functions.is_path_valid(str(path)):
+        if helper_functions.is_path_valid(path):
             valid_paths.add(path)
             continue
         invalid_paths.add(path)
@@ -422,7 +424,7 @@ def split_valid_and_invalid_link_paths(all_paths):
 
 def update_content_with_new_paths(content: str,
                                   content_file_path: Path,
-                                  path_set: Iterable[Path],
+                                  path_set: Iterable[str],
                                   make_absolute: bool,
                                   root_for_absolute_paths: Path):
     """
@@ -439,7 +441,7 @@ def update_content_with_new_paths(content: str,
     content_file_path : Path
         The Path to the final location of the file the provided links sets were generated from.  This path is used to
         calculate absolute paths for any relative paths provided.
-    path_set : set[Path]
+    path_set : set[str]
         set of Path objects that require to be updated.  Typically this would be a set of paths that are to files that
         are outside of the root of the notes set.
     make_absolute : bool
@@ -455,7 +457,7 @@ def update_content_with_new_paths(content: str,
 
     """
     for original_link in path_set:
-        if original_link.is_absolute():
+        if Path(original_link).is_absolute():  # no need to change as an absolute path
             continue
 
         attachment_absolute_path = absolute_path_from_relative_path(content_file_path, original_link)
@@ -474,7 +476,7 @@ def update_content_with_new_paths(content: str,
     return content
 
 
-def process_attachments(path_to_content_file: Path, set_of_links: set[Path], note_paths: set[Path],
+def process_attachments(path_to_content_file: Path, set_of_links: set[str], note_paths: set[Path],
                         source_absolute_root):
     """
     Generate sets of attachment links from content.
@@ -509,10 +511,10 @@ def process_attachments(path_to_content_file: Path, set_of_links: set[Path], not
     ==========
     path_to_content_file : Path
         Absolute path to the file the set_of _links if from
-    set_of_links : set[Path]
-        set of path objects for all links from a note content
+    set_of_links : set[str]
+        set of path strings for all links from note content
     note_paths : set[Path]
-        set of paths to each of the note files being processed.
+        set of paths to each of the note files names being processed.
     source_absolute_root : Path
         Absolute path to the source folder for the note the links are being processed from
 
@@ -529,11 +531,10 @@ def process_attachments(path_to_content_file: Path, set_of_links: set[Path], not
         non_copyable - set of links to files that are NOT in the same path as the source of the content
 
     """
-
+# TODO done kind of.  test with nsx files, test md - html html  md md-md and test in windows for renaming.
     all_attachments = remove_content_links_from_links(path_to_content_file, note_paths, set_of_links)
 
     link_validity = split_valid_and_invalid_link_paths(all_attachments)
-
     file_exists_status_links = split_set_existing_non_existing_links(path_to_content_file,
                                                                      link_validity.valid)
 
@@ -564,7 +565,8 @@ def process_attachments(path_to_content_file: Path, set_of_links: set[Path], not
                             copyable_status_links.copyable,
                             copyable_status_links.non_copyable_relative,
                             copyable_status_links.non_copyable_absolute,
-                            copyable_absolute)
+                            copyable_absolute
+                            )
 
 
 def find_local_file_links_in_content(file_type, content):
@@ -642,18 +644,18 @@ def get_attachment_paths(source_absolute_root, file_type, file, files_to_convert
     return attachment_links
 
 
-def update_html_link_src(content: str, old_name: Path, new_name: Path) -> str:
+def update_html_link_src(content: str, old_name: str, new_name: Path) -> str:
     soup = BeautifulSoup(content, 'html.parser')
     for a_tag in soup.findAll(href=True):
-        url_path = Path(urlparse(a_tag['href']).path)
+        url_path = urlparse(a_tag['href']).path
         if url_path == old_name:
-            a_tag['href'] = str(new_name)
+            a_tag['href'] = helper_functions.path_to_posix_str(new_name)
             # do not return early after finding link as content may have more than one link to the renamed file
 
     return str(soup)
 
 
-def update_markdown_link_src(content: str, old_name: Path, new_name: Path) -> str:
+def update_markdown_link_src(content: str, old_name: str, new_name: Path) -> str:
     tags = re.findall(r'\[.*?]\(.*?\)', content)
 
     if not tags:
@@ -661,8 +663,8 @@ def update_markdown_link_src(content: str, old_name: Path, new_name: Path) -> st
 
     for tag in tags:
         src = tag.rsplit('(', 1)[1].rstrip(')')
-        if src == str(old_name):
-            new_image_tag = tag.replace(str(old_name), str(new_name))
+        if src == old_name:
+            new_image_tag = tag.replace(old_name, helper_functions.path_to_posix_str(new_name))
             content = content.replace(tag, new_image_tag)
 
     return content

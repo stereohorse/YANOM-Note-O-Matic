@@ -2,6 +2,7 @@ from pathlib import Path
 import unittest
 
 from testfixtures import TempDirectory
+import pytest
 
 from content_link_management import get_attachment_paths
 from src.conversion_settings import ConversionSettings
@@ -236,19 +237,17 @@ def test_get_attachment_paths_markdown_export_format(tmp_path):
                 'some_folder/data/my_notebook/attachments/file fourteen.png') in attachment_links.copyable_absolute
     assert len(attachment_links.copyable_absolute) == 9
 
-    assert Path(tmp_path, 'some_folder/two.png') in attachment_links.non_existing
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/three.pdf') in attachment_links.non_existing
-    assert Path(tmp_path, 'some_folder/data/my_notebook/seven.csv') in attachment_links.non_existing
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/file thirteen.pdf') in attachment_links.non_existing
+    assert f'{tmp_path}/some_folder/two.png' in attachment_links.non_existing
+    assert f'attachments/three.pdf' in attachment_links.non_existing
+    assert f'../my_notebook/seven.csv' in attachment_links.non_existing
+    assert f'attachments/file thirteen.pdf' in attachment_links.non_existing
     assert len(attachment_links.non_existing) == 4
 
     # NOTE for the "some_folder/attachments/four.csv" attachment the content should be updated to a new relative link
     # assert Path(tmp_path, 'some_folder/attachments/four.csv') in file_converter._non_copyable_attachment_path_set
-    assert Path('../../attachments/four.csv') in attachment_links.non_copyable_relative
+    assert '../../attachments/four.csv' in attachment_links.non_copyable_relative
     assert len(attachment_links.non_copyable_relative) == 1
-    assert Path(tmp_path, 'some_folder/three.png') in attachment_links.non_copyable_absolute
+    assert f'{tmp_path}/some_folder/three.png' in attachment_links.non_copyable_absolute
     assert len(attachment_links.non_copyable_absolute) == 1
 
 
@@ -355,22 +354,20 @@ def test_get_attachment_paths_where_make_absolute_for_non_copyable_files(tmp_pat
 
     assert len(attachment_links.copyable_absolute) == 9
 
-    assert Path(tmp_path, 'some_folder/two.png') in attachment_links.non_existing
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/three.pdf') in attachment_links.non_existing
-    assert Path(tmp_path, 'some_folder/data/my_notebook/seven.csv') in attachment_links.non_existing
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/file thirteen.pdf') in attachment_links.non_existing
+    assert f'{tmp_path}/some_folder/two.png' in attachment_links.non_existing
+    assert f'attachments/three.pdf' in attachment_links.non_existing
+    assert f'../my_notebook/seven.csv' in attachment_links.non_existing
+    assert f'attachments/file thirteen.pdf' in attachment_links.non_existing
     assert len(attachment_links.non_existing) == 4
 
-    assert Path('../../attachments/four.csv') in attachment_links.non_copyable_relative
-    assert Path('../../three.png') in attachment_links.non_copyable_relative
+    assert '../../attachments/four.csv' in attachment_links.non_copyable_relative
+    assert '../../three.png' in attachment_links.non_copyable_relative
     assert len(attachment_links.non_copyable_relative) == 2
     # three.png is used twice, once with relative path and once with absolute path as we are
     # searching post processed content the content will already have had make absolute applied if it was turned on
     # so we still get one path to three in the relative list
 
-    assert Path(tmp_path, 'some_folder/three.png') in attachment_links.non_copyable_absolute
+    assert f'{tmp_path}/some_folder/three.png' in attachment_links.non_copyable_absolute
     assert len(attachment_links.non_copyable_absolute) == 1
 
 
@@ -488,3 +485,18 @@ def test_get_attachment_paths_where_make_absolute_for_non_copyable_files(tmp_pat
 #     assert len(attachment_links.non_copyable_absolute) == 1
 #
 #     assert result_content == expected_content
+
+@pytest.mark.parametrize(
+    'conversion_input, expected', [
+        ('html', True),
+        ('nsx', True),
+        ('markdown', False),
+    ]
+)
+def test_is_html_based_content(conversion_input, expected):
+    cs = ConversionSettings()
+    cs.conversion_input = conversion_input
+    file_converter = HTMLToMDConverter(cs, 'files_to_convert')
+
+    result = file_converter.is_html_based_content()
+    assert result is expected

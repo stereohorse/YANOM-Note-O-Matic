@@ -235,7 +235,6 @@ def test_generate_set_of_attachment_paths_html_export_format(tmp_path):
 
     assert len(attachment_links.copyable_absolute) == 5
 
-    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/file thirteen.pdf') \
-           in attachment_links.non_existing
+    assert f'attachments/file thirteen.pdf' in attachment_links.non_existing
 
     assert len(attachment_links.non_existing) == 1

@@ -3,6 +3,8 @@ from pathlib import Path
 import shutil
 import sys
 
+import content_link_management
+import helper_functions
 from alive_progress import alive_bar
 
 import config
@@ -146,6 +148,7 @@ class NotesConvertor:
 
                 if not self.conversion_settings.source_absolute_root == self.conversion_settings.export_folder_absolute:
                     for attachment in file_converter.current_note_attachment_links.copyable_absolute:
+                        # self._copy_attachment(attachment, file)
                         self._copy_attachment(attachment)
 
                 self._attachment_details[file] = {
@@ -155,9 +158,9 @@ class NotesConvertor:
                     'existing': file_converter.current_note_attachment_links.existing,
                     'non_existing': file_converter.current_note_attachment_links.non_existing,
                     'copyable': file_converter.current_note_attachment_links.copyable,
-                    'copyable_absolute': file_converter.current_note_attachment_links.copyable_absolute,
                     'non_copyable_relative': file_converter.current_note_attachment_links.non_copyable_relative,
                     'non_copyable_absolute': file_converter.current_note_attachment_links.non_copyable_absolute,
+                    'copyable_absolute': file_converter.current_note_attachment_links.copyable_absolute,
                 }
 
                 if not config.yanom_globals.is_silent:
@@ -177,6 +180,26 @@ class NotesConvertor:
             shutil.copy(attachment, target_attachment_absolute_path)
         else:
             self.logger.warning(f'Unable to copy attachment "{attachment}" - It does not exist or is a directory.')
+
+
+    # def _copy_attachment(self, attachment, file):
+    #     attachment_relative = Path(attachment)
+    #     attachment_absolute = Path(attachment)
+    #
+    #     if not attachment_absolute.is_absolute():
+    #         attachment_absolute = content_link_management.absolute_path_from_relative_path(file, attachment)
+    #     else:
+    #         attachment_relative = attachment.relative_to(self.conversion_settings.source_absolute_root)
+    #
+    #     if attachment_absolute.exists() and attachment_absolute.is_file():
+    #         target_attachment_absolute_path = Path(self.conversion_settings.export_folder_absolute,
+    #                                                attachment_relative)
+    #
+    #         target_attachment_absolute_path.parent.mkdir(parents=True, exist_ok=True)
+    #
+    #         shutil.copy(attachment_absolute, target_attachment_absolute_path)
+    #     else:
+    #         self.logger.warning(f'Unable to copy attachment "{attachment}" - It does not exist or is a directory.')
 
     def get_list_of_orphan_files(self, set_of_all_files):
         orphans = set_of_all_files
@@ -223,34 +246,34 @@ class NotesConvertor:
         self._image_count += nsx_file.image_count
         self._attachment_count += nsx_file.attachment_count
 
-    def check_nsx_attachment_links(self):
-        if not config.yanom_globals.is_silent:
-            print(f"Analysing note page links")
-        notes_to_check = self.generate_file_list(file_mover.get_file_suffix_for(self.conversion_settings.export_format))
-        with alive_bar(len(notes_to_check), bar='blocks') as bar:
-            for note in notes_to_check:
-                content = note.read_text(encoding='utf-8')
-                all_attachments_paths = find_local_file_links_in_content(self.conversion_settings.export_format, content)
-                attachment_links = process_attachments(note,
-                                                       all_attachments_paths,
-                                                       notes_to_check,
-                                                       self.conversion_settings.export_folder_absolute
-                                                       )
-
-                self._attachment_details[note] = {
-                    'all': attachment_links.all,
-                    'valid': attachment_links.valid,
-                    'invalid': attachment_links.invalid,
-                    'existing': attachment_links.existing,
-                    'non_existing': attachment_links.non_existing,
-                    'copyable': attachment_links.copyable,
-                    'copyable_absolute': attachment_links.copyable_absolute,
-                    'non_copyable_relative': attachment_links.non_copyable_relative,
-                    'non_copyable_absolute': attachment_links.non_copyable_absolute,
-                }
-
-                if not config.yanom_globals.is_silent:
-                    bar()
+    # def check_nsx_attachment_links(self):
+    #     if not config.yanom_globals.is_silent:
+    #         print(f"Analysing note page links")
+    #     notes_to_check = self.generate_file_list(file_mover.get_file_suffix_for(self.conversion_settings.export_format))
+    #     with alive_bar(len(notes_to_check), bar='blocks') as bar:
+    #         for note in notes_to_check:
+    #             content = note.read_text(encoding='utf-8')
+    #             all_attachments_paths = find_local_file_links_in_content(self.conversion_settings.export_format, content)
+    #             attachment_links = process_attachments(note,
+    #                                                    all_attachments_paths,
+    #                                                    notes_to_check,
+    #                                                    self.conversion_settings.export_folder_absolute
+    #                                                    )
+    #
+    #             self._attachment_details[note] = {
+    #                 'all': attachment_links.all,
+    #                 'valid': attachment_links.valid,
+    #                 'invalid': attachment_links.invalid,
+    #                 'existing': attachment_links.existing,
+    #                 'non_existing': attachment_links.non_existing,
+    #                 'copyable_absolute': attachment_links.copyable_absolute,
+    #                 'non_copyable_relative': attachment_links.non_copyable_relative,
+    #                 'non_copyable_absolute': attachment_links.non_copyable_absolute,
+    #                 'copyable': attachment_links.copyable,
+    #             }
+    #
+    #             if not config.yanom_globals.is_silent:
+    #                 bar()
 
     def evaluate_command_line_arguments(self):
         self.configure_for_ini_settings()

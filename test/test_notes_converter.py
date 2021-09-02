@@ -396,6 +396,7 @@ def test_process_files_copy_attachments(tmp_path):
     assert Path(tmp_path, 'notes', 'attachments').exists()
     assert Path(tmp_path, 'notes', 'attachments', 'a-file.pdf').exists()
 
+
 @pytest.mark.parametrize(
     'silent', [True, False]
 )
@@ -582,13 +583,13 @@ def test_get_list_of_orphan_files(tmp_path):
         },
     }
     expected_files = {Path(tmp_path, 'some_folder/attachments/four.csv'),
-                        Path(tmp_path, 'some_folder/data/my_notebook/six.csv'),
-                        Path(tmp_path, 'some_folder/data/my_other_notebook/attachments/five.pdf'),
-                        Path(tmp_path, 'some_folder/attachments/four.csv'),
-                        Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png'),
-                        Path(tmp_path, 'some_folder/data/attachments/two.csv'),
-                        Path(tmp_path, 'some_folder/three.png'),
-                        }
+                      Path(tmp_path, 'some_folder/data/my_notebook/six.csv'),
+                      Path(tmp_path, 'some_folder/data/my_other_notebook/attachments/five.pdf'),
+                      Path(tmp_path, 'some_folder/attachments/four.csv'),
+                      Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png'),
+                      Path(tmp_path, 'some_folder/data/attachments/two.csv'),
+                      Path(tmp_path, 'some_folder/three.png'),
+                      }
 
     set_of_all_files = content_link_management.get_set_of_all_files(tmp_path)
     files = nc.get_list_of_orphan_files(set_of_all_files)
@@ -654,7 +655,7 @@ def test_handle_orphan_files_as_required_orphans_set_to_orphans_folder(tmp_path)
     assert Path(tmp_path, 'notes/orphan/some_folder/data/my_other_notebook/attachments/five.pdf').exists()
     assert Path(tmp_path, 'notes/orphan/some_folder/data/my_notebook/six.csv').exists()
 
-    # Also check original files are alos inplace - the originals are not moved we only copy them
+    # Also check original files are also inplace - the originals are not moved we only copy them
     Path(tmp_path, 'some_folder/data/my_notebook/note.md').exists()
     Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png').exists()
     Path(tmp_path, 'some_folder/data/attachments/two.csv').exists()
@@ -727,7 +728,7 @@ def test_handle_orphan_files_as_required_orphans_copy(tmp_path):
     assert Path(tmp_path, 'notes/some_folder/data/my_other_notebook/attachments/five.pdf').exists()
     assert Path(tmp_path, 'notes/some_folder/data/my_notebook/six.csv').exists()
 
-    # Also check original files are alos inplace - the originals are not moved we only copy them
+    # Also check original files are also inplace - the originals are not moved we only copy them
     Path(tmp_path, 'some_folder/data/my_notebook/note.md').exists()
     Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png').exists()
     Path(tmp_path, 'some_folder/data/attachments/two.csv').exists()

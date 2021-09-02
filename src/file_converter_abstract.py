@@ -174,24 +174,24 @@ class FileConverter(ABC):
         # html replacement is always used as html formatted links can be in any of the input formats
         self._pre_processed_content = content_link_management.update_html_link_src(
             self._pre_processed_content,
-            renamed_file.original_absolute,
+            str(renamed_file.original_absolute),
             renamed_file.new_absolute,
         )
         self._pre_processed_content = content_link_management.update_html_link_src(
             self._pre_processed_content,
-            renamed_file.original_relative,
+            str(renamed_file.original_relative),
             renamed_file.new_relative,
         )
         if self._conversion_settings.conversion_input == 'markdown':
             #  if input is markdown also replace name in any markdown formatted links
             self._pre_processed_content = content_link_management.update_markdown_link_src(
                 self._pre_processed_content,
-                renamed_file.original_absolute,
+                str(renamed_file.original_absolute),
                 renamed_file.new_absolute,
             )
             self._pre_processed_content = content_link_management.update_markdown_link_src(
                 self._pre_processed_content,
-                renamed_file.original_relative,
+                str(renamed_file.original_relative),
                 renamed_file.new_relative,
             )
 

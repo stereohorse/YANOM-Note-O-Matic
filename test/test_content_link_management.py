@@ -103,8 +103,8 @@ def test_set_of_html_href_file_paths_from():
               f'<a href="https://www.google.com">person@exmaple.com</a>\n' \
               f'<a href="http://www.google.com">person@exmaple.com</a>'
     expected = {
-        Path('attachments/eleven.pdf'),
-        Path('attachments/file thirteen.pdf')
+        'attachments/eleven.pdf',
+        'attachments/file thirteen.pdf'
     }
     result = content_link_management.set_of_html_href_file_paths_from(content)
 
@@ -120,8 +120,8 @@ def test_set_of_html_img_file_paths_from():
               f'<img src="https://www.dummy.com/image.png" />' \
               f'<img src="http://www.dummy.com/image2.png" />'
     expected = {
-        Path('attachments/ten.png'),
-        Path('attachments/file fourteen.png')
+        'attachments/ten.png',
+        'attachments/file fourteen.png'
     }
     result = content_link_management.set_of_html_img_file_paths_from(content)
 
@@ -140,9 +140,9 @@ def test_set_of_markdown_file_paths_from():
               f'<a href="attachments/file%20thirteen.pdf">example-attachment.pdf</a>\n' \
               f'<img src="attachments/file%20fourteen.png" />'
     expected = {
-        Path('../my_other_notebook/attachments/five.pdf'),
-        Path('nine.md'),
-        Path('attachments/file twelve.pdf')
+        '../my_other_notebook/attachments/five.pdf',
+        'nine.md',
+        'attachments/file twelve.pdf'
     }
 
     result = content_link_management.set_of_markdown_file_paths_from(content)
@@ -153,18 +153,18 @@ def test_set_of_markdown_file_paths_from():
 @pytest.mark.parametrize(
     'file_type, expected', [
         ('html', {
-            Path('attachments/ten.png'),
-            Path('attachments/eleven.pdf'),
-            Path('attachments/file thirteen.pdf'),
-            Path('attachments/file fourteen.png'),
+            'attachments/ten.png',
+            'attachments/eleven.pdf',
+            'attachments/file thirteen.pdf',
+            'attachments/file fourteen.png',
         },
         ),
         ('markdown', {
-            Path('attachments/ten.png'),
-            Path('attachments/eleven.pdf'),
-            Path('attachments/file twelve.pdf'),
-            Path('attachments/file thirteen.pdf'),
-            Path('attachments/file fourteen.png'),
+            'attachments/ten.png',
+            'attachments/eleven.pdf',
+            'attachments/file twelve.pdf',
+            'attachments/file thirteen.pdf',
+            'attachments/file fourteen.png',
         },
         ),
     ]
@@ -188,10 +188,10 @@ def test_scan_html_content_for_all_links():
               f'<a href="attachments/file%20thirteen.pdf">example-attachment.pdf</a>\n' \
               f'<img src="attachments/file%20fourteen.png" />'
     expected = {
-        Path('attachments/ten.png'),
-        Path('attachments/file fourteen.png'),
-        Path('attachments/eleven.pdf'),
-        Path('attachments/file thirteen.pdf')
+        'attachments/ten.png',
+        'attachments/file fourteen.png',
+        'attachments/eleven.pdf',
+        'attachments/file thirteen.pdf'
     }
     result = content_link_management.scan_html_content_for_all_paths(content)
 
@@ -208,13 +208,13 @@ def test_scan_markdown_content_for_all_links():
               f'<a href="attachments/file%20thirteen.pdf">example-attachment.pdf</a>\n' \
               f'<img src="attachments/file%20fourteen.png" />'
     expected = {
-        Path('../my_other_notebook/attachments/five.pdf'),
-        Path('nine.md'),
-        Path('attachments/file twelve.pdf'),
-        Path('attachments/ten.png'),
-        Path('attachments/file fourteen.png'),
-        Path('attachments/eleven.pdf'),
-        Path('attachments/file thirteen.pdf')
+        '../my_other_notebook/attachments/five.pdf',
+        'nine.md',
+        'attachments/file twelve.pdf',
+        'attachments/ten.png',
+        'attachments/file fourteen.png',
+        'attachments/eleven.pdf',
+        'attachments/file thirteen.pdf'
     }
 
     result = content_link_management.scan_markdown_content_for_all_paths(content)
@@ -225,15 +225,15 @@ def test_scan_markdown_content_for_all_links():
 def test_remove_content_links_from_links(tmp_path):
     content_file_path = Path(tmp_path, 'some_folder/folder1/file.txt')
     links = {
-        Path('../folder2/file2.txt'),
-        Path(tmp_path, 'some_folder/folder3/file3.txt'),
-        Path(tmp_path, 'some_folder/content.md')
+        '../folder2/file2.txt',
+        f'{tmp_path}/some_folder/folder3/file3.txt',
+        f'{tmp_path}/some_folder/content.md',
     }
     content_links = {Path(tmp_path, 'some_folder/content.md')}
 
     expected = {
-        Path('../folder2/file2.txt'),
-        Path(tmp_path, 'some_folder/folder3/file3.txt')
+        '../folder2/file2.txt',
+        f'{tmp_path}/some_folder/folder3/file3.txt',
     }
 
     result = content_link_management.remove_content_links_from_links(content_file_path, content_links, links)
@@ -244,9 +244,9 @@ def test_remove_content_links_from_links(tmp_path):
 def test_split_set_existing_non_existing_links(tmp_path):
     content_file_path = Path(tmp_path, 'some_folder/folder1/file.txt')
     links = {
-        Path('../folder1/file1.txt'),
-        Path('../folder2/file2.txt'),
-        Path(tmp_path, 'some_folder/folder3/file3.txt'),
+        '../folder1/file1.txt',
+        '../folder2/file2.txt',
+        f'{tmp_path}/some_folder/folder3/file3.txt',
     }
 
     Path(tmp_path, 'some_folder/folder1').mkdir(parents=True)
@@ -256,10 +256,10 @@ def test_split_set_existing_non_existing_links(tmp_path):
 
     result = content_link_management.split_set_existing_non_existing_links(content_file_path, links)
 
-    assert result.non_existing == {Path(tmp_path, 'some_folder/folder2/file2.txt')}
+    assert result.non_existing == {'../folder2/file2.txt'}
     assert result.existing == {
-        Path(tmp_path, 'some_folder/folder3/file3.txt'),
-        Path('../folder1/file1.txt')
+        f'{tmp_path}/some_folder/folder3/file3.txt',
+        '../folder1/file1.txt',
     }
 
 
@@ -267,10 +267,10 @@ def test_split_existing_links_copyable_non_copyable(tmp_path):
     content_file_path = Path(tmp_path, 'some_folder/folder1/file1.txt')
     root_for_copyable_paths = Path(tmp_path, 'some_folder/folder1')
     links_to_split = {
-        Path(tmp_path, 'some_folder/folder1/folder1-2/copyable.txt'),
-        Path('folder1-2/copyable2.txt'),
-        Path(tmp_path, 'some_folder/folder2/folder2-2/non-copyable.txt'),
-        Path('../folder2/folder2-2/non-copyable2.txt'),
+        f'{tmp_path}/some_folder/folder1/folder1-2/copyable.txt',
+        'folder1-2/copyable2.txt',
+        f'{tmp_path}/some_folder/folder2/folder2-2/non-copyable.txt',
+        '../folder2/folder2-2/non-copyable2.txt',
     }
 
     result = content_link_management.split_existing_links_copyable_non_copyable(content_file_path,
@@ -278,16 +278,16 @@ def test_split_existing_links_copyable_non_copyable(tmp_path):
                                                                                 links_to_split)
 
     expected_copyable = {
-        Path(tmp_path, 'some_folder/folder1/folder1-2/copyable.txt'),
-        Path('folder1-2/copyable2.txt'),
+        f'{tmp_path}/some_folder/folder1/folder1-2/copyable.txt',
+        'folder1-2/copyable2.txt',
     }
 
     expected_non_copyable_relative = {
-        Path('../folder2/folder2-2/non-copyable2.txt'),
+        '../folder2/folder2-2/non-copyable2.txt',
     }
 
     expected_non_copyable_absolute = {
-        Path(tmp_path, 'some_folder/folder2/folder2-2/non-copyable.txt'),
+        f'{tmp_path}/some_folder/folder2/folder2-2/non-copyable.txt',
     }
 
     assert result.copyable == expected_copyable
@@ -300,7 +300,7 @@ def test_split_existing_links_copyable_non_copyable(tmp_path):
 def test_update_content_with_new_paths_absolute_false(tmp_path):
     content = f'![something](../attachments/five.pdf "test tool tip text")\n![something]({tmp_path}/attachments/one.pdf "test tool tip text")'
     content_file_path = Path(tmp_path, 'some_folder/file1.txt')
-    path_set = {Path('attachments/five.pdf')}
+    path_set = {'attachments/five.pdf'}
     make_absolute = False
     root_for_absolute_paths = Path(tmp_path, 'some_folder/folder3')
 
@@ -319,8 +319,8 @@ def test_update_content_with_new_paths_absolute_true(tmp_path):
     content = f'![something](../attachments/five.pdf)\n![something]({tmp_path}/attachments/one.pdf)'
     content_file_path = Path(tmp_path, 'some_folder/file1.txt')
     path_set = {
-        Path('../attachments/five.pdf'),
-        Path(tmp_path, 'attachments/one.pdf')
+        '../attachments/five.pdf',
+        f'{tmp_path}/attachments/one.pdf'
     }
     make_absolute = True
     root_for_absolute_paths = Path(tmp_path, 'some_folder/folder3')
@@ -456,46 +456,12 @@ def test_update_content_with_new_paths_for_non_movable_attachments(tmp_path):
                                                    file_converter._conversion_settings.export_folder_absolute,
                                                    )
 
-    assert Path(tmp_path, 'some_folder/data/my_other_notebook/attachments/five.pdf') \
-           in attachment_links.copyable_absolute
-    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png') \
-           in attachment_links.copyable_absolute
-    assert Path(tmp_path, 'some_folder/data/my_notebook/six.csv') \
-           in attachment_links.copyable_absolute
-    assert Path(tmp_path, 'some_folder/data/attachments/two.csv') \
-           in attachment_links.copyable_absolute
-    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/eight.pdf') \
-           in attachment_links.copyable_absolute
-    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/ten.png') \
-           in attachment_links.copyable_absolute
-    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/eleven.pdf') \
-           in attachment_links.copyable_absolute
-    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/file twelve.pdf') \
-           in attachment_links.copyable_absolute
-    assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/file fourteen.png') \
-           in attachment_links.copyable_absolute
-
-    assert len(attachment_links.copyable_absolute) == 9
-
-    assert Path(tmp_path, 'some_folder/two.png') in attachment_links.non_existing
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/three.pdf') in attachment_links.non_existing
-    assert Path(tmp_path, 'some_folder/data/my_notebook/seven.csv') in attachment_links.non_existing
-    assert Path(tmp_path,
-                'some_folder/data/my_notebook/attachments/file thirteen.pdf') in attachment_links.non_existing
-    assert len(attachment_links.non_existing) == 4
-
-    assert Path('../../attachments/four.csv') in attachment_links.non_copyable_relative
-    assert len(attachment_links.non_copyable_relative) == 2
-    assert Path(tmp_path, 'some_folder/three.png') in attachment_links.non_copyable_absolute
-    assert len(attachment_links.non_copyable_absolute) == 1
-
     assert result_content == expected_content
 
 
 def test_update_markdown_link_src():
     content = "![not changed](attachments/not-changed.html)\n[should change](changed.md)\n![not changed](attachments/not-changed.html)\n[should not change](attachments/changed.md)\n![should not changed](https://changed.md)"
-    old = Path("changed.md")
+    old = "changed.md"
     new = Path("changed-old-1.md")
     expected = "![not changed](attachments/not-changed.html)\n[should change](changed-old-1.md)\n![not changed](attachments/not-changed.html)\n[should not change](attachments/changed.md)\n![should not changed](https://changed.md)"
 
@@ -504,9 +470,20 @@ def test_update_markdown_link_src():
     assert result == expected
 
 
+def test_update_markdown_link_src_content_has_no_tags():
+    content = "Hello world"
+    old = "changed.md"
+    new = Path("changed-old-1.md")
+    expected = "Hello world"
+
+    result = content_link_management.update_markdown_link_src(content, old, new)
+
+    assert result == expected
+
+
 def test_update_html_link_src():
     content = '<a href="attachments/not-changed.html">example-attachment</a><a href="attachments/changed.md">should change</a><a href="http://attachments/changed.md">should not change</a><a href="not-changed.html">example-attachment</a><a href="http://changed.md">should not change</a>'
-    old = Path("attachments/changed.md")
+    old = "attachments/changed.md"
     new = Path("attachments/changed-old-1.md")
     expected = '<a href="attachments/not-changed.html">example-attachment</a><a href="attachments/changed-old-1.md">should change</a><a href="http://attachments/changed.md">should not change</a><a href="not-changed.html">example-attachment</a><a href="http://changed.md">should not change</a>'
 
@@ -519,23 +496,23 @@ def test_split_valid_and_invalid_link_paths_windows():
     if not os.name == 'nt':
         return
 
-    all_attachments = [
-        Path('/hello/dog\0/cat'),
-        Path('file:///K:/SPSS%20info/'),
-        Path('c:/SPSS%20inf'),
-        Path('attachments\example_file.pdf'),
-        Path('c:\\windows'),
-    ]
+    all_attachments = {
+        '/hello/dog\0/cat',
+        'file:///K:/SPSS%20info/',
+        'c:/SPSS%20inf',
+        'attachments\example_file.pdf',
+        'c:\\windows',
+    }
 
     expected_invalid = {
-        Path('/hello/dog\0/cat'),
-        Path('file:///K:/SPSS%20info/'),
+        '/hello/dog\0/cat',
+        'file:///K:/SPSS%20info/',
     }
 
     expected_valid = {
-        Path('c:/SPSS%20inf'),
-        Path('attachments\example_file.pdf'),
-        Path('c:\\windows'),
+        'c:/SPSS%20inf',
+        'attachments\example_file.pdf',
+        'c:\\windows',
     }
 
     result = content_link_management.split_valid_and_invalid_link_paths(all_attachments)
@@ -549,21 +526,21 @@ def test_split_valid_and_invalid_link_paths_unix_like():
     if os.name == 'nt':
         return
 
-    all_attachments = [
-        Path('/hello/dog\0/cat'),
-        Path('file:///K:/SPSS%20info/'),
-        Path('c:/SPSS%20inf'),
-        Path('attachments\example_file.pdf'),
-    ]
+    all_attachments = {
+        '/hello/dog\0/cat',
+        'file:///K:/SPSS%20info/',
+        'c:/SPSS%20inf',
+        'attachments\example_file.pdf',
+    }
 
     expected_invalid = {
-        Path('/hello/dog\0/cat'),
+        '/hello/dog\0/cat',
     }
 
     expected_valid = {
-        Path('file:///K:/SPSS%20info/'),
-        Path('c:/SPSS%20inf'),
-        Path('attachments\example_file.pdf'),
+        'file:///K:/SPSS%20info/',
+        'c:/SPSS%20inf',
+        'attachments\example_file.pdf',
     }
 
     result = content_link_management.split_valid_and_invalid_link_paths(all_attachments)
