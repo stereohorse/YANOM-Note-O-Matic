@@ -1,3 +1,4 @@
+import os
 import re
 
 import pytest
@@ -64,7 +65,10 @@ def test_checklist_pre_processing_nsx_to_md_with_nsx_html_markdown_output(html, 
 
     result = checklist_processor.processed_html
 
-    regex = r"\d{15}"  # used to replace the placeholder id number
+    if os.name == 'nt':
+        regex = r"\d{13}"
+    else:
+        regex = r"\d{15}"
     sub_with = ""
     compare_to, subs_made = re.subn(regex, sub_with, result, 0, re.MULTILINE)
 

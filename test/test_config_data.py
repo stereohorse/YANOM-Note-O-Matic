@@ -576,7 +576,7 @@ def test_generate_conversion_settings_using_quick_settings_string_to_forced_bad_
     assert not Path(tmp_path, 'config.ini').exists()
 
     assert caplog.records
-    assert f"Unable to save config.ini file '{Path(tmp_path, 'abc')}' is not a directory.\n[Errno 2] No such file or directory: '{Path(tmp_path, 'abc', 'config.ini')}'" in caplog.messages
+    assert f"Unable to save config.ini file '{Path(tmp_path, 'abc')}' is not a directory. No such file or directory" in caplog.messages
 
     captured = capsys.readouterr()
     assert expected in captured.out

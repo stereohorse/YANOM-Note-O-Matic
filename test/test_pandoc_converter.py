@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 import subprocess
 from unittest.mock import patch
 
@@ -6,6 +7,7 @@ import pytest
 
 import config
 import conversion_settings
+import helper_functions
 import pandoc_converter
 
 
@@ -226,7 +228,6 @@ def test_convert_using_strings_forcing_subprocess_error(caplog, capsys, monkeypa
     ], ids=['is_silent', 'not_silent']
 )
 def test_convert_using_strings_html_to_markdown(caplog, silent_mode, expected_capture_out):
-
     config.yanom_globals.is_silent = silent_mode
     cs = conversion_settings.ConversionSettings()
     pandoc_processor = pandoc_converter.PandocConverter(cs)
@@ -241,9 +242,10 @@ def test_convert_using_strings_html_to_markdown(caplog, silent_mode, expected_ca
                                        ]
     caplog.clear()
 
-    result = pandoc_processor.convert_using_strings('<p>hello world</p><p><img src="image.png" width="600"/></p><p>Goodbye world</p>',
-                                                    'my_note'
-                                                    )
+    result = pandoc_processor.convert_using_strings(
+        '<p>hello world</p><p><img src="image.png" width="600"/></p><p>Goodbye world</p>',
+        'my_note'
+    )
 
     assert result == 'hello world\n\n<img src="image.png" width="600" />\n\nGoodbye world\n'
     # Note result ahs any html that will be embeded in markdown file sureounded by additonal line spacing,
@@ -251,7 +253,6 @@ def test_convert_using_strings_html_to_markdown(caplog, silent_mode, expected_ca
 
 
 def test_convert_using_strings_forcing_pandoc_not_installed():
-
     cs = conversion_settings.ConversionSettings()
     pandoc_processor = pandoc_converter.PandocConverter(cs)
     pandoc_processor.pandoc_options = ['fake_path', '-fqwe', 'html', '-s', '-t', 'gfm']
@@ -272,10 +273,10 @@ def test_convert_using_strings_forcing_pandoc_not_installed():
     ], ids=['non-linux-frozen', 'linux-frozen', 'non-linux-non-frozen', 'linux-not-frozen']
 )
 def test_set_pandoc_path(monkeypatch, is_linux, if_frozen, expected_ends_with):
-    def mock_is_system_linux(ignored):
+    def mock_is_system_linux(_ignored):
         return is_linux
 
-    def mock_is_this_a_frozen_package(ignored):
+    def mock_is_this_a_frozen_package(_ignored):
         return if_frozen
 
     cs = conversion_settings.ConversionSettings()
@@ -284,4 +285,5 @@ def test_set_pandoc_path(monkeypatch, is_linux, if_frozen, expected_ends_with):
     monkeypatch.setattr(pandoc_converter.PandocConverter, 'is_this_a_frozen_package', mock_is_this_a_frozen_package)
     pandoc_processor.set_pandoc_path()
 
-    assert pandoc_processor._pandoc_path.endswith(expected_ends_with)
+    found_path_as_posix_string = helper_functions.path_to_posix_str(Path(pandoc_processor._pandoc_path))
+    assert found_path_as_posix_string.endswith(expected_ends_with)

@@ -171,13 +171,15 @@ class ConfigData(ConfigParser):
         except FileNotFoundError as e:
             if not Path(self.conversion_settings.working_directory).is_dir():
                 message = f"Unable to save config.ini file '{self.conversion_settings.working_directory}' " \
-                          f"is not a directory.\n{e}"
+                          f"is not a directory. {e.strerror}"
                 self.logger.error(message)
                 self.logger.error(helper_functions.log_traceback(e))
                 if not config.yanom_globals.is_silent:
                     print(message)
             else:
-                message = f"Unable to save config.ini file.\n{e}"
+                message = f"Unable to save config.ini file " \
+                          f"- '{Path(self.conversion_settings.working_directory, self._config_file)}' " \
+                          f"- {e.strerror}"
                 self.logger.error(message)
                 self.logger.error(helper_functions.log_traceback(e))
                 if not config.yanom_globals.is_silent:

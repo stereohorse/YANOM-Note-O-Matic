@@ -1,4 +1,5 @@
 from collections import namedtuple
+import os
 from pathlib import Path
 import re
 
@@ -123,7 +124,11 @@ Below is an image of the design of the line chart as seen in note-station
 <img src="image.png" width="600" />
 """
     # replace the generated 15 digit id-numbers with placeholder text to allow comparison
-    regex = r"\d{15}"
+    if os.name == 'nt':
+        regex = r"\d{13}"
+    else:
+        regex = r"\d{15}"
+
     test_string = note_1.converted_content
     substitute_text = 'replaced_id_number'
     result = re.sub(regex, substitute_text, test_string, 0, re.MULTILINE)
@@ -228,7 +233,10 @@ Below is an image of the design of the line chart as seen in note-station
 ![|600](image.png)
 """
     # replace the generated 15 digit id-numbers with placeholder text to allow comparison
-    regex = r"\d{15}"
+    if os.name == 'nt':
+        regex = r"\d{13}"
+    else:
+        regex = r"\d{15}"
     test_string = note_1.converted_content
     substitute_text = 'replaced_id_number'
     result = re.sub(regex, substitute_text, test_string, 0, re.MULTILINE)

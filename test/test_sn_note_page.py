@@ -1,22 +1,21 @@
 import logging
-
-import sn_attachment
-import zip_file_reader
-from mock import patch
+from packaging import version
 from pathlib import Path
 
-import config
+from mock import patch
 import pytest
 
+import config
 import nsx_pre_processing
 import pandoc_converter
 import sn_notebook
 import sn_note_page
+import zip_file_reader
 
 
 @pytest.fixture
 def notebook(nsx, monkeypatch):
-    def fake_json_data(ignored, ignored2):
+    def fake_json_data(_ignored, _ignored2):
         return None
 
     monkeypatch.setattr(zip_file_reader, 'read_json_data', fake_json_data)
@@ -140,7 +139,7 @@ def test_generate_filenames_and_paths(export_format, extension, time, optional_d
                                        note_page.file_name)
 
 
-def test_create_attachments(nsx, note_page_1):
+def test_create_attachments(note_page_1):
     with patch('sn_attachment.ImageNSAttachment', spec=True):
         with patch('sn_attachment.FileNSAttachment', spec=True):
             image_count, file_count = note_page_1.create_attachments()
@@ -149,7 +148,7 @@ def test_create_attachments(nsx, note_page_1):
     assert file_count == 3
 
 
-def test_create_attachments_no_note_json_for_attachments(nsx, note_page_1, caplog):
+def test_create_attachments_no_note_json_for_attachments(note_page_1):
     note_page_1._attachments_json = None
     with patch('sn_attachment.ImageNSAttachment', spec=True):
         with patch('sn_attachment.FileNSAttachment', spec=True):
@@ -159,7 +158,7 @@ def test_create_attachments_no_note_json_for_attachments(nsx, note_page_1, caplo
     assert file_count == 0
 
 
-def test_process_attachments(nsx, note_page_1):
+def test_process_attachments(note_page_1):
     with patch('sn_attachment.ImageNSAttachment', spec=True) as mock_image_attachment:
         with patch('sn_attachment.FileNSAttachment', spec=True) as mock_file_attachment:
             _ignored_1, _ignored_2 = note_page_1.create_attachments()
@@ -178,22 +177,28 @@ def test_pre_process_content(note_page):
     assert note_page.pre_processed_content == '<head><title>Page 8 title</title><meta title="Page 8 title"/></head>content'
 
 
-@pytest.mark.parametrize(
-    'export_format, expected', [
-        ('html', '<head><title> </title></head>content'),
-        ('gfm', 'content\n'),
-    ]
-)
-def test_convert_data(note_page, export_format, expected):
-    note_page.conversion_settings.export_format = export_format
+def test_convert_data_markdown_export(note_page):
+    note_page.conversion_settings.export_format = 'gfm'
     note_page._pre_processed_content = '<head><title> </title></head>content'
     note_page._pandoc_converter = pandoc_converter.PandocConverter(note_page.conversion_settings)
     note_page.convert_data()
 
-    assert note_page._converted_content == expected
+    if version.parse(note_page._pandoc_converter._pandoc_version) < version.parse('2.13'):
+        assert note_page._converted_content == 'content\n'
+    else:
+        assert note_page._converted_content == '---\n---\n\ncontent\n'
 
 
-def test_post_process_content(note_page, tmp_path):
+def test_convert_data_html_export(note_page):
+    note_page.conversion_settings.export_format = 'html'
+    note_page._pre_processed_content = '<head><title> </title></head>content'
+    note_page._pandoc_converter = pandoc_converter.PandocConverter(note_page.conversion_settings)
+    note_page.convert_data()
+
+    assert note_page._converted_content == '<head><title> </title></head>content'
+
+
+def test_post_process_content(note_page):
     note_page._pre_processed_content = '<head><title> </title></head>content'
     note_page._pandoc_converter = pandoc_converter.PandocConverter(note_page.conversion_settings)
     note_page._converted_content = 'content\n'
@@ -225,17 +230,18 @@ def test_increment_duplicated_title(note_page, title_list, expected_new_title):
          """<p>Below is a hyperlink to the internet</p><p><a href="https://github.com/kevindurston21/YANOM-Note-O-Matic">https://github.com/kevindurston21/YANOM-Note-O-Matic</a></p><h6>Attachments</h6><p><a href="attachments/Record 2021-02-15 16-00-13.webm">Record 2021-02-15 16-00-13.webm</a></p><p><a href="attachments/example-attachment.pdf">example-attachment.pdf</a></p><p><a href="attachments/test page.pdf">test page.pdf</a></p>"""),
     ]
 )
-def test_process_note(nsx, note_page_1, export_format, expected, monkeypatch):
+def test_process_note(note_page_1, export_format, expected, monkeypatch):
     note_page_1.conversion_settings.export_format = export_format
     note_page_1._pandoc_converter = pandoc_converter.PandocConverter(note_page_1.conversion_settings)
     note_page_1.conversion_settings.front_matter_format = 'none'
 
-    def fake_store_file(ignored):
-        pass
-
     # NOTE  THIS IS CRAZY.  Depending on the day one of these money patches works.
-    # If the test fails swap to the other and it wil probbaly work until tomoroow!
+
+    # If the test fails swap to the other and it wil probably work until tomorrow!
+    # def fake_store_file(_ignored):
+    #     pass
     # monkeypatch.setattr(sn_attachment.NSAttachment, 'store_file', fake_store_file)
+
     monkeypatch.delattr('sn_attachment.FileNSAttachment.store_file')
     note_page_1.process_note()
 
@@ -263,7 +269,7 @@ def test_get_json_note_title_key_missing_in_json(note_page_1, caplog):
     assert expected_caplog_msg in caplog.messages
 
 
-def test_get_json_note_content(note_page_1, caplog):
+def test_get_json_note_content(note_page_1):
     note_page_1._note_json = {'content': 'Note Content Testing Get'}
     expected = 'Note Content Testing Get'
     note_page_1.get_json_note_content()
@@ -279,7 +285,7 @@ def test_get_json_note_content_key_missing_in_json(note_page_1, caplog):
     assert expected_caplog_msg in caplog.messages
 
 
-def test_get_json_attachment_data(note_page_1, caplog):
+def test_get_json_attachment_data(note_page_1):
     expected = 'Note Attachment Testing Get'
     note_page_1._note_json = {'attachment': expected}
     note_page_1.get_json_attachment_data()
@@ -295,7 +301,7 @@ def test_get_json_attachment_data_key_missing_in_json(note_page_1, caplog):
     assert expected_caplog_msg in caplog.messages
 
 
-def test_get_json_parent_notebook(note_page_1, caplog):
+def test_get_json_parent_notebook(note_page_1):
     expected = 'Note Parent ID Testing Get'
     note_page_1._note_json = {'parent_id': expected}
     note_page_1.get_json_parent_notebook()
@@ -329,6 +335,7 @@ def test_get_json_attachment_data_key_is_null(note_page_1, caplog):
     assert note_page_1._attachments_json is None
     assert expected_caplog_msg1 in caplog.messages
 
+
 @pytest.mark.parametrize(
     'ctime, mtime, expected_ctime, expected_mtime, format_time', [
         (1594591675, 1594591737, 1594591675, 1594591737, False),
@@ -353,7 +360,7 @@ def test_format_ctime_and_mtime_if_required(note_page_1, ctime, mtime, expected_
     ]
 )
 def test_format_ctime_and_mtime_if_required_no_time_data_in_note_json(note_page_1, ctime, mtime, expected_ctime, expected_mtime, format_time):
-    note_page_1._note_json= {}
+    note_page_1._note_json = {}
     note_page_1.conversion_settings.creation_time_in_exported_file_name = format_time
     note_page_1.conversion_settings.front_matter_format = 'none'
     note_page_1.format_ctime_and_mtime_if_required()
