@@ -1,6 +1,7 @@
 import logging
 
 import config
+import helper_functions
 from iframe_processing import post_process_iframes_to_markdown
 
 
@@ -24,6 +25,9 @@ class NoteStationPostProcessing:
     def post_process_note_page(self):
         if self._conversion_settings.front_matter_format != 'none':
             self._add_meta_data()
+        if self._conversion_settings.export_format != 'html':
+            self._post_processed_content = helper_functions.replace_markdown_pseudo_html_href_tag_with_markdown_links(
+                self._post_processed_content)
         self._add_check_lists()
         if self._note.conversion_settings.export_format != 'pandoc_markdown_strict':
             self._add_iframes()

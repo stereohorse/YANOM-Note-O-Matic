@@ -2,6 +2,7 @@ from checklist_processing import HTMLInputMDOutputChecklistProcessor
 from content_link_management import get_attachment_paths, update_content_with_new_paths
 from content_link_management import update_href_link_suffix_in_content
 from file_converter_abstract import FileConverter
+import helper_functions
 from iframe_processing import pre_process_iframes_from_html, post_process_iframes_to_markdown
 from metadata_processing import MetaDataProcessor
 
@@ -19,6 +20,7 @@ class HTMLToMDConverter(FileConverter):
                                                                          self._output_extension,
                                                                          self._files_to_convert
                                                                          )
+        self.pre_process_obsidian_image_links_if_required()
         self.parse_metadata_if_required()
         self.logger.debug(f'Search for iframes')
         self._pre_processed_content, self._iframes_dict = pre_process_iframes_from_html(self._pre_processed_content)
@@ -32,6 +34,7 @@ class HTMLToMDConverter(FileConverter):
 
     def post_process_content(self):
         self._post_processed_content = self._converted_content
+        self._post_processed_content = helper_functions.replace_markdown_pseudo_html_href_tag_with_markdown_links(self._post_processed_content)
         self.post_process_obsidian_image_links_if_required()
         self.update_checklists()
         self.add_meta_data_if_required()

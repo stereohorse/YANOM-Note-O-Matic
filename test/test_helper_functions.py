@@ -675,3 +675,22 @@ def test_path_to_posix_str(expected, path):
     result = helper_functions.path_to_posix_str(path)
 
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    'content, expected', [
+        ('<https://github.com/kevindurston21/YANOM-Note-O-Matic>',
+         '[github.com/kevindurston21/YANOM-Note-O-Matic](https://github.com/kevindurston21/YANOM-Note-O-Matic)',
+         ),
+        ('<http://github.com/kevindurston21/YANOM-Note-O-Matic>',
+         '[github.com/kevindurston21/YANOM-Note-O-Matic](http://github.com/kevindurston21/YANOM-Note-O-Matic)',
+         ),
+        ('<a href="https://github.com/kevindurston21/YANOM-Note-O-Matic">link to github</a>',
+         '<a href="https://github.com/kevindurston21/YANOM-Note-O-Matic">link to github</a>',
+         ),
+    ],
+)
+def test_replace_markdown_pseudo_html_href_tag_with_markdown_links(content, expected):
+    result = helper_functions.replace_markdown_pseudo_html_href_tag_with_markdown_links(content)
+
+    assert result == expected

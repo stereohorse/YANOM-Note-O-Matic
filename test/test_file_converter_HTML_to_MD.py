@@ -74,8 +74,12 @@ class TestHTMLToMDConverter(unittest.TestCase):
             self.file_converter._conversion_settings.export_folder = Path(d.path)
             self.file_converter.pre_process_content()
             self.file_converter.convert_content()
-            self.file_converter._metadata_processor._conversion_settings.front_matter_format = 'toml'  # set toml and confirm content is forced back into yaml
+
+            # set toml and confirm content is forced back into yaml
+            self.file_converter._metadata_processor._conversion_settings.front_matter_format = 'toml'
+
             self.file_converter.post_process_content()
+
             self.assertEqual(
                 '---\ntitle: this is test2\n---\n\n- [x] Check 1\n\n- [ ] Check 2\n\n<img src="filepath/image.png" width="600" />\n\n\n<iframe allowfullscreen="" anchorhref="https://www.youtube.com/watch?v=SqdxNUMO2cg" frameborder="0" height="315" src="https://www.youtube.com/embed/SqdxNUMO2cg" width="420" youtube="true"> </iframe>\n\n',
                 self.file_converter._post_processed_content,
@@ -86,6 +90,7 @@ class TestHTMLToMDConverter(unittest.TestCase):
         self.file_converter._file_content = '<head><meta title="this is test2"/><meta not_valid="not_in_schema"/></head><p><input checked="" type="checkbox"/>Check 1</p><p><input type="checkbox"/>Check 2</p><img src="filepath/image.png" width="600">'
         self.file_converter._metadata_schema = ['title']
         self.file_converter._file = Path('a-file.html')
+        self.file_converter._conversion_settings.conversion_input = 'nsx'
         self.file_converter._conversion_settings.export_format = 'obsidian'
         self.file_converter.pre_process_content()
         self.file_converter.convert_content()

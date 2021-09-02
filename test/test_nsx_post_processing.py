@@ -110,7 +110,7 @@ Pie Chart
 
 Below is a hyperlink to the internet
 
-<https://github.com/kevindurston21/YANOM-Note-O-Matic>
+[github.com/kevindurston21/YANOM-Note-O-Matic](https://github.com/kevindurston21/YANOM-Note-O-Matic)
 
 Below is a 3x3 Table
 
@@ -157,7 +157,7 @@ Pie Chart
 
 Below is a hyperlink to the internet
 
-<https://github.com/kevindurston21/YANOM-Note-O-Matic>
+[github.com/kevindurston21/YANOM-Note-O-Matic](https://github.com/kevindurston21/YANOM-Note-O-Matic)
 
 Below is a 3x3 Table
 
@@ -219,7 +219,7 @@ Pie Chart
 
 Below is a hyperlink to the internet
 
-<https://github.com/kevindurston21/YANOM-Note-O-Matic>
+[github.com/kevindurston21/YANOM-Note-O-Matic](https://github.com/kevindurston21/YANOM-Note-O-Matic)
 
 Below is a 3x3 Table
 

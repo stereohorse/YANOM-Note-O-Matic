@@ -1,5 +1,6 @@
 from content_link_management import get_attachment_paths, update_content_with_new_paths
 from file_converter_abstract import FileConverter
+import helper_functions
 from metadata_processing import MetaDataProcessor
 
 
@@ -7,6 +8,8 @@ class MDToMDConverter(FileConverter):
     def pre_process_content(self):
         self._pre_processed_content = self._file_content
         self.parse_metadata_if_required()
+        self._pre_processed_content = helper_functions.replace_markdown_pseudo_html_href_tag_with_markdown_links(
+            self._pre_processed_content)
         self.pre_process_obsidian_image_links_if_required()
         renamed_file = self.rename_target_file_if_it_already_exists()
         if renamed_file is not None:
@@ -18,6 +21,8 @@ class MDToMDConverter(FileConverter):
 
     def post_process_content(self):
         self._post_processed_content = self._pre_processed_content
+        self._post_processed_content = helper_functions.replace_markdown_pseudo_html_href_tag_with_markdown_links(
+            self._post_processed_content)
         self.post_process_obsidian_image_links_if_required()
         self.add_meta_data_if_required()
         self._current_note_attachment_links = get_attachment_paths(self._conversion_settings.source_absolute_root,

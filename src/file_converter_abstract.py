@@ -3,6 +3,7 @@ from collections import namedtuple
 import logging
 from pathlib import Path
 
+
 import config
 import content_link_management
 import helper_functions
@@ -98,6 +99,10 @@ class FileConverter(ABC):
             self.logger.debug(f"Pre process obsidian image links")
             self._pre_processed_content = image_processing.replace_obsidian_image_links_with_html_img_tag(
                 self._pre_processed_content)
+
+    def is_html_based_content(self):
+        return self._conversion_settings.conversion_input == 'html' \
+               or self._conversion_settings.conversion_input == 'nsx'
 
     def post_process_obsidian_image_links_if_required(self):
         if self._conversion_settings.export_format == 'obsidian':
