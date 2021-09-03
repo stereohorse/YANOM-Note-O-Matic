@@ -252,6 +252,9 @@ class NSXFile:
 
         for notebooks_id in self._notebooks:
             self._notebooks[notebooks_id].process_notebook_pages()
+            self._image_count += self._notebooks[notebooks_id].num_image_attachments
+            self._attachment_count += self._notebooks[notebooks_id].num_file_attachments
+
             if self._notebooks[notebooks_id].null_attachment_list:
                 self._null_attachments[self._notebooks[notebooks_id].title] \
                     = self._null_attachments.get(self._notebooks[notebooks_id].title, []) \
@@ -263,15 +266,10 @@ class NSXFile:
             with alive_bar(len(self._note_pages), bar='blocks') as bar:
                 for note_page_id in self._note_pages:
                     self._store_file(self._note_pages[note_page_id], bar)
-                    # file_writer.store_file(self._note_pages[note_page_id].full_path,
-                    #                        self._note_pages[note_page_id].converted_content)
-                    # bar()
             return
 
         for note_page_id in self._note_pages:
             self._store_file(self._note_pages[note_page_id])
-            # file_writer.store_file(self._note_pages[note_page_id].full_path,
-            #                        self._note_pages[note_page_id].converted_content)
 
     @staticmethod
     def _store_file(note_page, bar=None):
@@ -280,9 +278,6 @@ class NSXFile:
 
         if bar:
             bar()
-
-
-
 
     @property
     def notebooks(self):

@@ -33,6 +33,8 @@ class Notebook:
         self.note_titles = []
         self._attachment_md5_file_name_dict = {}
         self._null_attachment_list = []
+        self._num_image_attachments = 0
+        self._num_file_attachments = 0
 
     def process_notebook_pages(self):
         self.logger.info(f"Processing note book {self.title} - {self.notebook_id}")
@@ -42,6 +44,7 @@ class Notebook:
             with alive_bar(len(self.note_pages), bar='blocks') as bar:
                 for note_page in self.note_pages:
                     self._process_page(note_page, bar)
+
             return
 
         for note_page in self.note_pages:
@@ -49,6 +52,8 @@ class Notebook:
 
     def _process_page(self, note_page, bar=None):
         note_page.process_note()
+        self._num_image_attachments += note_page.image_count
+        self._num_file_attachments += note_page.attachment_count
         if note_page.attachments_json is None:
             self._null_attachment_list.append(note_page.title)
         if bar:
@@ -170,3 +175,11 @@ class Notebook:
     @property
     def null_attachment_list(self):
         return self._null_attachment_list
+
+    @property
+    def num_image_attachments(self):
+        return self._num_image_attachments
+
+    @property
+    def num_file_attachments(self):
+        return self._num_file_attachments

@@ -327,7 +327,7 @@ def test_add_note_pages_encrypted_note(conv_setting, caplog):
     assert 'Creating note page objects' in caplog.messages
     assert "The Note - 'note title' - is encrypted and has not been converted." in caplog.messages
 
-    assert nsx_fc._encrypted_notes == ['note title']
+    assert nsx_fc.encrypted_notes == ['note title']
 
 
 def test_add_note_pages_encrypted_note_no_encrypt_key_in_note_data(conv_setting, caplog):
@@ -389,8 +389,10 @@ def test_process_notebooks(conv_setting, notebooks):
         nsx_fc.process_notebooks()
 
         mock_process_notebook_pages.assert_called()
-        assert nsx_fc._note_book_count == 2
-        assert nsx_fc._null_attachments == {'notebook 1': ['page1']}
+        assert nsx_fc.note_book_count == 2
+        assert nsx_fc.null_attachments == {'notebook 1': ['page1']}
+        assert nsx_fc.image_count == 0
+        assert nsx_fc.attachment_count == 0
 
 
 def test_get_notebook_ids(conv_setting):
