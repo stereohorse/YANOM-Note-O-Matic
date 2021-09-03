@@ -500,7 +500,7 @@ def test_split_valid_and_invalid_link_paths_windows():
         '/hello/dog\0/cat',
         'file:///K:/SPSS%20info/',
         'c:/SPSS%20inf',
-        'attachments\example_file.pdf',
+        r'attachments\example_file.pdf',
         'c:\\windows',
     }
 
@@ -511,7 +511,7 @@ def test_split_valid_and_invalid_link_paths_windows():
 
     expected_valid = {
         'c:/SPSS%20inf',
-        'attachments\example_file.pdf',
+        r'attachments\example_file.pdf',
         'c:\\windows',
     }
 
@@ -530,7 +530,7 @@ def test_split_valid_and_invalid_link_paths_unix_like():
         '/hello/dog\0/cat',
         'file:///K:/SPSS%20info/',
         'c:/SPSS%20inf',
-        'attachments\example_file.pdf',
+        r'attachments\example_file.pdf',
     }
 
     expected_invalid = {
@@ -540,7 +540,7 @@ def test_split_valid_and_invalid_link_paths_unix_like():
     expected_valid = {
         'file:///K:/SPSS%20info/',
         'c:/SPSS%20inf',
-        'attachments\example_file.pdf',
+        r'attachments\example_file.pdf',
     }
 
     result = content_link_management.split_valid_and_invalid_link_paths(all_attachments)
