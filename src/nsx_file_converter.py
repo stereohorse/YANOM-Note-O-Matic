@@ -182,27 +182,40 @@ class NSXFile:
 
         if not config.yanom_globals.is_silent:
             print(f"Finding note pages in {self._nsx_file_name.name}")
-        with alive_bar(len(self._note_page_ids), bar='blocks') as bar:
-            for note_id in self._note_page_ids:
-                note_data = self.fetch_json_data(note_id)
-                if not note_data:
-                    self.logger.warning(f"Unable to locate note data for note id '{note_id}' "
-                                        f"from nsx file'{self._nsx_file_name.name}'. No note data to process ")
-                    bar()
-                    continue
-                if self.is_note_encrypted(note_data):
-                    self._encrypted_notes.append(note_data['title'])
-                    bar()
-                    continue
+            with alive_bar(len(self._note_page_ids), bar='blocks') as bar:
+                for note_id in self._note_page_ids:
+                    self._add_note(note_id, bar)
+                self._note_page_count += len(self._note_pages)
 
-                note_page = NotePage(self, note_id, note_data)
-                self._note_pages[note_id] = note_page
-                if not config.yanom_globals.is_silent:
-                    bar()
+                self._warn_if_note_pages_missing()
+            return
 
-            self._note_page_count += len(self._note_pages)
+        for note_id in self._note_page_ids:
+            self._add_note(note_id)
 
-            self._warn_if_note_pages_missing()
+        self._note_page_count += len(self._note_pages)
+
+        self._warn_if_note_pages_missing()
+
+    def _add_note(self, note_id, bar=None):
+        note_data = self.fetch_json_data(note_id)
+        if not note_data:
+            self.logger.warning(f"Unable to locate note data for note id '{note_id}' "
+                                f"from nsx file'{self._nsx_file_name.name}'. No note data to process ")
+            if bar:
+                bar()
+            return
+
+        if self.is_note_encrypted(note_data):
+            self._encrypted_notes.append(note_data['title'])
+            if bar:
+                bar()
+            return
+
+        note_page = NotePage(self, note_id, note_data)
+        self._note_pages[note_id] = note_page
+        if bar:
+            bar()
 
     def _warn_if_note_pages_missing(self):
         if len(self._note_pages) < len(self._note_page_ids):
@@ -247,13 +260,29 @@ class NSXFile:
     def save_note_pages(self):
         if not config.yanom_globals.is_silent:
             print("Saving note pages")
-        with alive_bar(len(self._note_pages), bar='blocks') as bar:
-            for note_page_id in self._note_pages:
-                file_writer.store_file(self._note_pages[note_page_id].full_path,
-                                       self._note_pages[note_page_id].converted_content)
-                self._exported_notes.append(self._note_pages[note_page_id].full_path)
-                if not config.yanom_globals.is_silent:
-                    bar()
+            with alive_bar(len(self._note_pages), bar='blocks') as bar:
+                for note_page_id in self._note_pages:
+                    self._store_file(self._note_pages[note_page_id], bar)
+                    # file_writer.store_file(self._note_pages[note_page_id].full_path,
+                    #                        self._note_pages[note_page_id].converted_content)
+                    # bar()
+            return
+
+        for note_page_id in self._note_pages:
+            self._store_file(self._note_pages[note_page_id])
+            # file_writer.store_file(self._note_pages[note_page_id].full_path,
+            #                        self._note_pages[note_page_id].converted_content)
+
+    @staticmethod
+    def _store_file(note_page, bar=None):
+        file_writer.store_file(note_page.full_path,
+                               note_page.converted_content)
+
+        if bar:
+            bar()
+
+
+
 
     @property
     def notebooks(self):

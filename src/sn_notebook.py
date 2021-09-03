@@ -39,13 +39,20 @@ class Notebook:
 
         if not config.yanom_globals.is_silent:
             print(f"Processing '{self.title}' Notebook")
-        with alive_bar(len(self.note_pages), bar='blocks') as bar:
-            for note_page in self.note_pages:
-                note_page.process_note()
-                if note_page.attachments_json is None:
-                    self._null_attachment_list.append(note_page.title)
-                if not config.yanom_globals.is_silent:
-                    bar()
+            with alive_bar(len(self.note_pages), bar='blocks') as bar:
+                for note_page in self.note_pages:
+                    self._process_page(note_page, bar)
+            return
+
+        for note_page in self.note_pages:
+            self._process_page(note_page)
+
+    def _process_page(self, note_page, bar=None):
+        note_page.process_note()
+        if note_page.attachments_json is None:
+            self._null_attachment_list.append(note_page.title)
+        if bar:
+            bar()
 
     def fetch_notebook_json(self, notebook_id):
         if notebook_id == 'recycle-bin':
