@@ -531,7 +531,6 @@ def process_attachments(path_to_content_file: Path, set_of_links: set[str], note
         non_copyable - set of links to files that are NOT in the same path as the source of the content
 
     """
-# TODO done kind of.  test with nsx files, test md - html html  md md-md and test in windows for renaming.
     all_attachments = remove_content_links_from_links(path_to_content_file, note_paths, set_of_links)
 
     link_validity = split_valid_and_invalid_link_paths(all_attachments)

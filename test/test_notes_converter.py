@@ -21,58 +21,6 @@ def touch(path):
         os.utime(path, None)
 
 
-@pytest.mark.parametrize(
-    'conversion_count, message, expected', [
-        (0, 'word', ''),
-        (1, 'word', '1 word'),
-        (2, 'word', '2 words')
-    ]
-)
-def test_print_result_if_any(capsys, conversion_count, message, expected):
-    args = ''
-    nc = notes_converter.NotesConvertor(args, 'config_data_fake')
-
-    nc.print_result_if_any(conversion_count, message)
-
-    captured = capsys.readouterr()
-
-    assert expected in captured.out
-
-
-def test_log_results(caplog):
-    args = ''
-    nc = notes_converter.NotesConvertor(args, 'config_data_fake')
-    nc._note_book_count = 1
-    nc._note_page_count = 2
-    nc._image_count = 3
-    nc._attachment_count = 4
-
-    caplog.clear()
-    nc.log_results()
-
-    assert len(caplog.records) == 4
-    assert caplog.records[3].message == '4 Attachments'
-    assert caplog.records[2].message == '3 Images'
-    assert caplog.records[1].message == '2 Note Pages'
-    assert caplog.records[0].message == '1 Note books'
-
-
-def test_output_results_if_not_silent_mode_when_in_silent_mode(capsys):
-    args = ''
-    nc = notes_converter.NotesConvertor(args, 'config_data_fake')
-    nc._note_book_count = 1
-    nc._note_page_count = 2
-    nc._image_count = 3
-    nc._attachment_count = 4
-
-    config.yanom_globals.is_silent = True
-
-    nc.output_results_if_not_silent_mode()
-
-    captured = capsys.readouterr()
-    assert captured.out == ''
-
-
 class FakeNSXFile:
     def __init__(self):
         self.inter_note_link_processor = FakeInterLinkProcessor()
@@ -95,23 +43,6 @@ class FakeInterLinkProcessor:
         self.renamed_links_not_corrected = [1, 2]
         self.replacement_links = [1, 2, 3]
         self.unmatched_links_msg = "missing links message"
-
-
-def test_output_results_if_not_silent_mode(capsys):
-    args = ''
-    nc = notes_converter.NotesConvertor(args, 'config_data_fake')
-    nc._note_book_count = 1
-    nc._note_page_count = 2
-    nc._image_count = 3
-    nc._attachment_count = 4
-    nc._nsx_backups = [FakeNSXFile()]
-
-    config.yanom_globals.is_silent = False
-
-    nc.output_results_if_not_silent_mode()
-
-    captured = capsys.readouterr()
-    assert captured.out == '1 Note book\n2 Note pages\n3 Images\n4 Attachments\n3 out of 5 links between notes were re-created\nmissing links message\n'
 
 
 class FakeConfigData:

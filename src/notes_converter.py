@@ -13,6 +13,7 @@ from file_converter_MD_to_MD import MDToMDConverter
 import interactive_cli
 from nsx_file_converter import NSXFile
 from pandoc_converter import PandocConverter
+import report
 from timer import Timer
 
 
@@ -58,6 +59,7 @@ class NotesConvertor:
         self._nsx_null_attachments = {}
         self._encrypted_notes = []
         self._exported_files = set()
+        self._report = ''
 
     def convert_notes(self):
         self.evaluate_command_line_arguments()
@@ -68,8 +70,7 @@ class NotesConvertor:
             self.convert_markdown()
         else:
             self.convert_nsx()
-        self.output_results_if_not_silent_mode()
-        self.log_results()
+        self.generate_results_report()
         self.logger.info("Processing Completed")
 
     def create_export_folder_if_required(self):
@@ -255,24 +256,12 @@ class NotesConvertor:
         self.logger.info("Using settings from config  ini file")
         self.conversion_settings = self.config_data.conversion_settings
 
-    def output_results_if_not_silent_mode(self):
-        if not config.yanom_globals.is_silent:
-            self.print_result_if_any(self._note_book_count, 'Note book')
-            self.print_result_if_any(self._note_page_count, 'Note page')
-            self.print_result_if_any(self._image_count, 'Image')
-            self.print_result_if_any(self._attachment_count, 'Attachment')
-            num_links_corrected = 0
-            num_links_not_corrected = 0
-            for nsx_file in self._nsx_backups:
-                num_links_corrected = num_links_corrected + len(nsx_file.inter_note_link_processor.replacement_links)
-                num_links_not_corrected = num_links_not_corrected + len(
-                    nsx_file.inter_note_link_processor.renamed_links_not_corrected)
-            if (num_links_corrected + num_links_not_corrected) > 0:
-                print(f'{num_links_corrected} out of {num_links_corrected + num_links_not_corrected} '
-                      f'links between notes were re-created')
-            for nsx_file in self._nsx_backups:
-                if nsx_file.inter_note_link_processor.unmatched_links_msg:
-                    print(nsx_file.inter_note_link_processor.unmatched_links_msg)
+    def generate_results_report(self):
+        report_generator = report.Report(self)
+        report_generator.generate_report()
+        report_generator.save_results()
+        report_generator.output_results_if_not_silent_mode()
+        report_generator.log_results()
 
     @staticmethod
     def print_result_if_any(conversion_count, message):
@@ -283,8 +272,38 @@ class NotesConvertor:
             plural = 's'
         print(f'{conversion_count} {message}{plural}')
 
-    def log_results(self):
-        self.logger.info(f"{self._note_book_count} Note books")
-        self.logger.info(f"{self._note_page_count} Note Pages")
-        self.logger.info(f"{self._image_count} Images")
-        self.logger.info(f"{self._attachment_count} Attachments")
+    @property
+    def nsx_backups(self):
+        return self._nsx_backups
+
+    @property
+    def attachment_count(self):
+        return self._attachment_count
+
+    @property
+    def image_count(self):
+        return self._image_count
+
+    @property
+    def note_page_count(self):
+        return self._note_page_count
+
+    @property
+    def note_book_count(self):
+        return self._note_book_count
+
+    @property
+    def orphan_files(self):
+        return self._orphan_files
+
+    @property
+    def attachment_details(self):
+        return self._attachment_details
+
+    @property
+    def nsx_null_attachments(self):
+        return self._nsx_null_attachments
+
+    @property
+    def encrypted_notes(self):
+        return self._encrypted_notes
