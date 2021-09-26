@@ -95,11 +95,11 @@ def replace_obsidian_image_links_with_html_img_tag(content: str) -> str:
 
     The string provided is analysed, the source is formatted as a posix path and a html img tag string is generated.
 
-    ![Some alt text|600](my_image.gif)
+    ![Some alt text|600x300](my_image.gif)
     becomes
-    <img src="my_image.gif" alt="Some alt text" width="600"/>
+    <img src="my_image.gif" alt="Some alt text" width="600" height="300" />
 
-    Tags that are not obsidian formatted - so do not contain |width will not be changed
+    Tags that are not obsidian formatted - so do not contain '|width' or '|widthxheight' will not be changed
 
     Parameters
     ==========
@@ -112,38 +112,52 @@ def replace_obsidian_image_links_with_html_img_tag(content: str) -> str:
         Updated content with replaced image links
 
     """
-    image_tags = re.findall(r'!\[.*?]\(.*?\)', content)
+    image_tag_lines = find_image_tag_lines(content)
 
-    if not image_tags:
-        return content
 
-    for tag in image_tags:
-        tag_part_one = tag.split('[', 1)[1].rsplit(']', 1)[0]
+    while image_tag_lines:
+        for image_tag_line in image_tag_lines:
+            image_tags = re.findall(r'!\[.*?\|.*?]\(.*?\)', image_tag_line)
 
-        if not tag_part_one:
-            continue  # skip ahead as this tag is not formatted for obsidian as first part is empty[]
+            # Now process the first tag on a line,
+            # once we have looped the first tags on each line the while loop
+            # will loop until no tags left on any lines
+            alt_text, width, height, original_alt_box = find_alt_box_details(image_tags[0])
+            path = find_markdown_path(image_tag_line)
+            auto_tag = create_image_autolink(alt_text, width, height, path)
+            old = f'{original_alt_box}({path})'
+            content = content.replace(old, auto_tag)
 
-        if '|' not in tag_part_one:
-            continue  # skip ahead as this tag is not formatted for obsidian as no pipe so no width so not obsidian
-
-        alt_text, width = tag_part_one.rsplit('|', 1)
-        if not width.isnumeric():
-            continue  # skip ahead as this tag is not formatted for obsidian
-
-        if alt_text:
-            alt_text = f'alt="{alt_text}" '
-
-        width = f' width="{width}"'
-
-        src = tag.rsplit('(', 1)[1].rstrip(')')
-        src = helper_functions.path_to_posix_str(src)
-        src = f'src="{src}"'
-
-        new_image_tag = f'<img {alt_text}{src}{width} />'
-
-        content = content.replace(tag, new_image_tag)
+        image_tag_lines = find_image_tag_lines(content)
 
     return content
+
+
+def find_alt_box_details(text_line):
+    width = ''
+    height = ''
+
+    tag_part_one = text_line.split('[', 1)[1].rsplit(']', 1)[0]
+    original_alt_box = f'![{tag_part_one}]'
+
+    alt_text, width_and_height = tag_part_one.rsplit('|', 1)
+
+    if width_and_height.isnumeric():
+        width = str(int(width_and_height))
+    else:
+        try:
+            found_width, found_height = width_and_height.split('x')
+            if found_width.isnumeric():
+                width = str(int(found_width))
+            if found_height.isnumeric() and width:
+                height = str(int(found_height))
+            if width == '':
+                # width and height were invalid entries add to alt text
+                alt_text = tag_part_one
+        except ValueError:
+            alt_text = f'{alt_text}|{width_and_height}'  # invalid width and height include them in the alt text
+
+    return alt_text, width, height, original_alt_box
 
 
 def replace_markdown_html_img_tag_with_obsidian_image_links(content: str) -> str:
@@ -183,3 +197,43 @@ def replace_markdown_html_img_tag_with_obsidian_image_links(content: str) -> str
         new_content = new_content.replace(old, new)
 
     return new_content
+
+
+def find_markdown_path(line):
+    path = ''
+    open_paren_count = 0
+    for char in line:
+        if char == '(':
+            open_paren_count += 1
+        if char == ')':
+            open_paren_count -= 1
+        if open_paren_count > 0:
+            path = f"{path}{char}"
+        if len(path) > 0 and open_paren_count == 0:
+            break
+    path = path.strip('(')
+
+    return path
+
+
+def find_image_tag_lines(text_to_search):
+    """Return a list of lines that contain a markdown image tag with a pipe ![ | ]()"""
+    lines = re.findall(r'^.*!\[.*?\|.*?]\(.*\).*$', text_to_search, re.MULTILINE)
+    return lines
+
+
+def create_image_autolink(alt_text='', img_width='', img_height='', path=''):
+    alt = ''
+    src = ''
+    width = ''
+    height = ''
+    if alt_text:
+        alt = f'alt="{alt_text}" '
+    # if path:
+    src = f'src="{path}" '
+    if img_width:
+        width = f'width="{img_width}" '
+    if img_height:
+        height = f'height="{img_height}" '
+
+    return f'<img {alt}{src}{width}{height}/>'

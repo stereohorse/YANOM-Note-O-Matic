@@ -126,7 +126,7 @@ def test_generate_obsidian_image_markdown_link(raw_html, expected):
         ("""![Some alt text](attachments/12345678.png)""",
          """![Some alt text](attachments/12345678.png)""",
          ),
-        ("""![Some alt text with | a pipe](attachments/12345678.png)""",
+        ("""<img alt="Some alt text with | a pipe" src="attachments/12345678.png" />""",
          """![Some alt text with | a pipe](attachments/12345678.png)""",
          ),
         ("""<img alt="Some alt text with | a pipe and a width" src="attachments/12345678.png" width="400" />""",
@@ -157,7 +157,37 @@ def test_generate_obsidian_image_markdown_link(raw_html, expected):
         ("""hello world""",
          """hello world""",
          ),
-
+        ("""
+        a line with no images
+        <img alt="text" src="filepath/image(23).png" width="600" height="300" /> more text <img alt="text" src="filepath/image(23).png" width="600" /> more more text
+        <img alt="text" src="filepath/image(23).png" width="600" />
+        ![alt text](filepath/image(23).png)
+        ![alt text](filepath/image((23,hello)).png)
+        ![alt text](filepath/image((23 hello)).png)
+        <img alt="alt text" src="filepath/image.png" width="600" />
+        ![alt text](filepath/image.png)
+        pre text ![alt text](filepath/image(23)).png) more text
+        ![alt text](filepath/image.png) more text
+        ![alt text](filepath/ima ge.png)
+        ![alt text](filepath\ima.ge.png)
+        <img src="filepath/image(23).png" width="600" />
+        """,
+        """
+        a line with no images
+        ![text|600x300](filepath/image(23).png) more text ![text|600](filepath/image(23).png) more more text
+        ![text|600](filepath/image(23).png)
+        ![alt text](filepath/image(23).png)
+        ![alt text](filepath/image((23,hello)).png)
+        ![alt text](filepath/image((23 hello)).png)
+        ![alt text|600](filepath/image.png)
+        ![alt text](filepath/image.png)
+        pre text ![alt text](filepath/image(23)).png) more text
+        ![alt text](filepath/image.png) more text
+        ![alt text](filepath/ima ge.png)
+        ![alt text](filepath\\ima.ge.png)
+        ![|600](filepath/image(23).png)
+        """,
+         ),
     ],
 )
 def test_replace_obsidian_image_links_with_html_img_tag(expected, obsidian):
@@ -211,3 +241,97 @@ def test_replace_markdown_html_img_tag_with_obsidian_image_links(html, expected)
     result = image_processing.replace_markdown_html_img_tag_with_obsidian_image_links(html)
 
     assert result == expected
+
+
+
+@pytest.mark.parametrize(
+    'text_line, expected', [
+        ('![text|600x300](filepath/image(23).png)', 'filepath/image(23).png'),
+        ('![text|600x300](filepath/image((23,hello)).png)', 'filepath/image((23,hello)).png'),
+        ('pre text ![alt text](filepath/image(23)).png) more text', 'filepath/image(23)'),
+        ('![alt text](filepath\\ima.ge.png)', 'filepath\\ima.ge.png'),
+    ]
+)
+def test_find_markdown_path(text_line, expected):
+    result = image_processing.find_markdown_path(text_line)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    'text_line, expected_alt, expected_width, expected_height, expected_alt_box_original', [
+        ('![text|600x300](filepath/image(23).png)',
+         'text', '600', '300', '![text|600x300]'),
+        ('![text|600](filepath/image((23,hello)).png)',
+         'text', '600', '', '![text|600]',),
+        ('![alt text|x600](filepath/image((23,hello)).png)',
+         'alt text|x600', '', '', '![alt text|x600]',),
+        ('![|600](filepath/image(23).png)',
+         '', '600', '', '![|600]',),
+        ('![|some-text](filepath/image.png))',
+         '|some-text', '', '', '![|some-text]',),
+        ('![|hello world](filepath/image.png))',
+         '|hello world', '', '', '![|hello world]',),
+
+    ]
+)
+def test_find_alt_box_details(text_line, expected_alt, expected_width, expected_height, expected_alt_box_original):
+    alt_text, width, height, original_alt_box = image_processing.find_alt_box_details(text_line)
+
+    assert alt_text == expected_alt
+    assert width == expected_width
+    assert height == expected_height
+    assert original_alt_box == expected_alt_box_original
+
+
+@pytest.mark.parametrize(
+    'alt_text, img_width, img_height, path, expected', [
+        ('some alt text', '600', '300', 'folder/file.ext',
+         '<img alt="some alt text" src="folder/file.ext" width="600" height="300" />'),
+        ('some alt text', '', '300', 'folder/file.ext',
+         '<img alt="some alt text" src="folder/file.ext" height="300" />'),
+        ('some alt text', '600', '', 'folder/file.ext',
+         '<img alt="some alt text" src="folder/file.ext" width="600" />'),
+        ('some alt text', '', '', 'folder/file.ext',
+         '<img alt="some alt text" src="folder/file.ext" />'),
+        ('', '', '', 'folder/file.ext',
+         '<img src="folder/file.ext" />'),
+    ],
+)
+def test_create_image_autolink(alt_text, img_width, img_height, path, expected):
+    result = image_processing.create_image_autolink(alt_text, img_width, img_height, path)
+    assert result == expected
+
+
+# def test_replace_obsidian_image_links_with_html_img_tag():
+#     markdown = """
+#             ![text|600x300](filepath/image(23).png) more text ![text|600](filepath/image(23).png) more more text
+#             ![text|600](filepath/image(23).png)
+#             ![alt text](filepath/image(23).png)
+#             ![alt text](filepath/image((23,hello)).png)
+#             ![alt text](filepath/image((23 hello)).png)
+#             ![alt text|600](filepath/image.png)
+#             ![alt text](filepath/image.png)
+#             pre text ![alt text](filepath/image(23)).png) more text
+#             ![alt text](filepath/image.png) more text
+#             ![alt text](filepath/ima ge.png)
+#             ![alt text](filepath\\ima.ge.png)
+#             ![|600](filepath/image(23).png)
+#             """
+#
+#     expected ="""
+#             <img alt="text" src="filepath/image(23).png" width="600" height="300" /> more text <img alt="text" src="filepath/image(23).png" width="600" /> more more text
+#             <img alt="text" src="filepath/image(23).png" width="600" />
+#             ![alt text](filepath/image(23).png)
+#             ![alt text](filepath/image((23,hello)).png)
+#             ![alt text](filepath/image((23 hello)).png)
+#             <img alt="alt text" src="filepath/image.png" width="600" />
+#             ![alt text](filepath/image.png)
+#             pre text ![alt text](filepath/image(23)).png) more text
+#             ![alt text](filepath/image.png) more text
+#             ![alt text](filepath/ima ge.png)
+#             ![alt text](filepath\ima.ge.png)
+#             <img src="filepath/image(23).png" width="600" />
+#             """
+#     result = image_processing.replace_obsidian_image_links_with_html_img_tag(markdown)
+#
+#     assert result == expected
