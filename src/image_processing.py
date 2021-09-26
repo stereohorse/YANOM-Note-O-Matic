@@ -46,6 +46,9 @@ def clean_html_image_tag(tag, src_path=None):
     if 'width' in tag.attrs:
         new_attrs['width'] = tag.attrs['width']
 
+    if 'height' in tag.attrs:
+        new_attrs['height'] = tag.attrs['height']
+
     if 'alt' in tag.attrs:
         new_attrs['alt'] = tag.attrs['alt']
 
@@ -70,21 +73,22 @@ def generate_obsidian_image_markdown_link(tag) -> Optional[str]:
     None : if width is not in the image tag - no need to format for obsidian
 
     """
-    if 'width' not in tag.attrs:
-        return  # no width so no need for obsidian format
+    width = tag.attrs.get('width', '')
+    if not width:
+        return
 
-    if tag.attrs['width'] == '':
-        return  # no width so no need for obsidian format
-    else:
-        width = f"|{tag.attrs['width']}"
+    height = tag.attrs.get('height', '')
 
     alt = tag.attrs.get('alt', '')
     src = tag.attrs.get('src', '')
     src = helper_functions.path_to_posix_str(src)
 
-    obsidian_img_tag_markdown = f'![{width}]({src})'
-    if alt:
-        obsidian_img_tag_markdown = f'![{alt}{width}]({src})'
+    height_string = ''
+    if height:
+        height_string = f'x{height}'
+
+    with_and_height = f'{width}{height_string}'
+    obsidian_img_tag_markdown = f'![{alt}|{with_and_height}]({src})'
 
     return obsidian_img_tag_markdown
 
@@ -113,7 +117,6 @@ def replace_obsidian_image_links_with_html_img_tag(content: str) -> str:
 
     """
     image_tag_lines = find_image_tag_lines(content)
-
 
     while image_tag_lines:
         for image_tag_line in image_tag_lines:
@@ -199,7 +202,8 @@ def replace_markdown_html_img_tag_with_obsidian_image_links(content: str) -> str
     return new_content
 
 
-def find_markdown_path(line):
+def find_markdown_path(line: str):
+    """Parse the given string for the path in a markdown image tag"""
     path = ''
     open_paren_count = 0
     for char in line:
@@ -223,13 +227,12 @@ def find_image_tag_lines(text_to_search):
 
 
 def create_image_autolink(alt_text='', img_width='', img_height='', path=''):
+    """create an image autolink formatted markdown string """
     alt = ''
-    src = ''
     width = ''
     height = ''
     if alt_text:
         alt = f'alt="{alt_text}" '
-    # if path:
     src = f'src="{path}" '
     if img_width:
         width = f'width="{img_width}" '

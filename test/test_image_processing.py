@@ -48,6 +48,10 @@ class ImageNSAttachment:
          None,
          {'src': '', 'width': '600'},
          ),
+        ("""<div><img width="600" height="300" /></div>""",
+         None,
+         {'src': '', 'width': '600', 'height': '300'},
+         ),
         ("""<div><img /></div>""",
          None,
          {'src': ''},
@@ -82,6 +86,12 @@ def test_clean_html_image_tag(raw_html, proved_path, expected):
         ("""<div><img src="my_image.gif" alt="Some alt text" width="600"/></div>""",
          """![Some alt text|600](my_image.gif)""",
          ),
+        ("""<div><img src="my_image.gif" alt="Some alt text" width="600" height="300" /></div>""",
+         """![Some alt text|600x300](my_image.gif)""",
+         ),
+        ("""<div><img src="my_image.gif" alt="Some alt text" height="300" /></div>""",
+         None,
+         ),
         ("""<div><img src="" alt="Some alt text" width="600"/></div>""",
          """![Some alt text|600]()""",
          ),
@@ -114,6 +124,15 @@ def test_generate_obsidian_image_markdown_link(raw_html, expected):
 
     assert result == expected
 
+
+def test_generate_obsidian_image_markdown_link_with_height():
+    soup = BeautifulSoup('<div><img src="my_image.gif" alt="Some alt text" width="600" height="300" /></div>', 'html.parser')
+    expected = '![Some alt text|600x300](my_image.gif)'
+    image_tag = soup.findAll('img')
+
+    result = image_processing.generate_obsidian_image_markdown_link(image_tag[0])
+
+    assert result == expected
 
 @pytest.mark.parametrize(
     'expected, obsidian', [
