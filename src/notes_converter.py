@@ -3,10 +3,11 @@ from pathlib import Path
 import shutil
 import sys
 
+import file_mover
 from alive_progress import alive_bar
 
 import config
-from content_link_management import get_set_of_all_files
+from content_link_management import find_local_file_links_in_content, get_set_of_all_files, process_attachments
 from file_converter_HTML_to_MD import HTMLToMDConverter
 from file_converter_MD_to_HTML import MDToHTMLConverter
 from file_converter_MD_to_MD import MDToMDConverter
@@ -79,7 +80,7 @@ class NotesConvertor:
     def convert_markdown(self):
         with Timer(name="md_conversion", logger=self.logger.info, silent=bool(config.yanom_globals.is_silent)):
             file_extension = 'md'
-            md_files_to_convert = self.generate_file_list(file_extension)
+            md_files_to_convert = self.generate_file_list(file_extension, self.conversion_settings.source_absolute_root)
             self.exit_if_no_files_found(md_files_to_convert, file_extension)
 
             if self.conversion_settings.export_format == 'html':
@@ -111,13 +112,15 @@ class NotesConvertor:
             new_absolute_path.parent.mkdir(exist_ok=True, parents=True)
             shutil.copy2(file, new_absolute_path)
 
-    def generate_file_list(self, file_extension):
-        if not self.conversion_settings.source.is_file():
-            file_list_generator = self.conversion_settings.source_absolute_root.rglob(f'*.{file_extension}')
-            file_list = {item for item in file_list_generator}
-            return file_list
+    def generate_file_list(self, file_extension, path_to_files: Path):
+        if self.conversion_settings.source.is_file():
+            return [self.conversion_settings.source]
 
-        return {self.conversion_settings.source}
+        file_list_generator = path_to_files.rglob(f'*{file_extension}')
+        file_list = {item for item in file_list_generator}
+        return file_list
+
+
 
     def exit_if_no_files_found(self, files_to_convert, file_extension):
         if not files_to_convert:
@@ -201,7 +204,8 @@ class NotesConvertor:
     def convert_html(self):
         with Timer(name="html_conversion", logger=self.logger.info, silent=bool(config.yanom_globals.is_silent)):
             file_extension = 'html'
-            html_files_to_convert = self.generate_file_list(file_extension)
+            html_files_to_convert = self.generate_file_list(file_extension,
+                                                            self.conversion_settings.source_absolute_root)
             self.exit_if_no_files_found(html_files_to_convert, file_extension)
             html_file_converter = HTMLToMDConverter(self.conversion_settings, html_files_to_convert)
             self.process_files(html_files_to_convert, html_file_converter)
@@ -209,12 +213,13 @@ class NotesConvertor:
 
     def convert_nsx(self):
         file_extension = 'nsx'
-        nsx_files_to_convert = self.generate_file_list(file_extension)
+        nsx_files_to_convert = self.generate_file_list(file_extension, self.conversion_settings.source_absolute_root)
         self.exit_if_no_files_found(nsx_files_to_convert, file_extension)
         self.pandoc_converter = PandocConverter(self.conversion_settings)
         self._nsx_backups = [NSXFile(file, self.conversion_settings, self.pandoc_converter)
                              for file in nsx_files_to_convert]
         self.process_nsx_files()
+        self.check_nsx_attachment_links()
 
     def process_nsx_files(self):
         with Timer(name="nsx_conversion", logger=self.logger.info, silent=bool(config.yanom_globals.is_silent)):
@@ -224,6 +229,45 @@ class NotesConvertor:
                 self._nsx_null_attachments.update(nsx_file.null_attachments)
                 self._encrypted_notes += nsx_file.encrypted_notes
                 self._exported_files.update(nsx_file.exported_notes)
+
+    def check_nsx_attachment_links(self):
+        if not config.yanom_globals.is_silent:
+            print(f"Analysing note page links")
+        notes_to_check = self.generate_file_list(file_mover.get_file_suffix_for(self.conversion_settings.export_format),
+                                                 self.conversion_settings.export_folder_absolute
+                                                 )
+        if not config.yanom_globals.is_silent:
+            with alive_bar(len(notes_to_check), bar='blocks') as bar:
+                for note in notes_to_check:
+                    self._nsx_attachment_checks(note, notes_to_check, bar)
+            return
+
+        for note in notes_to_check:
+            self._nsx_attachment_checks(note, notes_to_check)
+
+    def _nsx_attachment_checks(self, note, notes_to_check, bar=None):
+                content = note.read_text(encoding='utf-8')
+                all_attachments_paths = find_local_file_links_in_content(self.conversion_settings.export_format, content)
+                attachment_links = process_attachments(note,
+                                                       all_attachments_paths,
+                                                       notes_to_check,
+                                                       self.conversion_settings.export_folder_absolute
+                                                       )
+
+                self._attachment_details[note] = {
+                    'all': attachment_links.all,
+                    'valid': attachment_links.valid,
+                    'invalid': attachment_links.invalid,
+                    'existing': attachment_links.existing,
+                    'non_existing': attachment_links.non_existing,
+                    'copyable': attachment_links.copyable,
+                    'copyable_absolute': attachment_links.copyable_absolute,
+                    'non_copyable_relative': attachment_links.non_copyable_relative,
+                    'non_copyable_absolute': attachment_links.non_copyable_absolute,
+                }
+
+                if bar:
+                    bar()
 
     def update_processing_stats(self, nsx_file):
         self._note_page_count += nsx_file.note_page_count

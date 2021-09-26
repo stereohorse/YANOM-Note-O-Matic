@@ -196,7 +196,7 @@ def test_generate_file_list_multiple_files(tmp_path, filetype):
     nc.conversion_settings = conversion_settings.ConversionSettings()
     nc.conversion_settings.source = Path(tmp_path)
 
-    result = nc.generate_file_list(f'{filetype}')
+    result = nc.generate_file_list(f'{filetype}', nc.conversion_settings.source_absolute_root)
 
     assert len(result) == 2
     assert Path(tmp_path, f'file1.{filetype}') in result
@@ -212,20 +212,24 @@ def test_generate_file_list_single_file_source(tmp_path):
     nc.conversion_settings = conversion_settings.ConversionSettings()
     nc.conversion_settings.source = Path(tmp_path, 'file1.nsx')
 
-    result = nc.generate_file_list('nsx')
+    result = nc.generate_file_list('nsx', nc.conversion_settings.source_absolute_root)
 
     assert len(result) == 1
     assert Path(tmp_path, f'file1.nsx') in result
 
 
-def test_convert_nsx(tmp_path):
+@pytest.mark.parametrize(
+    'silent', [True, False]
+)
+def test_convert_nsx(tmp_path, silent):
+    config.yanom_globals.is_silent = silent
     test_source_path = tmp_path
     args = {'source': test_source_path}
     touch(Path(tmp_path, 'file1.nsx'))
     cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
-    nc.conversion_settings.source = Path(tmp_path, 'file1.nsx')
+    nc.conversion_settings.source = Path(tmp_path)
 
     with patch('notes_converter.NotesConvertor.process_nsx_files', spec=True) as mock_process_nsx_files:
         nc.convert_nsx()
@@ -273,7 +277,7 @@ def test_convert_html_rename_existing_file(tmp_path):
     Path(tmp_path, 'notes').mkdir()
     touch(Path(tmp_path, 'notes', 'file1.md'))
 
-    nc.conversion_settings._source = Path(tmp_path, 'file1.html')
+    nc.conversion_settings._source = Path(tmp_path)
     nc.conversion_settings._source_absolute_root = Path(tmp_path)
 
     nc.convert_html()
@@ -401,7 +405,7 @@ def test_convert_markdown(tmp_path, input_file, file_converter_type, export_form
     cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
-    nc.conversion_settings._source = Path(tmp_path, input_file)
+    nc.conversion_settings._source = Path(tmp_path)
     nc.conversion_settings._source_absolute_root = Path(tmp_path)
     nc.conversion_settings.export_format = export_format
 
@@ -426,7 +430,7 @@ def test_convert_notes(tmp_path, input_file, file_converter_type, export_format,
     touch(Path(tmp_path, input_file))
     nc = notes_converter.NotesConvertor(args, 'config_data')
     nc.conversion_settings = conversion_settings.ConversionSettings()
-    nc.conversion_settings._source = Path(tmp_path, input_file)
+    nc.conversion_settings._source = Path(tmp_path)
     nc.conversion_settings._working_directory = Path(tmp_path)
     nc.conversion_settings._source_absolute_root = Path(tmp_path)
     nc.conversion_settings.export_format = export_format
@@ -447,13 +451,13 @@ def test_convert_notes(tmp_path, input_file, file_converter_type, export_format,
 
 def test_convert_notes_nsx_file_type(tmp_path, capsys, caplog):
     test_source_path = tmp_path
-    input_file = 'file1.md'
+    input_file = 'file1.nsx'
     args = {'silent': True, 'ini': False, 'source': test_source_path}
     touch(Path(tmp_path, input_file))
     cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
     nc = notes_converter.NotesConvertor(args, cd)
     nc.conversion_settings = conversion_settings.ConversionSettings()
-    nc.conversion_settings._source = Path(tmp_path, input_file)
+    nc.conversion_settings._source = Path(tmp_path)
     nc.conversion_settings._source_absolute_root = Path(tmp_path)
     nc.conversion_settings.conversion_input = 'nsx'
 

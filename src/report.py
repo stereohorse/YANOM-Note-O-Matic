@@ -83,7 +83,7 @@ class Report:
     def get_orphan_file_report_details(self):
         orphan_messages = {
             'ignore': 'The following orphan files were left in the source location and not copied to the export folder',
-            'move': 'The following orphan files were included in the export folder',
+            'copy': 'The following orphan files were included in the export folder',
             'orphan': 'The following orphan files were put in the `orphan` folder in the export folder',
         }
 
