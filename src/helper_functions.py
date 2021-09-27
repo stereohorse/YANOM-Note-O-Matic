@@ -260,8 +260,8 @@ def add_random_string_to_any_empty_path_parts(parts):
 
 
 def strip_unwanted_chars_from_path_part(name_options: FileNameOptions, raw_part):
-    # Always clean windows reserved characters
-    raw_part = re.sub(r'[<>:"/\\|?*]', '-', raw_part)
+    # Always clean windows reserved characters and characters not allowed in markdown links - #^[]|()
+    raw_part = re.sub(r'[<>:"/\\|?*#^\[\]()]', '-', raw_part)
 
     if not name_options.allow_non_alphanumeric:
         # remove anything not a alpha numeric, white, space or dash
