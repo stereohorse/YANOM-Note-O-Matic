@@ -57,6 +57,15 @@ Future versions will support conversion from additional proprietary file formats
 - Convert HTML to Markdown
 - Convert Markdown to HTML
 - Convert Markdown to a different format of Markdown 
+- Report details of and issues identified during conversion
+  - Detials such as 
+    - number of notes converted
+    - attachment files and images processed, 
+    - links between note recreated
+  - Issues identified such as
+    - Links between note station notes that could not be recreated
+    - Links in notes that are for files that can not be located
+    - Orphan Files that exist but are not linked to a note
 - User selectable filename and directory name cleaning options (file name cleaning only for nsx files)
 - List of available Markdown formats that can be used as inputs or outputs
   - CommonMark  (Used by Joplin)
@@ -84,6 +93,7 @@ Future versions will support conversion from additional proprietary file formats
     - option to split grouped tags photography/landscape/winter becomes #photography, #landscape, #winter
     - option to remove spaces from tag names, spaces are replaced with hyphen `-`
   - File attachments are maintained
+  - Option to 
   - Note-Station specific features
     - Charts are recreated.  Options to place an image, data table of the chart data and, a link to a csv file on the exported page.  
     - If duplicate files are attached to different notes within a notebook only a single copy of the attachment is stored in the attachment folder and links will be to that file.

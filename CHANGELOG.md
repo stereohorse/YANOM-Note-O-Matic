@@ -17,17 +17,24 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Option to change relative links to files outside the path of the source directory to absolute links
 - For a Note Station NSX conversion check if an attachment uses the same md5 value and is a shared attachment between notes and no longer create a duplicated file on disk. 
 - Check for and filter out encrypted notes from nsx files.  The encrypted notes are not converted.
-- Check links in notes are valid for the current file system.
+- Check links in notes are valid for the current file system
+- Conversion report displayed to screen and saved as markdown file.  Report contains details of the conversion and issues identified with attachments.
+- For obsidian image tags image height is now also supported.
+- All link handling and link creation will output only posix formatted uri's.
 
 ### Fixed
 - File renaming for existing files with nsx export - was changing the exported file name now changes the existing file name.
 - In nsx export duplicate attachment file names no longer overwrite each other.
 - Creation time in file name is now fully implemented.
+- Obsidian image tags with a path containing parenthesis are now parsed correctly.
+- Progress bars no longer partially display in silent mode.
+- Markdown to Markdown conversion of some specifically formatted autolink where the link and display text were the same would result in non-working link. 
 
 ### Other Changes
 - Improve error message when unable to find file in nsx zip file
+- Improvement to tests
 
-## [1.5.0]  2021-08-27
+## [1.5.0] 2021-08-27
 
 ### Added
 - Checklists in NSX files formatted in html code other than the synology checklist format now also export as checklists.
