@@ -730,3 +730,26 @@ def test_handle_orphan_files_as_required_orphans_ignore(tmp_path):
 
     assert not Path(tmp_path, 'notes/some_folder/data/my_notebook/attachments/one.png').exists()
     assert Path(tmp_path, 'some_folder/data/my_notebook/attachments/one.png').exists()
+
+@pytest.mark.parametrize(
+    'conversion_count, message, expected', [
+        (1, 'message', '1 message'),
+        (2, 'message', '2 messages'),
+    ]
+)
+def test_print_result_if_any(conversion_count, message, expected, capsys, tmp_path):
+    args = {'silent': True, 'ini': False, 'source': tmp_path}
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
+    nc = notes_converter.NotesConvertor(args, cd)
+    nc.print_result_if_any(conversion_count, message)
+    captured = capsys.readouterr()
+    assert expected in captured.out
+
+
+def test_print_result_if_any_no_message_expected(capsys, tmp_path):
+    args = {'silent': True, 'ini': False, 'source': tmp_path}
+    cd = config_data.ConfigData(f"{config.yanom_globals.data_dir}/config.ini", 'gfm', allow_no_value=True)
+    nc = notes_converter.NotesConvertor(args, cd)
+    nc.print_result_if_any(0, 'message')
+    captured = capsys.readouterr()
+    assert 'message' not in captured.out
