@@ -121,7 +121,6 @@ class NotesConvertor:
         return file_list
 
 
-
     def exit_if_no_files_found(self, files_to_convert, file_extension):
         if not files_to_convert:
             self.logger.info(

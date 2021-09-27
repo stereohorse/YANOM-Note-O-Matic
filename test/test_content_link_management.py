@@ -420,7 +420,7 @@ def test_update_content_with_new_paths_for_non_movable_attachments(tmp_path):
                        f'![non-existing|600](attachments/three.pdf)\n' \
                        f'![copyable|600](attachments/eight.pdf)\n' \
                        f'![copyable](../attachments/two.csv)\n' \
-                       f'![non-copyable]({str(tmp_path)}/some_folder/attachments/four.csv)\n' \
+                       f'![non-copyable]({str(tmp_path.as_posix())}/some_folder/attachments/four.csv)\n' \
                        f'![non-existing](../my_notebook/seven.csv)\n' \
                        f'![copyable](../my_notebook/six.csv)\n' \
                        f'![copyable](../my_other_notebook/attachments/five.pdf "test tool tip text")\n' \

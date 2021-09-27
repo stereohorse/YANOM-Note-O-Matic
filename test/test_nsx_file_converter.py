@@ -134,13 +134,18 @@ def test_create_export_folder_if_not_exist_force_exception_invalid_path_missing_
     nsx_fc.conversion_settings.export_folder = 'notes'
     Path(conv_setting.working_directory, config.yanom_globals.data_dir).rmdir()  # remove a directory to
 
-    expected_error_log_caplog_message = f"Unable to create the export folder there is a problem with the path.\n[Errno 2] No such file or directory: '{Path(conv_setting.working_directory, config.yanom_globals.data_dir, nsx_fc.conversion_settings.export_folder)}'"
+    expected_error_log_caplog_message = f"Unable to create the export folder there is a problem with the path."
 
     with pytest.raises(SystemExit):
         nsx_fc.create_export_folder_if_not_exist(parents=False)  # use parents false to force error
 
-    # assert "Creating export folder if it does not exist" in caplog.messages
-    assert expected_error_log_caplog_message in caplog.messages
+    message_found = False
+    for message in caplog.messages:
+        if expected_error_log_caplog_message in message:
+            message_found = True
+            break
+
+    assert message_found
 
 
 def test_create_export_folder_if_not_exist_force_exception_directory_already_exists(conv_setting, caplog, tmp_path):
@@ -179,12 +184,18 @@ def test_create_export_folder_if_not_exist_force_exception_path_is_to_existing_f
 
     Path(conv_setting.working_directory, config.yanom_globals.data_dir, 'notes').touch()  # make exist as a file
 
-    expected_error_log_caplog_message = f"Unable to create the export folder because path is to an existing file not a directory.\n[Errno 17] File exists: '{Path(conv_setting.working_directory, config.yanom_globals.data_dir, 'notes')}'"
+    expected_error_log_caplog_message = f"Unable to create the export folder because path is to an existing file not a directory"
 
     with pytest.raises(SystemExit):
         nsx_fc.create_export_folder_if_not_exist()
 
-    assert expected_error_log_caplog_message in caplog.messages
+    message_found = False
+    for message in caplog.messages:
+        if expected_error_log_caplog_message in message:
+            message_found = True
+            break
+
+    assert message_found
 
     captured = capsys.readouterr()
     assert expected_out in captured.out

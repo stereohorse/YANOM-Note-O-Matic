@@ -174,7 +174,7 @@ def generate_clean_directory_path(directory_name: str, name_options: FileNameOpt
         clean_part = _clean_file_or_directory_name(path_part, name_options, is_file=False)
         cleaned_path = Path(cleaned_path, clean_part)
 
-    return str(cleaned_path)
+    return str(cleaned_path.as_posix())
 
 
 def _clean_file_or_directory_name(dirty_name: str, name_options: FileNameOptions, is_file=True) -> str:
