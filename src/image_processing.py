@@ -50,7 +50,10 @@ def clean_html_image_tag(tag, src_path=None):
         new_attrs['height'] = tag.attrs['height']
 
     if 'alt' in tag.attrs:
-        new_attrs['alt'] = tag.attrs['alt']
+        clean_alt = tag.attrs['alt']
+        clean_alt = clean_alt.replace('[', '')
+        clean_alt = clean_alt.replace(']', '')
+        new_attrs['alt'] = clean_alt
 
     return new_attrs
 
@@ -80,6 +83,8 @@ def generate_obsidian_image_markdown_link(tag) -> Optional[str]:
     height = tag.attrs.get('height', '')
 
     alt = tag.attrs.get('alt', '')
+    alt = alt.replace('[', '')
+    alt = alt.replace(']', '')
     src = tag.attrs.get('src', '')
     src = helper_functions.path_to_posix_str(src)
 
