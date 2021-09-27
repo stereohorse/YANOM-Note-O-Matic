@@ -165,10 +165,12 @@ def generate_clean_directory_path(directory_name: str, name_options: FileNameOpt
     directory_name = directory_name.strip()
     for path_part in Path(directory_name).parts:
         testing_path = Path(cleaned_path, path_part)
-        if testing_path.exists():
-            cleaned_path = testing_path
-            continue
-
+        try:
+            if testing_path.exists():
+                cleaned_path = testing_path
+                continue
+        except OSError:
+            pass
         clean_part = _clean_file_or_directory_name(path_part, name_options, is_file=False)
         cleaned_path = Path(cleaned_path, clean_part)
 
