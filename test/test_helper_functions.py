@@ -694,3 +694,17 @@ def test_replace_markdown_pseudo_html_href_tag_with_markdown_links(content, expe
     result = helper_functions.replace_markdown_pseudo_html_href_tag_with_markdown_links(content)
 
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    'content, expected', [
+        ('hello &amp; goodbye', 'hello & goodbye'),
+        ('hello &lt; goodbye', 'hello < goodbye'),
+        ('hello &gt; goodbye', 'hello > goodbye'),
+        ('hello &lt;&amp;&gt; goodbye', 'hello <&> goodbye'),
+    ]
+)
+def test_unescape(content, expected):
+    result = helper_functions.unescape(content)
+
+    assert result == expected

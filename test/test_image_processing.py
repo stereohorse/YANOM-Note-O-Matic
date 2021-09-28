@@ -221,7 +221,7 @@ def test_replace_obsidian_image_links_with_html_img_tag(expected, obsidian):
          """![|600](attachments/12345678.png)""",
          ),
         ("""<img alt="alt text [with] brackets" src="attachments/12345678.png" width="600" />""",
-         """![alt text [with] brackets|600](attachments/12345678.png)""",
+         """![alt text with brackets|600](attachments/12345678.png)""",
          ),
         ("""<img alt="Some alt text" src="attachments/12345678.png" />""",
          """<img alt="Some alt text" src="attachments/12345678.png"/>""",
@@ -234,7 +234,7 @@ def test_replace_obsidian_image_links_with_html_img_tag(expected, obsidian):
          ),
         (
                 """<img alt="Some alt text with | a pipe and a width [and] brackets" src="attachments/12345678.png" width="400" />""",
-                """![Some alt text with | a pipe and a width [and] brackets|400](attachments/12345678.png)""",
+                """![Some alt text with | a pipe and a width and brackets|400](attachments/12345678.png)""",
         ),
         ("""<img alt="Some alt text" src="attachments/12345678.png" width="600"/>""",
          """![Some alt text|600](attachments/12345678.png)""",

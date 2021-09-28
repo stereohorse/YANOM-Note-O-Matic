@@ -794,3 +794,10 @@ def replace_markdown_pseudo_html_href_tag_with_markdown_links(content: str) -> s
         content = content.replace(f'{match.group(1)}', new_link_tag)
 
     return content
+
+
+def unescape(text):
+    text = text.replace("&lt;", "<")
+    text = text.replace("&gt;", ">")
+    text = text.replace("&amp;", "&")
+    return text

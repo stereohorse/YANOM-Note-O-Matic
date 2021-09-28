@@ -247,12 +247,15 @@ def test_split_set_existing_non_existing_links(tmp_path):
         '../folder1/file1.txt',
         '../folder2/file2.txt',
         f'{tmp_path}/some_folder/folder3/file3.txt',
+        f'{tmp_path}/some_folder/Stuck on the Past - A Primer on Value Migration & How to Avoid It.pdf'
     }
 
     Path(tmp_path, 'some_folder/folder1').mkdir(parents=True)
     Path(tmp_path, 'some_folder/folder1/file1.txt').touch()
     Path(tmp_path, 'some_folder/folder3').mkdir(parents=True)
     Path(tmp_path, 'some_folder/folder3/file3.txt').touch()
+    Path(tmp_path, 'some_folder').mkdir(exist_ok=True)
+    Path(tmp_path, 'some_folder/Stuck on the Past - A Primer on Value Migration & How to Avoid It.pdf').touch()
 
     result = content_link_management.split_set_existing_non_existing_links(content_file_path, links)
 
@@ -260,6 +263,7 @@ def test_split_set_existing_non_existing_links(tmp_path):
     assert result.existing == {
         f'{tmp_path}/some_folder/folder3/file3.txt',
         '../folder1/file1.txt',
+        f'{tmp_path}/some_folder/Stuck on the Past - A Primer on Value Migration & How to Avoid It.pdf'
     }
 
 

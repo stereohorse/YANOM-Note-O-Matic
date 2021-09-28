@@ -180,14 +180,12 @@ def set_of_html_href_file_paths_from(content):
     """
     soup = BeautifulSoup(content, 'html.parser')
 
-    url_paths = {
-        unquote(urlparse(a_tag['href']).path)
-        for a_tag in soup.findAll(href=True)
-        if
-        (urlparse(a_tag['href']).scheme == "" or urlparse(a_tag['href']).scheme == "file")
-        and
-        len(urlparse(a_tag['href']).path)
-    }
+    url_paths = set()
+    for a_tag in soup.findAll(href=True):
+        if (urlparse(a_tag['href']).scheme == "" or urlparse(a_tag['href']).scheme == "file") and len(urlparse(a_tag['href']).path):
+            path_to_add = unquote(a_tag['href'])
+            path_to_add = helper_functions.unescape(path_to_add)
+            url_paths.add(path_to_add)
 
     return url_paths
 
@@ -258,15 +256,15 @@ def set_of_markdown_file_paths_from(content: str) -> set[str]:
     ''', re.MULTILINE | re.VERBOSE)
 
     matches_md = regex_md_pattern.findall(content)
-    set_of_md_formatted_links = {unquote(match)
-                                 for match in matches_md
-                                 if
-                                 not match.startswith("https://")
-                                 and
-                                 not match.startswith("http://")
-                                 and
-                                 len(match)
-                                 }
+
+    set_of_md_formatted_links = set()
+
+    for match in matches_md:
+        if  not match.startswith("https://") and not match.startswith("http://") and len(match):
+            path = unquote(match)
+            path = helper_functions.unescape(path)
+            set_of_md_formatted_links.add(path)
+
     return set_of_md_formatted_links
 
 
