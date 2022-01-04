@@ -3,7 +3,7 @@ from pathlib import Path
 import shutil
 
 
-VERSION = '1.5.0'
+VERSION = '1.5.1'
 ZIP_FILENAME = f'yanom-v{VERSION}-osx-10.15.7'
 
 

@@ -8,6 +8,11 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Increment the minor version number when adding a new feature or set of features and any current bug fixes not yet released
 - Increment the major version when significantly overhaul the user interface, or rewrite all internals.
 
+## [1.5.1]  2022-01-04
+
+### Fixed
+- Issue seen on M1 mac where checklist processing fails if checklist item is blank at end of page.  Not seen on intel mac.
+
 ## [1.5.0]  2021-08-27
 
 ### Added
