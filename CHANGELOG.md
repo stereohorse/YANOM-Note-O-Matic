@@ -8,6 +8,7 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Increment the minor version number when adding a new feature or set of features and any current bug fixes not yet released
 - Increment the major version when significantly overhaul the user interface, or rewrite all internals.
 
+
 ## [1.6.0] development
 ### Added
 - User can now enter a source and export folder path in command line options, the interactive command line interface or config.ini.  Paths can be relative to the yanom/data folder or an absolute path on the file system.  For Docker the file system is only the docker container file system so paths must be relative to the shared data folder.
@@ -34,7 +35,12 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Improve error message when unable to find file in nsx zip file
 - Improvement to tests
 
-## [1.5.0] 2021-08-27
+## [1.5.1]  2022-01-04
+
+### Fixed
+- Issue seen on M1 mac where checklist processing fails if checklist item is blank at end of page.  Not seen on intel mac.
+
+## [1.5.0]  2021-08-27
 
 ### Added
 - Checklists in NSX files formatted in html code other than the synology checklist format now also export as checklists.
