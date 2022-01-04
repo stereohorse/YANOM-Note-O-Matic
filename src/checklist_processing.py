@@ -236,7 +236,7 @@ class HTMLInputMDOutputChecklistProcessor(ChecklistProcessor):
             ChecklistItem object holding details of the tag
 
         """
-        if tag.next_sibling:
+        if tag.next_sibling and tag.next_sibling.string:
             if tag.previousSibling is None:
                 tag.next_sibling.string.replace_with(
                     f'{this_checklist_item.placeholder_text} {tag.next_sibling.string}')
