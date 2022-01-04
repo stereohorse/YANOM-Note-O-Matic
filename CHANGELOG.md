@@ -9,7 +9,7 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Increment the major version when significantly overhaul the user interface, or rewrite all internals.
 
 
-## [1.6.0] development
+## [1.6.0] 2022-01-04
 ### Added
 - User can now enter a source and export folder path in command line options, the interactive command line interface or config.ini.  Paths can be relative to the yanom/data folder or an absolute path on the file system.  For Docker the file system is only the docker container file system so paths must be relative to the shared data folder.
 - When converting markdown or html files, conversions are now placed in the export folder rather than, being "converted in place" and, being placed in the source folder.  The source and export folders can be the same folder to do a "conversion in place".
