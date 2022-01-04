@@ -18,7 +18,7 @@ Additionally, YANOM has the capability to add support for modified Markdown form
   * [YANOM's Goals](#yanoms-goals)
 - [Sections in this read me are](#sections-in-this-read-me-are)
   * [YANOM Note-O-Matic wiki](#yanom-note-o-matic-wiki)
-  * [Version 1.1.0 capabilities](#current-capabilities)
+  * [Current capabilities](#current-capabilities)
     + [Current functionality](#current-functionality)
   * [Getting Started](#getting-started)
     + [Prerequisites](#prerequisites)
@@ -137,14 +137,16 @@ The packaged versions include the required python environment and pandoc.
 
 ### Using the pre-built packaged versions for Debian linux, windows and Mac OSX
 
-Packaged versions of YANOM are available.  Please see the wiki for how to install and use them.
+Packaged versions of YANOM are available.  Please see the wiki for how to install and use them.  Linux package is stuck at version 1.5.0 for the latest version use source code.
 
 Also, please note the Mac OSX package is slow to start and can take 20 or more seconds to launch.   The windows versoin takes around 10 seconds to start.
 
 The Mac OSX version is code signed and has been notarised by apple, and should not give any security warnings.
 
 ### Using the docker image
-A docker image has been created and is available on [docker hub](https://hub.docker.com/r/thehistorianandthegeek/yanom).
+There is no docker version for 1.6.0
+
+A docker image has been created  for version 1.5.0 and is available on [docker hub](https://hub.docker.com/r/thehistorianandthegeek/yanom).
 
 For further information on the duse of the YANOM docker image please check the [wiki page](https://github.com/kevindurston21/YANOM-Note-O-Matic/wiki/Installing YANOM using Docker.md)
 
