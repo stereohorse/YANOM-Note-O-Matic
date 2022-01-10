@@ -4,7 +4,7 @@ import zipfile
 
 import secrets
 
-VERSION = '1.6.0'
+VERSION = '1.6.1'
 NOTARISE_ZIP_FILENAME = f'yanom-v{VERSION}'
 
 

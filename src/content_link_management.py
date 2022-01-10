@@ -260,7 +260,7 @@ def set_of_markdown_file_paths_from(content: str) -> set[str]:
     set_of_md_formatted_links = set()
 
     for match in matches_md:
-        if  not match.startswith("https://") and not match.startswith("http://") and len(match):
+        if not match.startswith("https://") and not match.startswith("http://") and len(match):
             path = unquote(match)
             path = helper_functions.unescape(path)
             set_of_md_formatted_links.add(path)

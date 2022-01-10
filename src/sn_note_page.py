@@ -151,7 +151,9 @@ class NotePage:
             return 0, 0
 
         for attachment_id in self._attachments_json:
-            if self._attachments_json[attachment_id]['type'].startswith('image'):
+            if self._attachments_json[attachment_id]['type'].startswith('image') \
+                    and \
+                    self._attachments_json[attachment_id].get('ref'):
                 self._attachments[attachment_id] = sn_attachment.ImageNSAttachment(self, attachment_id)
                 self._image_count += 1
             else:

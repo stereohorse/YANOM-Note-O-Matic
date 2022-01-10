@@ -81,8 +81,18 @@ def note_page_1(nsx, notebook):
                 "type": "application/pdf",
                 "ctime": 1619295124,
             },
-        },
+            "file_aW1hZ2UucG5nMTY0MTg1NjE2NDY3MQ==": {
+                "md5": "ef7fa8d5e8bebd4910b0eba05bdc2ff5",
+                "name": "image.png",
+                "size": 212498,
+                "width": 377,
+                "height": 302,
+                "type": "image/png",
+                "ctime": 1641856164,
+            }
         }
+    }
+
     note_page_1 = sn_note_page.NotePage(nsx, 1, note_page_1_json)
     note_page_1.notebook_folder_name = 'note_book1'
     note_page_1._file_name = 'page-1-title.md'
@@ -145,7 +155,7 @@ def test_create_attachments(note_page_1):
             image_count, file_count = note_page_1.create_attachments()
 
     assert image_count == 1
-    assert file_count == 3
+    assert file_count == 4
 
 
 def test_create_attachments_no_note_json_for_attachments(note_page_1):
@@ -166,7 +176,7 @@ def test_process_attachments(note_page_1):
             note_page_1.process_attachments()
 
             mock_image_attachment.assert_called_once()
-            assert mock_file_attachment.call_count == 3
+            assert mock_file_attachment.call_count == 4
 
 
 def test_pre_process_content(note_page):
@@ -225,9 +235,9 @@ def test_increment_duplicated_title(note_page, title_list, expected_new_title):
 @pytest.mark.parametrize(
     'export_format, expected', [
         ('gfm',
-         """Below is a hyperlink to the internet\n\n[github.com/kevindurston21/YANOM-Note-O-Matic](https://github.com/kevindurston21/YANOM-Note-O-Matic)\n\n###### Attachments\n\n[Record 2021-02-15 16-00-13.webm](attachments/Record%202021-02-15%2016-00-13.webm)\n\n[example-attachment.pdf](attachments/example-attachment.pdf)\n\n[test page.pdf](attachments/test%20page.pdf)\n\n"""),
+         """Below is a hyperlink to the internet\n\n[github.com/kevindurston21/YANOM-Note-O-Matic](https://github.com/kevindurston21/YANOM-Note-O-Matic)\n\n###### Attachments\n\n[Record 2021-02-15 16-00-13.webm](attachments/Record%202021-02-15%2016-00-13.webm)\n\n[example-attachment.pdf](attachments/example-attachment.pdf)\n\n[test page.pdf](attachments/test%20page.pdf)\n\n[image.png](attachments/image.png)\n\n"""),
         ('html',
-         """<p>Below is a hyperlink to the internet</p><p><a href="https://github.com/kevindurston21/YANOM-Note-O-Matic">https://github.com/kevindurston21/YANOM-Note-O-Matic</a></p><h6>Attachments</h6><p><a href="attachments/Record 2021-02-15 16-00-13.webm">Record 2021-02-15 16-00-13.webm</a></p><p><a href="attachments/example-attachment.pdf">example-attachment.pdf</a></p><p><a href="attachments/test page.pdf">test page.pdf</a></p>"""),
+         """<p>Below is a hyperlink to the internet</p><p><a href="https://github.com/kevindurston21/YANOM-Note-O-Matic">https://github.com/kevindurston21/YANOM-Note-O-Matic</a></p><h6>Attachments</h6><p><a href="attachments/Record 2021-02-15 16-00-13.webm">Record 2021-02-15 16-00-13.webm</a></p><p><a href="attachments/example-attachment.pdf">example-attachment.pdf</a></p><p><a href="attachments/test page.pdf">test page.pdf</a></p><p><a href="attachments/image.png">image.png</a></p>"""),
     ]
 )
 def test_process_note(note_page_1, export_format, expected, monkeypatch):

@@ -8,6 +8,9 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Increment the minor version number when adding a new feature or set of features and any current bug fixes not yet released
 - Increment the major version when significantly overhaul the user interface, or rewrite all internals.
 
+## [1.6.1] 2022-01-10
+### Fixed
+- NSX file - if a note has an image file as an attachment and not as a displayed image, the image is now treated as an attachment.  YANOM will no longer crash whilst attempting to read missing json data that was expected when it assumed all images would be displayed.
 
 ## [1.6.0] 2022-01-04
 ### Added
