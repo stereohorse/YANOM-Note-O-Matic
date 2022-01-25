@@ -23,6 +23,7 @@ def show_app_title():
     print(Figlet().renderText(config.yanom_globals.app_name))
     f = Figlet(font='slant')
     print(f.renderText(config.yanom_globals.app_sub_name))
+    print(f"YANOM ver {config.yanom_globals.version}")
 
 
 def _exit_if_keyboard_interrupt(answer):
