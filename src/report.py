@@ -45,7 +45,7 @@ class Report:
         self.update_report_for_absolute_attachments()
 
     def get_conversion_summary(self):
-        conversion_results = '# Conversion summary'
+        conversion_results = f"YANOM ver {config.yanom_globals.version}\n# Conversion summary"
         result = get_result_as_string(self._source.note_book_count, 'Note book')
         if result:
             conversion_results = f"{conversion_results}\n{result}"

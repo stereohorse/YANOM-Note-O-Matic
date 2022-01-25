@@ -12,7 +12,7 @@ class YanomGlobals:
         self._logger_level = logging.INFO
         self._is_silent = False
         self._data_dir = 'data'
-        self._version = '1.5.0'
+        self._version = '1.6.1'
         self._app_sub_name = 'Note-O-Matic'
         self._app_name = 'YANOM'
 
