@@ -69,7 +69,8 @@ class NotesConvertor:
         note_formats = {
             'html': self.convert_html,
             'markdown': self.convert_markdown,
-            'nsx': self.convert_nsx
+            'nsx': self.convert_nsx,
+            'nimbus': self.convert_nimbus,
         }
 
         conversion_to_run = note_formats.get(self.conversion_settings.conversion_input, None)
@@ -123,7 +124,6 @@ class NotesConvertor:
         file_list_generator = path_to_files.rglob(f'*{file_extension}')
         file_list = {item for item in file_list_generator}
         return file_list
-
 
     def exit_if_no_files_found(self, files_to_convert, file_extension):
         if not files_to_convert:
@@ -223,6 +223,21 @@ class NotesConvertor:
                              for file in nsx_files_to_convert]
         self.process_nsx_files()
         self.check_nsx_attachment_links()
+
+    def convert_nimbus(self):
+        file_extension = 'zip'
+        nimbus_files_to_convert = self.generate_file_list(file_extension, self.conversion_settings.source_absolute_root)
+        self.exit_if_no_files_found(nimbus_files_to_convert, file_extension)
+        self.pandoc_converter = PandocConverter(self.conversion_settings)
+        self._nimbus_notes = [NimbusNote(file, self.conversion_settings, self.pandoc_converter)
+                             for file in nimbus_files_to_convert]
+        # self.process_nsx_files()
+        # self.check_nsx_attachment_links()
+
+    def process_nimbus_files(self):
+        raise NotImplementedError
+
+
 
     def process_nsx_files(self):
         with Timer(name="nsx_conversion", logger=self.logger.info, silent=bool(config.yanom_globals.is_silent)):

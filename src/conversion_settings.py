@@ -99,7 +99,7 @@ class ConversionSettings:
 
     validation_values = {
         'conversion_inputs': {
-            'conversion_input': ('nsx', 'html', 'markdown')
+            'conversion_input': ('html', 'markdown', 'nimbus', 'nsx')
         },
         'markdown_conversion_inputs': {
             'markdown_conversion_input': (
@@ -364,10 +364,14 @@ class ConversionSettings:
         self.metadata_schema = []
         if self.conversion_input == 'nsx':
             self.metadata_schema = ['title', 'ctime', 'mtime', 'tag']
+        if self.conversion_input == 'nimbus':
+            self.metadata_schema = ['title', 'tag']
         self.spaces_in_tags = False
         self.split_tags = False
         self.first_row_as_header = True
         self.first_column_as_header = True
+        if self.conversion_input == 'nimbus':
+            self.first_column_as_header = False
         self.chart_image = True
         self.chart_csv = True
         self.chart_data_table = True

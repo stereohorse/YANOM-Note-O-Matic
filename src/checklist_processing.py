@@ -158,6 +158,7 @@ class HTMLInputMDOutputChecklistProcessor(ChecklistProcessor):
         self._processed_html = str(self._soup)
 
     def _pre_process_html_tags(self, checklists):
+        # TODO add support for checklists in ol and ul lists?
         extra_indents = {}  # key is checklist tag index, value is amount of indent to add in markdown
         for i in range(len(checklists)):
             this_checklist_item = ChecklistItem()
@@ -188,7 +189,7 @@ class HTMLInputMDOutputChecklistProcessor(ChecklistProcessor):
 
         If the html content has more than one checklist item on a line identify the siblings of the first input tag
         on that line.
-        These sibling inputtags need an indent to make them a child checklist item.
+        These sibling input tags need an indent to make them a child checklist item.
         so,
         [x] An item [x] another item
         becomes,
