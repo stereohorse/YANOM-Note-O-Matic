@@ -65,12 +65,16 @@ class NotesConvertor:
     def convert_notes(self):
         self.evaluate_command_line_arguments()
         self.create_export_folder_if_required()
-        if self.conversion_settings.conversion_input == 'html':
-            self.convert_html()
-        elif self.conversion_settings.conversion_input == 'markdown':
-            self.convert_markdown()
-        else:
-            self.convert_nsx()
+
+        note_formats = {
+            'html': self.convert_html,
+            'markdown': self.convert_markdown,
+            'nsx': self.convert_nsx
+        }
+
+        conversion_to_run = note_formats.get(self.conversion_settings.conversion_input, None)
+        conversion_to_run()
+
         self.generate_results_report()
         self.logger.info("Processing Completed")
 
