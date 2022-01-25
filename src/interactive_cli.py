@@ -94,7 +94,8 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         note_formats = {
             'html': self._ask_html_conversion_options,
             'markdown': self._ask_markdown_conversion_options,
-            'nsx': self._ask_nsx_conversion_options
+            'nsx': self._ask_nsx_conversion_options,
+            'nimbus': self._ask_nimbus_conversion_options,
         }
 
         questions_to_ask = note_formats.get(self._default_settings.conversion_input, None)
@@ -228,6 +229,20 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             self._ask_and_set_table_details()
             self._ask_and_set_chart_options()
             self._ask_and_set_attachment_folder_name()
+            self._ask_and_set_file_name_options()
+            self._ask_and_set_space_replacement_character()
+            self._ask_and_set_maximum_filename_length()
+
+    def _ask_nimbus_conversion_options(self):
+        self._ask_and_set_conversion_quick_setting()
+        self._ask_and_set_source()
+        self._ask_and_set_export_folder_name()
+
+        if self._cli_conversion_settings.quick_setting == 'manual':
+            self._ask_and_set_export_format()
+            if self._cli_conversion_settings.export_format != 'html':
+                self._ask_markdown_metadata_questions()
+            self._ask_and_set_table_details()
             self._ask_and_set_file_name_options()
             self._ask_and_set_space_replacement_character()
             self._ask_and_set_maximum_filename_length()
