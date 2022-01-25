@@ -91,12 +91,14 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
 
         self._ask_and_set_conversion_input()
 
-        if self._cli_conversion_settings.conversion_input == 'markdown':
-            self._ask_markdown_conversion_options()
-        if self._cli_conversion_settings.conversion_input == 'html':
-            self._ask_html_conversion_options()
-        if self._cli_conversion_settings.conversion_input == 'nsx':
-            self._ask_nsx_conversion_options()
+        note_formats = {
+            'html': self._ask_html_conversion_options,
+            'markdown': self._ask_markdown_conversion_options,
+            'nsx': self._ask_nsx_conversion_options
+        }
+
+        questions_to_ask = note_formats.get(self._default_settings.conversion_input, None)
+        questions_to_ask()
 
         self.logger.info(f"Returning settings for {self._cli_conversion_settings}")
         return self._cli_conversion_settings
