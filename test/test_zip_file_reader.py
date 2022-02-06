@@ -8,6 +8,19 @@ import pytest
 import zip_file_reader
 
 
+def test_read_text(tmp_path):
+    zip_filename = Path(tmp_path, 'test_zip.zip')
+    expected = "hello world"
+    target_filename = 'file.txt'
+
+    with zipfile.ZipFile(str(zip_filename), 'w') as zip_file:
+        zip_file.writestr(target_filename, expected)
+
+    result = zip_file_reader.read_text(zip_filename, target_filename)
+
+    assert result == expected
+
+
 def test_read_json_data(tmp_path):
     zip_filename = Path(tmp_path, 'test_zip.zip')
     expected = {'key': 'value'}

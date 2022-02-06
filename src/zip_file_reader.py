@@ -10,6 +10,32 @@ logger = logging.getLogger(f'{config.yanom_globals.app_name}.{__name__}')
 logger.setLevel(config.yanom_globals.logger_level)
 
 
+def read_text(zip_filename, target_filename, message=''):
+    """
+    Read a text file from a zip archive and return string of that content
+
+    Parameters
+    ----------
+    zip_filename : Path
+        Path object to the zipfile
+    target_filename : str
+        name of the file in the zip archive to be read from
+    message : str
+        Optional string to include in error messages, default is empty string
+
+    Returns
+    -------
+    str:
+        string of the text files content
+
+    """
+    try:
+        with zipfile.ZipFile(str(zip_filename), 'r') as zip_file:
+            return zip_file.read(target_filename).decode('utf-8')
+    except Exception as e:
+        _error_handling(e, target_filename, zip_filename, message)
+
+
 def read_json_data(zip_filename, target_filename, message=''):
     """
     Read a text file containing json from a zip archive and return a dictionary of the files json content
@@ -32,8 +58,7 @@ def read_json_data(zip_filename, target_filename, message=''):
 
     """
     try:
-        with zipfile.ZipFile(str(zip_filename), 'r') as zip_file:
-            return json.loads(zip_file.read(target_filename).decode('utf-8'))
+        return json.loads(read_text(zip_filename, target_filename, message))
     except Exception as e:
         _error_handling(e, target_filename, zip_filename, message)
 

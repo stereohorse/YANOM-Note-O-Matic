@@ -137,7 +137,7 @@ class MetaDataProcessor:
         merged_content = frontmatter.Post(content)
 
         # iterate metadata items rather than using "frontmatter.Post(content, **self._metadata)"
-        # because POST init can not accept a meta data field that ahs a key of 'content' which is common in html
+        # because POST init can not accept a meta data field that has a key of 'content' which is common in html
         # and likely in other files as well
         for key, value in self._metadata.items():
             merged_content[key] = value
