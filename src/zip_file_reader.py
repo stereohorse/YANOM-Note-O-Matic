@@ -2,12 +2,71 @@ import json
 import logging
 import sys
 import zipfile
+from pathlib import Path
+from typing import List, Optional, Set, Tuple
 
 import config
 import helper_functions
 
 logger = logging.getLogger(f'{config.yanom_globals.app_name}.{__name__}')
 logger.setLevel(config.yanom_globals.logger_level)
+
+
+def list_files_in_zip_file_from_a_directory(zip_file_path: str,
+                                            path_inside_of_zipfile: str = '',
+                                            filenames_to_ignore: Optional[List[str]] = None
+                                            ) -> Set[Path]:
+    """
+    Return a list of files from a directory within a zipfile.
+
+    The list of files returned is for a single directory within the zipfile.
+    An empty string for path_inside_of_zipfile represents the root of the zip file.  Sub directories are access by
+    passing a string of the path inside the the zip file.  'sub_folder' will return files in a directory called
+    sub_folder that is in the root of the zip file.  'sub_folder/sub_sub_folder' would return the files with in the
+    sub_sub_folder directory of the zip file.  If the directory does not exist an empty set is returned.
+    The list of files paths returned can be further filtered by passing a list strings of names to ignore.  Only exact
+    matches are ignored.  Passing ['file1.txt, 'file2.txt'] will exclude those files form the returned list if
+    they exist.
+
+    Parameters
+    ----------
+    zip_file_path : str
+        Path to a zip file.
+    path_inside_of_zipfile : str
+        default is empty string which returns files in the root of the zip file.  if a non-empty string representing
+        a path in the zip file is provided files in a directory matching that string will be returned.
+    filenames_to_ignore : Optional list[str]
+        Optional list of stings of file names that can be ignored.
+
+    Returns
+    -------
+    list[Path]
+        list containing paths to files in the zip file
+    """
+
+    if not filenames_to_ignore:
+        filenames_to_ignore = []
+
+    files_in_zip = set()
+
+    try:
+        zip_root_path = zipfile.Path(zip_file_path)
+        folder_to_search = zip_root_path
+
+        if path_inside_of_zipfile:
+            folder_to_search = zip_root_path.joinpath(path_inside_of_zipfile)
+            if not folder_to_search.exists():
+                logger.warning(f'Directory "{folder_to_search}" does not exist in zip file "{zip_file_path}"')
+                return set()
+
+        for item in folder_to_search.iterdir():
+            if item.is_file() and item.name not in filenames_to_ignore:
+                files_in_zip.add(item)
+
+        return files_in_zip
+
+    except Exception as e:
+        _error_handling(e, '', zip_file_path, '')
 
 
 def read_text(zip_filename, target_filename, message=''):
@@ -101,11 +160,14 @@ def _error_handling(e, target_filename, zip_filename, message=''):
         logger.error(traceback_text)
         if not config.yanom_globals.is_silent:
             print(msg)
-        sys.exit(1)
+        sys.exit(1)  # TODO need a more graceful handling than this
 
     if isinstance(e, KeyError):
         msg = f'Warning - For the note "{message}" ' \
               f'- unable to find the file "{target_filename}" in the zip file "{zip_filename}"'
+
+    if isinstance(e, ValueError):
+        msg = "Warning Value Error accessing zip file contents, possibly treating file as directory or vice versa."
 
     logger.warning(msg)
     logger.warning(traceback_text)

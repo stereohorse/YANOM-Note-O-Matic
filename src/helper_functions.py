@@ -8,12 +8,14 @@ import re
 import string
 import sys
 import traceback
-from typing import Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 import unicodedata
 from urllib import parse
 from urllib.parse import unquote_plus
 
-import filetype
+from bs4 import BeautifulSoup
+from filetype import filetype
+
 
 FileNameOptions = namedtuple('FileNameOptions',
                              'max_length allow_unicode allow_uppercase allow_non_alphanumeric allow_spaces '
@@ -170,7 +172,7 @@ def generate_clean_directory_path(directory_name: str, name_options: FileNameOpt
                 cleaned_path = testing_path
                 continue
         except OSError:
-            pass
+            pass  # pragma: no cover
         clean_part = _clean_file_or_directory_name(path_part, name_options, is_file=False)
         cleaned_path = Path(cleaned_path, clean_part)
 
@@ -801,3 +803,192 @@ def unescape(text):
     text = text.replace("&gt;", ">")
     text = text.replace("&amp;", "&")
     return text
+
+
+def list_directory_paths(root_dir: Union[Path, str],
+                         recursive: bool = False,
+                         matching_name: Optional[str] = None) -> List[Path]:
+    """
+    Return a list of paths for directories in the provided root_dir.
+
+    If recursive=True then the function will be recursive and search all sub folders recursively.  The returned list
+    can be further filtered by the parameter 'name' this looks at the last folder name (i.e. Path.name) and if matches
+    that path is included in the list.
+
+    Parameters
+    ----------
+    root_dir : Path or Str
+        Path from which the search begins.
+    recursive : bool
+        If True the function is recursive searching all sub folders.  If False (default) it only searches the root_dir
+        directory.
+    matching_name : str
+        Optional name of a folder to filter the list by.  If the last folder in the path matches name it will be
+        included in the list.
+
+    Returns
+    -------
+    list
+        list of paths or an empty list of none found.
+    """
+
+    list_of_paths = []
+    if not matching_name:
+        for path in [path for path in Path(root_dir).iterdir() if path.is_dir()]:
+            list_of_paths.append(path)
+            if recursive:
+                list_of_paths.extend(list_directory_paths(path, recursive, matching_name))
+        return list_of_paths
+
+    # for path in [path for path in Path(root_dir).iterdir() if path.is_dir]:
+    potential_paths = []
+
+    for path in Path(root_dir).iterdir():
+        if path.is_dir():
+            potential_paths.append(path)
+
+    for path in potential_paths:
+        if path.name == matching_name:
+            list_of_paths.append(path)
+        if recursive:
+            list_of_paths.extend(list_directory_paths(path, recursive, matching_name))
+
+    return list_of_paths
+
+
+def make_soup_from_html(html_content: str):
+    return BeautifulSoup(html_content, 'html.parser')
+
+
+def is_valid_email(email_text: str) -> bool:
+    """
+    Simple email validation
+
+    This will validate the format of most email addresses in use.  Complex formats may fail, but this should
+    work on 99% of emails in use.
+
+    Parameters
+    ==========
+    email_text : str
+        The email to be validated.
+
+    Returns
+    =======
+    bool
+        True for valid formats else false.
+
+    """
+    regex = r"\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b"
+
+    valid = re.fullmatch(regex, email_text.lower())
+
+    if valid:
+        return True
+
+    return False
+
+
+def correct_file_extension(file_bytes: bytes, target_path):
+    """
+    Identify the correct file type and extension based on the byte content of the file and
+    change the target file extensions to the correct suffix.
+
+    There is a limitation to what files can be recognised.  See https://pypi.org/project/filetype/#supported-types
+
+    Parameters
+    ----------
+    file_bytes : bytes
+        bytes read form the source file, this can be the entire file or a minimum of the first 261 bytes.
+    target_path : Path
+        Path object to the audio file that need to have the correct extension applied
+
+    Returns
+    -------
+    Path
+        Pathlib Path to the audio file with the correct extension applied if file type was of a type that could be
+        identified and corrected.
+
+    """
+    kind_of_file = filetype.guess(file_bytes)
+    if kind_of_file:
+        correct_extension = f".{kind_of_file.extension}"
+        target_path = target_path.with_suffix(correct_extension)
+    return target_path
+
+
+def get_relative_path_to_target(destination: Path, origin: Path) -> Path:
+    """
+    Return the relative path between the origin and destination paths.  If they are the same path, origin.name is
+    returned.
+
+    Parameters
+    ----------
+    destination
+        Pathlib Path of the destination directory the relative path is to
+    origin : Path
+        Pathlib Path of the origin directory that the relative path is from
+
+    Returns
+    -------
+    Path
+        Pathlib Path of the relative path between origin and destination
+
+    """
+    if destination == origin:
+        # return destination
+        return Path('.')
+    else:
+        return Path(os.path.relpath(destination, origin))
+
+
+def merge_iterable_or_item_to_list(target_list: List[Any], new_content) -> List[Any]:
+    """
+
+    Parameters
+    ----------
+    target_list : list
+        list to which items will be added
+    new_content :  object
+        The new content can be an iterable or not, if iterable all items are added, and if a single item it will be added
+        to the list
+
+    Returns
+    -------
+    list
+        Copy of the provided target list with new item(s) added
+
+    """
+    new_list = target_list.copy()
+    if new_content:
+        try:
+            new_list.extend(new_content)
+        except TypeError as e:
+            new_list.append(new_content)
+
+    return new_list
+
+
+def separate_whitespace_from_text(text_to_clean: str) -> Tuple[str, str, str]:
+    """Separate leading and trialing white space from a string and return a tuple of the 3 parts of the string"""
+    body_text = text_to_clean.strip()
+
+    if not text_to_clean or text_to_clean.strip() == '':
+        return '', '', ''
+
+    whitespaces = text_to_clean.split(body_text)
+    leading_whitespace = whitespaces[0]
+    trailing_whitespace = whitespaces[1]
+
+    return leading_whitespace, body_text, trailing_whitespace
+
+
+def string_to_bool(string_to_check: str) -> bool:
+    return str(string_to_check).lower() in ("yes", "true", "t", "1")
+
+
+def bounded_number(number, min_value, max_value):
+    if min_value > max_value:
+        raise ValueError(f'Minimum limit "{min_value}" is greater than the maximum limit "{max_value}"')
+
+    return max(min(max_value, number), min_value)
+

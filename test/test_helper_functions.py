@@ -3,6 +3,7 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 import re
 import sys
 
+from bs4 import BeautifulSoup
 import pytest
 
 import helper_functions
@@ -265,7 +266,8 @@ def test_generate_clean_directory_name_force_windows_long_name(string_to_test, f
         ("..", helper_functions.FileNameOptions(32, False, True, True, False, '-'), '6-chars-replaced'),
         (".txt", helper_functions.FileNameOptions(32, False, True, True, False, '-'), 'txt'),
         ("file.???", helper_functions.FileNameOptions(32, False, True, True, False, '-'), 'file.6-chars-replaced'),
-        ("???.???", helper_functions.FileNameOptions(32, False, True, True, False, '-'), '6-chars-replaced.6-chars-replaced'),
+        ("???.???", helper_functions.FileNameOptions(32, False, True, True, False, '-'),
+         '6-chars-replaced.6-chars-replaced'),
     ]
 )
 def test_generate_clean_filename_empty_strings(string_to_test, filename_options, expected):
@@ -402,17 +404,21 @@ def test_file_extension_from_bytes_file_not_recognised():
     'uri, path_type, expected', [
         ('some_folder/some%20space/file%20space.pdf', PurePosixPath, Path('some_folder/some space/file space.pdf')),
         ('some_folder/some_space/file_space.pdf', PurePosixPath, Path('some_folder/some_space/file_space.pdf')),
-        ('file:///Users/user/folder/attachments/example attachment.pdf', PurePosixPath, Path('/Users/user/folder/attachments/example attachment.pdf')),
-        ('file:///Users/user/folder/attachments/example%20attachment.pdf', PurePosixPath, Path('/Users/user/folder/attachments/example attachment.pdf')),
+        ('file:///Users/user/folder/attachments/example attachment.pdf', PurePosixPath,
+         Path('/Users/user/folder/attachments/example attachment.pdf')),
+        ('file:///Users/user/folder/attachments/example%20attachment.pdf', PurePosixPath,
+         Path('/Users/user/folder/attachments/example attachment.pdf')),
         ('file://c:/users/files/a file.pdf', PurePosixPath, Path('/users/files/a file.pdf')),
-        ('some_folder/some%20space/file%20space.pdf', PureWindowsPath, PureWindowsPath('some_folder/some space/file space.pdf')),
-        ('some_folder/some_space/file_space.pdf', PureWindowsPath, PureWindowsPath('some_folder/some_space/file_space.pdf')),
+        ('some_folder/some%20space/file%20space.pdf', PureWindowsPath,
+         PureWindowsPath('some_folder/some space/file space.pdf')),
+        ('some_folder/some_space/file_space.pdf', PureWindowsPath,
+         PureWindowsPath('some_folder/some_space/file_space.pdf')),
         ('file:///Users/user/folder/attachments/example attachment.pdf', PureWindowsPath,
          PureWindowsPath('/Users/user/folder/attachments/example attachment.pdf')),
         ('file:///Users/user/folder/attachments/example%20attachment.pdf', PureWindowsPath,
          PureWindowsPath('/Users/user/folder/attachments/example attachment.pdf')),
         ('file://c:/users/files/a file.pdf', PureWindowsPath, PureWindowsPath('c:/users/files/a file.pdf')),
-        ]
+    ]
 )
 def test_file_uri_to_path(uri, path_type, expected):
     result = helper_functions.file_uri_to_path(uri, path_type)
@@ -512,7 +518,7 @@ def test_next_available_directory_name_check_casting(tmp_path):
     'string_to_search, expected', [
         ('hello-1234', 1234),
         ('hello-', None),
-        ]
+    ]
 )
 def test_get_trailing_number(string_to_search, expected):
     result = helper_functions.get_trailing_number(string_to_search)
@@ -624,19 +630,25 @@ def test_is_path_valid_unix_like(path_to_test, expected):
 
 @pytest.mark.parametrize(
     'uri, path_type, expected', [
-        ('some_folder/some%20space/file%20space.pdf', PurePosixPath, PurePosixPath('some_folder/some space/file space.pdf')),
-        ('some_folder/some_space/file_space.pdf', PurePosixPath, PurePosixPath('some_folder/some_space/file_space.pdf')),
-        ('file:///Users/user/folder/attachments/example attachment.pdf', PurePosixPath, PurePosixPath('/Users/user/folder/attachments/example attachment.pdf')),
-        ('file:///Users/user/folder/attachments/example%20attachment.pdf', PurePosixPath, PurePosixPath('/Users/user/folder/attachments/example attachment.pdf')),
+        ('some_folder/some%20space/file%20space.pdf', PurePosixPath,
+         PurePosixPath('some_folder/some space/file space.pdf')),
+        (
+        'some_folder/some_space/file_space.pdf', PurePosixPath, PurePosixPath('some_folder/some_space/file_space.pdf')),
+        ('file:///Users/user/folder/attachments/example attachment.pdf', PurePosixPath,
+         PurePosixPath('/Users/user/folder/attachments/example attachment.pdf')),
+        ('file:///Users/user/folder/attachments/example%20attachment.pdf', PurePosixPath,
+         PurePosixPath('/Users/user/folder/attachments/example attachment.pdf')),
         ('file://c:/users/files/a file.pdf', PurePosixPath, PurePosixPath('/users/files/a file.pdf')),
-        ('some_folder/some%20space/file%20space.pdf', PureWindowsPath, PureWindowsPath('some_folder/some space/file space.pdf')),
-        ('some_folder/some_space/file_space.pdf', PureWindowsPath, PureWindowsPath('some_folder/some_space/file_space.pdf')),
+        ('some_folder/some%20space/file%20space.pdf', PureWindowsPath,
+         PureWindowsPath('some_folder/some space/file space.pdf')),
+        ('some_folder/some_space/file_space.pdf', PureWindowsPath,
+         PureWindowsPath('some_folder/some_space/file_space.pdf')),
         ('file:///Users/user/folder/attachments/example attachment.pdf', PureWindowsPath,
          PureWindowsPath('/Users/user/folder/attachments/example attachment.pdf')),
         ('file:///Users/user/folder/attachments/example%20attachment.pdf', PureWindowsPath,
          PureWindowsPath('/Users/user/folder/attachments/example attachment.pdf')),
         ('file://c:/users/files/a file.pdf', PureWindowsPath, PureWindowsPath('c:/users/files/a file.pdf')),
-        ]
+    ]
 )
 def test_file_uri_to_path(uri, path_type, expected):
     result = helper_functions.file_uri_to_path(uri, path_type)
@@ -669,7 +681,7 @@ def test_file_uri_to_path(uri, path_type, expected):
          PurePosixPath('')),
         ('',
          ''),
-        ]
+    ]
 )
 def test_path_to_posix_str(expected, path):
     result = helper_functions.path_to_posix_str(path)
@@ -708,3 +720,202 @@ def test_unescape(content, expected):
     result = helper_functions.unescape(content)
 
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    'email, expected', [
+        ('user@fake.come', True),
+        ('user @ fake.com', False),
+        ('user.user@fake.com', True),
+        ('user.user@fake', False),
+    ]
+)
+def test_is_valid_email(email, expected):
+    result = helper_functions.is_valid_email(email)
+
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    'mp3_bytes, expected', [
+        (b'ID3\x03\x00\x00\x00\x08ubTRCK\x00\x00\x00\x04\x00\x00\x0001\x00TXXX\x00\x00\x00 \x00\x00\x00replaygain_album_gain\x00-2.11 dB\x00TXXX\x00\x00\x00 \x00\x00\x00replaygain_album_peak\x001.075597\x00TXXX\x00\x00\x00 \x00\x00\x00replaygain_track_gain\x00-3.98 dB\x00TXXX\x00\x00\x00 \x00\x00\x00replaygain_track_peak\x000.962003\x00TALB\x00\x00\x00\x15\x00\x00\x01\xff\xfeA\x00b\x00b\x00a\x00 \x00G\x00o\x00l\x00d\x00TPE1\x00\x00\x00\x0b\x00\x00\x01\xff\xfeA\x00b\x00b\x00a\x00TBPM\x00\x00\x00\x04\x00\x00\x00100COM',
+         Path('folder/audio_file.mp3'),
+         ),
+        (b'12356',
+         Path('folder/audio_file.wav'),
+         ),
+    ]
+)
+def test_correct_file_extension(mp3_bytes, expected):
+    result = helper_functions.correct_file_extension(mp3_bytes, expected)
+
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    'origin, destination, expected', [
+        (Path('/user/user'),
+         Path('/user/user2'),
+         Path('../user2'),
+         ),
+        (Path('/user/user'),
+         Path('/user/user'),
+         Path('.'),
+         ),
+    ]
+)
+def test_get_relative_path_to_target(origin, destination, expected):
+    result = helper_functions.get_relative_path_to_target(destination, origin)
+
+    assert result == expected
+
+
+class TestListPaths:
+    """Class to organise tests for testing the function list_directory_paths"""
+
+    @pytest.fixture
+    def folder_paths(self, tmp_path):
+        Path(tmp_path, 'a_file1.txt').touch()
+        Path(tmp_path, 'a_file2.txt').touch()
+        Path(tmp_path, 'a_folder1').mkdir()
+        Path(tmp_path, 'a_folder2').mkdir()
+        Path(tmp_path, 'a_folder1', 'a_file_folder1_1.txt').touch()
+        Path(tmp_path, 'a_folder1', 'a_file_folder1_2.txt').touch()
+        Path(tmp_path, 'a_folder1', 'a_folder3').mkdir()
+        Path(tmp_path, 'a_folder2', 'a_folder4').mkdir()
+
+        return tmp_path
+
+    def test_list_paths_non_recursive(self, folder_paths):
+        """Test getting a list of folders in the root of the provided path"""
+        expected = {
+            Path(folder_paths, 'a_folder1'),
+            Path(folder_paths, 'a_folder2'),
+        }
+
+        result = helper_functions.list_directory_paths(folder_paths, recursive=False)
+
+        assert len(result) == 2
+        assert len(set(result).symmetric_difference(expected)) == 0
+
+    def test_list_paths_recursive(self, folder_paths):
+        """Test getting a list of folders recursively from the root of the provided path"""
+        expected = {
+            Path(folder_paths, 'a_folder1'),
+            Path(folder_paths, 'a_folder2'),
+            Path(folder_paths, 'a_folder1', 'a_folder3'),
+            Path(folder_paths, 'a_folder2', 'a_folder4'),
+        }
+
+        result = helper_functions.list_directory_paths(folder_paths, recursive=True)
+
+        assert len(result) == 4
+        assert len(set(result).symmetric_difference(expected)) == 0
+
+    def test_list_paths_recursive_name_filter(self, folder_paths):
+        """test getting a list of folders in the root of the provided path filterd to a name match"""
+        expected = {
+            Path(folder_paths, 'a_folder1', 'a_folder3'),
+        }
+
+        result = helper_functions.list_directory_paths(folder_paths, recursive=True, matching_name='a_folder3')
+
+        assert len(result) == 1
+        assert len(set(result).symmetric_difference(expected)) == 0
+
+    def test_list_paths_non_recursive_name_filter(self, folder_paths):
+        """Test getting a list of folders recursively from the root of the provided path filtered to a name match"""
+        expected = {
+            Path(folder_paths, 'a_folder1'),
+        }
+
+        result = helper_functions.list_directory_paths(folder_paths, recursive=False, matching_name='a_folder1')
+
+        assert len(result) == 1
+        assert len(set(result).symmetric_difference(expected)) == 0
+
+    def test_list_paths_recursive_name_filter_not_in_folders(self, folder_paths):
+        """
+        Test getting a list of folders recursively from the root of the provided path where name match does not
+        exist in the path
+        """
+        result = helper_functions.list_directory_paths(folder_paths, recursive=True, matching_name='not_found')
+
+        assert len(result) == 0
+
+
+def test_make_soup():
+    html = '<p>hello</p>'
+    result = helper_functions.make_soup_from_html(html)
+
+    assert isinstance(result, BeautifulSoup)
+
+
+@pytest.mark.parametrize(
+    'test_string, expected', [
+        ('yes', True),
+        ('true', True),
+        ('t', True),
+        ('1', True),
+        ('anything_else', False)
+    ]
+)
+def test_string_to_bool(test_string, expected):
+    result = helper_functions.string_to_bool(test_string)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    'test_string, expected', [
+        ('', ('', '', '')),
+        ('  two front spaces', ('  ', 'two front spaces', '')),
+        ('one end space ', ('', 'one end space', ' ')),
+        (' one front three end spaces   ', (' ', 'one front three end spaces', '   ')),
+        ('\n', ('', '', '')),
+    ]
+)
+def test_separate_whitespace_from_text(test_string, expected):
+    result = helper_functions.separate_whitespace_from_text(test_string)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    'target_list, new_content, expected', [
+        ([1, 2, 3], [4,5,6], [1,2,3,4,5,6]),
+        ([1, 2, 3], 4, [1,2,3,4]),
+        ([1, 2, 3], None, [1,2,3]),
+    ]
+)
+def test_merge_list_or_item_to_list(target_list, new_content, expected):
+    result = helper_functions.merge_iterable_or_item_to_list(target_list, new_content)
+
+    assert result == expected
+
+
+class TestBoundedNumber:
+    @pytest.mark.parametrize(
+        'number, min_value, max_value, expected', [
+            (4, 1, 6, 4),
+            (-1, 1, 6, 1),
+            (8, 1, 6, 6,),
+            (-2, -3, 3, -2),
+            (4, 5, 10, 5),
+
+        ]
+    )
+    def test_bounded_number(self, number, min_value, max_value, expected):
+        result = helper_functions.bounded_number(number, min_value, max_value)
+
+        assert result == expected
+
+    @pytest.mark.parametrize(
+        'number, min_value, max_value, expected', [
+            (-2, -3, -4, -4),
+            (4, 5, 3, 5),
+
+        ]
+    )
+    def test_bounded_number_invalid_limits(self, number, min_value, max_value, expected):
+        """Test ValueError raised when min and max values are reversed"""
+        with pytest.raises(ValueError):
+            _ = helper_functions.bounded_number(number, min_value, max_value)
