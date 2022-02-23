@@ -12,7 +12,7 @@ import interactive_cli
 @pytest.fixture
 def good_config_ini() -> str:
     return """[conversion_inputs]
-    # valid entries are nsx, html, markdown
+    # valid entries are html, markdown, nimbus, nsx
     #  nsx = synology note station export file
     #  html = simple html based notes pages, no complex css or javascript
     #  markdown =  text files in markdown format
@@ -39,7 +39,7 @@ export_format = obsidian
 
 [meta_data_options]
     # note: front_matter_format sets the presence and type of the section with metadata 
-    #retrieved from the source
+    # retrieved from the source
     # valid entries are yaml, toml, json, text, none
     # no entry will result in no front matter section
 front_matter_format = yaml
@@ -73,20 +73,20 @@ chart_data_table = True
 
 [file_options]
 source = 
-export_folder = notes
+export_folder = notes-15
 attachment_folder_name = attachments
-    # the following options currently only apply to nsx files.
+    # the following options apply to directory names, and currently only apply filenames in nsx conversions.
 allow_spaces_in_filenames = True
 filename_spaces_replaced_by = -
 allow_unicode_in_filenames = True
 allow_uppercase_in_filenames = True
 allow_non_alphanumeric_in_filenames = True
-creation_time_in_exported_file_name = False
+creation_time_in_exported_file_name = True
     # if true creation time as `yyyymmddhhmm-` will be added as prefix to file name
 max_file_or_directory_name_length = 255
-# The following options apply to directory names, and currently only apply to html and markdown conversions.': None,                
-orphans = ignore
-    # orphans are files that are not linked to any notes.  Valid Values are
+    # the following options apply to directory names, and currently only apply to html and markdown conversions.
+orphans = copy
+    # orphans are files that are not linked to any notes.  valid values are
     # ignore - orphan files are left where they are and are not moved to an export folder.
     # copy - orphan files are coppied to the export folder in the same relative locations as the source.
     # orphan - orphan files are moved to a directory named orphan in the export folder.
@@ -95,13 +95,25 @@ make_absolute = False
     # changed to absolute links if set to true.  for example "../../someplace/some_file.pdf"
     # becomes /root/path/to/someplace/some_file.pdf"
     # false will leave these links unchanged as relative links
+
+[nimbus_options]
+    # the following options apply to nimbus notes conversions
+embed_these_document_types = md,pdf
+embed_these_image_types = png,jpg,jpeg,gif,bmp,svg
+embed_these_audio_types = mp3,webm,wav,m4a,ogg,3gp,flac
+embed_these_video_types = mp4,webm,ogv
+keep_nimbus_row_and_column_headers = False
+    # for unrecognised html tags use either html or plain text
+    # html = inline html in markdown and html in html files
+    # text = extract any text and display as plain text in markdown and html
+unrecognised_tag_format = html
 """
 
 
 @pytest.fixture
 def good_config_ini_no_notes_or_attachment_folder() -> str:
     return """[conversion_inputs]
-    # valid entries are nsx, html, markdown
+    # valid entries are html, markdown, nimbus, nsx
     #  nsx = synology note station export file
     #  html = simple html based notes pages, no complex css or javascript
     #  markdown =  text files in markdown format
@@ -128,7 +140,7 @@ export_format = obsidian
 
 [meta_data_options]
     # note: front_matter_format sets the presence and type of the section with metadata 
-    #retrieved from the source
+    # retrieved from the source
     # valid entries are yaml, toml, json, text, none
     # no entry will result in no front matter section
 front_matter_format = yaml
@@ -161,21 +173,21 @@ chart_csv = True
 chart_data_table = True
 
 [file_options]
-source = my_source
+source = 
 export_folder = 
 attachment_folder_name = 
-    # the following options currently only apply to nsx files.
+    # the following options apply to directory names, and currently only apply filenames in nsx conversions.
 allow_spaces_in_filenames = True
 filename_spaces_replaced_by = -
 allow_unicode_in_filenames = True
 allow_uppercase_in_filenames = True
 allow_non_alphanumeric_in_filenames = True
-creation_time_in_exported_file_name = False
+creation_time_in_exported_file_name = True
     # if true creation time as `yyyymmddhhmm-` will be added as prefix to file name
 max_file_or_directory_name_length = 255
-# The following options apply to directory names, and currently only apply to html and markdown conversions.': None,                
-orphans = ignore
-    # orphans are files that are not linked to any notes.  Valid Values are
+    # the following options apply to directory names, and currently only apply to html and markdown conversions.
+orphans = copy
+    # orphans are files that are not linked to any notes.  valid values are
     # ignore - orphan files are left where they are and are not moved to an export folder.
     # copy - orphan files are coppied to the export folder in the same relative locations as the source.
     # orphan - orphan files are moved to a directory named orphan in the export folder.
@@ -184,6 +196,18 @@ make_absolute = False
     # changed to absolute links if set to true.  for example "../../someplace/some_file.pdf"
     # becomes /root/path/to/someplace/some_file.pdf"
     # false will leave these links unchanged as relative links
+
+[nimbus_options]
+    # the following options apply to nimbus notes conversions
+embed_these_document_types = md,pdf
+embed_these_image_types = png,jpg,jpeg,gif,bmp,svg
+embed_these_audio_types = mp3,webm,wav,m4a,ogg,3gp,flac
+embed_these_video_types = mp4,webm,ogv
+keep_nimbus_row_and_column_headers = False
+    # for unrecognised html tags use either html or plain text
+    # html = inline html in markdown and html in html files
+    # text = extract any text and display as plain text in markdown and html
+unrecognised_tag_format = html
 """
 
 
@@ -242,15 +266,15 @@ def test_validate_config_file_good_file(tmp_path, good_config_ini):
 
 
 def test_validate_good_config_ini_no_notes_or_attachment_folder(tmp_path, good_config_ini_no_notes_or_attachment_folder):
-    Path(f'{str(tmp_path)}/config.ini').write_text(good_config_ini_no_notes_or_attachment_folder, encoding="utf-8")
+    Path(f'{str(tmp_path)}/data').mkdir()
+    Path(f'{str(tmp_path)}/data/config.ini').write_text(good_config_ini_no_notes_or_attachment_folder, encoding="utf-8")
 
-    cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'gfm', allow_no_value=True)
+    cd = config_data.ConfigData(f"{str(tmp_path)}/data/config.ini", 'gfm', allow_no_value=True)
+    cd.conversion_settings.working_directory = Path(tmp_path)
 
-    cd.read_config_file()
-    valid_config = cd.validate_config_file()
-    assert valid_config
-    assert cd.conversion_settings.export_folder == 'notes'
-    assert cd.conversion_settings.attachment_folder_name == 'attachments'
+    cd.parse_config_file()
+    assert cd.conversion_settings.export_folder == Path('notes')
+    assert cd.conversion_settings.attachment_folder_name == Path('attachments')
 
 
 @pytest.mark.parametrize(
@@ -287,15 +311,17 @@ def test_validate_config_file_bad_values(tmp_path, good_config_ini, key1, key2, 
     'replace_this, with_this', [
         ('[quick_settings]', ''),
         ('quick_setting = obsidian', '')
-    ], ids=['missing-section', 'missing-key']
+    ],
+    ids=['missing-section', 'missing-key']
 )
 def test_validate_config_file_missing_keys_and_sections(tmp_path, good_config_ini, replace_this, with_this):
 
     good_config_ini = good_config_ini.replace(replace_this, with_this)
 
-    Path(f'{str(tmp_path)}/config.ini').write_text(good_config_ini, encoding="utf-8")
+    Path(tmp_path, 'data').mkdir()
+    Path(f'{str(tmp_path)}/data/config.ini').write_text(good_config_ini, encoding="utf-8")
 
-    cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'gfm', allow_no_value=True)
+    cd = config_data.ConfigData(f"{str(tmp_path)}/data/config.ini", 'gfm', allow_no_value=True)
 
     cd.read_config_file()
     valid_config = cd.validate_config_file()
@@ -324,6 +350,15 @@ def test_validate_config_file_missing_keys_and_sections(tmp_path, good_config_in
         ('file_options', 'creation_time_in_exported_file_name', 'True', 'False', False),
         ('file_options', 'orphans', 'copy', 'ignore', 'ignore'),
         ('file_options', 'make_absolute', 'True', 'False', False),
+        ('nimbus_options', 'embed_these_document_types', 'pdf,docx', 'something_different',
+         ['something_different']),
+        ('nimbus_options', 'embed_these_image_types', 'pdf,docx', 'something_different',
+         ['something_different']),
+        ('nimbus_options', 'embed_these_audio_types', 'pdf,docx', 'something_different',
+         ['something_different']),
+        ('nimbus_options', 'embed_these_video_types', 'pdf,docx', 'something_different',
+         ['something_different']),
+        ('nimbus_options', 'unrecognised_tag_format', 'html', 'text', 'text'),
     ]
 )
 def test_generate_conversion_settings_from_parsed_config_file_data(good_config_ini, tmp_path, key1, key2, start_value,
@@ -517,7 +552,7 @@ def test_str(good_config_ini, tmp_path):
     cd.parse_config_file()
 
     result = str(cd)
-    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'False', 'max_file_or_directory_name_length': '255', 'orphans': 'ignore', 'make_absolute': 'False'}}"
+    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes-15', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'True', 'max_file_or_directory_name_length': '255', 'orphans': 'copy', 'make_absolute': 'False'}, 'nimbus_options': {'embed_these_document_types': 'md,pdf', 'embed_these_image_types': 'png,jpg,jpeg,gif,bmp,svg', 'embed_these_audio_types': 'mp3,webm,wav,m4a,ogg,3gp,flac', 'embed_these_video_types': 'mp4,webm,ogv', 'keep_nimbus_row_and_column_headers': 'False', 'unrecognised_tag_format': 'html'}}"
 
 
 def test_repr(good_config_ini, tmp_path):
@@ -527,7 +562,7 @@ def test_repr(good_config_ini, tmp_path):
     cd.parse_config_file()
 
     result = repr(cd)
-    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'False', 'max_file_or_directory_name_length': '255', 'orphans': 'ignore', 'make_absolute': 'False'}}"
+    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes-15', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'True', 'max_file_or_directory_name_length': '255', 'orphans': 'copy', 'make_absolute': 'False'}, 'nimbus_options': {'embed_these_document_types': 'md,pdf', 'embed_these_image_types': 'png,jpg,jpeg,gif,bmp,svg', 'embed_these_audio_types': 'mp3,webm,wav,m4a,ogg,3gp,flac', 'embed_these_video_types': 'mp4,webm,ogv', 'keep_nimbus_row_and_column_headers': 'False', 'unrecognised_tag_format': 'html'}}"
 
 
 def test_generate_conversion_settings_using_quick_settings_string(good_config_ini, tmp_path):
@@ -560,13 +595,13 @@ def test_generate_conversion_settings_using_quick_settings_string_to_forced_bad_
     """Force a bad directory into the config.ini save method to check it is handled and logged"""
 
     config.yanom_globals.is_silent = silent
+    Path(tmp_path, 'data').mkdir()
+    Path(tmp_path, 'data', 'config.ini').write_text(good_config_ini, encoding="utf-8")
 
-    Path(tmp_path, 'config.ini').write_text(good_config_ini, encoding="utf-8")
-
-    cd = config_data.ConfigData(str(Path(tmp_path, 'config.ini')), 'obsidian', allow_no_value=True)
+    cd = config_data.ConfigData(str(Path(tmp_path, 'data', 'config.ini')), 'obsidian', allow_no_value=True)
 
     # remove the config.ini so we can check a new one is saved
-    Path(tmp_path, 'config.ini').unlink()
+    Path(tmp_path, 'data', 'config.ini').unlink()
     assert not Path(tmp_path, 'config.ini').exists()
     cd._config_file = 'config.ini'
 
@@ -576,7 +611,7 @@ def test_generate_conversion_settings_using_quick_settings_string_to_forced_bad_
     assert not Path(tmp_path, 'config.ini').exists()
 
     assert caplog.records
-    assert f"Unable to save config.ini file '{Path(tmp_path, 'abc')}' is not a directory. No such file or directory" in caplog.messages
+    assert f"Unable to save config.ini file '{Path(tmp_path, 'abc/data')}' is not a directory. No such file or directory" in caplog.messages
 
     captured = capsys.readouterr()
     assert expected in captured.out

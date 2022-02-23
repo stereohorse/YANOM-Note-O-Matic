@@ -70,19 +70,18 @@ class TestExtractFromTag:
              'img',
              ImageEmbed,
              '<img src="" alt="alt text" width="100" height="200">\n',
-             # NOTE at this point target_path is not set so src will be empty
-             # also there can be no ! in front of the link as the target suffix is needed for that to be set
+                # NOTE at this point target_path is not set so src will be empty
+                # also there can be no ! in front of the link as the target suffix is needed for that to be set
              ),
             ('<a href="image.png">link display text</a>', 'a', Hyperlink, '[link display text](image.png)'),
             ('<iframe>My iframe</iframe>', 'iframe', TextItem, '<iframe>My iframe</iframe>'),
         ],
     )
     def test_property_test_html_input_to_markdown_output(self, html, tag_name, expected_type,
-                                                expected_result_markdown, processing_options):
-
+                                                         expected_result_markdown, processing_options):
         soup = BeautifulSoup(html, 'html.parser')
         tag = soup.find(tag_name)
-        processing_options.markdown_format = 'md'
+        processing_options.export_format = 'md'
         result = html_data_extractors.extract_from_tag(tag, processing_options)
 
         assert isinstance(result, expected_type)
@@ -141,7 +140,7 @@ class TestExtractFromTag:
         ],
     )
     def test_image_embed_to_markdown(self, html, target_path, expected_result_markdown, processing_options):
-        processing_options.markdown_format = 'md'
+        processing_options.export_format = 'md'
         soup = BeautifulSoup(html, 'html.parser')
         tag = soup.find('img')
         result = html_data_extractors.extract_from_tag(tag, processing_options)
@@ -150,14 +149,13 @@ class TestExtractFromTag:
 
         assert result.markdown() == expected_result_markdown
 
-
     @pytest.mark.parametrize(
         'html, expected_result_markdown', [
             ('<a href="http://www.google.com">google</a>',
              '[google](http://www.google.com)',
-             ),            ('<a href="image.pdf">A file link</a>',
-             '[A file link](image.pdf)',
-             ),
+             ), ('<a href="image.pdf">A file link</a>',
+                 '[A file link](image.pdf)',
+                 ),
             ('<a href="">A file link</a>',
              '[A file link]()',
              ),
@@ -167,7 +165,7 @@ class TestExtractFromTag:
         ],
     )
     def test_link(self, html, expected_result_markdown, processing_options):
-        processing_options.markdown_format = 'md'
+        processing_options.export_format = 'md'
         soup = BeautifulSoup(html, 'html.parser')
         tag = soup.find('a')
         result = html_data_extractors.extract_from_tag(tag, processing_options)
@@ -210,17 +208,17 @@ class TestExtractFromTag:
     ],
 )
 def test_embed_file(alt_text, target_path, caption, expected_result_markdown, processing_options):
-
     result = markdown_string_builders.embed_file(processing_options, alt_text, target_path, caption)
 
     assert result == expected_result_markdown
 
+
 @pytest.mark.parametrize(
     'email, expected, ', [
         ('user@gmail.com',
-         "Mention [user@gmail.com](mailto:user@gmail.com)" ),
+         "Mention [user@gmail.com](mailto:user@gmail.com)"),
         ('user-gmail.com',
-         "Mention user-gmail.com" ),
+         "Mention user-gmail.com"),
 
     ],
 )
@@ -233,7 +231,7 @@ def test_mail_to_link(email, expected):
 @pytest.mark.parametrize(
     'text, expected, ', [
         ('1989. was a good year',
-         '1989\\. was a good year' ),
+         '1989\\. was a good year'),
         ('1989 was a good year',
          '1989 was a good year'),
     ],
@@ -251,7 +249,8 @@ def test_bullet_list(processing_options):
 
     expected = "- bullet 1\n\t- sub **bullet** two, below is an empty bullet\n\t- \n\n- bullet 2\n\n"
 
-    result = html_data_extractors.extract_bullet_list_from_ul_tag(tag, processing_options, html_nimbus_extractors.extract_from_nimbus_tag)
+    result = html_data_extractors.extract_bullet_list_from_ul_tag(tag, processing_options,
+                                                                  html_nimbus_extractors.extract_from_nimbus_tag)
 
     assert result.markdown() == expected
 
@@ -274,7 +273,8 @@ def test_numbered_list(processing_options):
 
     expected = """1. Number 1\n\t1. sub **Number** 1-2, below is an empty number\n\t2. \n2. Number 2\n"""
 
-    result = html_data_extractors.extract_numbered_list_from_ol_tag(tag, processing_options, html_nimbus_extractors.extract_from_nimbus_tag)
+    result = html_data_extractors.extract_numbered_list_from_ol_tag(tag, processing_options,
+                                                                    html_nimbus_extractors.extract_from_nimbus_tag)
 
     assert result.markdown() == expected
 
@@ -289,27 +289,77 @@ def test_numbered_list_item(processing_options):
     assert result == expected
 
 
-def test_markdown_anchor_tag_link(processing_options):
-    contents = TextItem(processing_options, "This is a heading ")
+@pytest.mark.parametrize(
+    'heading, link_id, link_format, expected', [
+        (
+                'This is a heading ',
+                '1234',
+                'gfm',
+                "[This is a heading](#this-is-a-heading)",
+        ),
+        (
+                'This is a heaçding ',
+                '1234',
+                'gfm',
+                "[This is a heaçding](#this-is-a-hea-ding)",
+        ),
+        (
+                '1.2.3. This is a heading ',
+                '1234',
+                'gfm',
+                "[1.2.3. This is a heading](#123-this-is-a-heading)",
+        ),
+        (
+                'This is a heading ',
+                '1234',
+                'obsidian',
+                "[This is a heading](#^1234)",
+        ),
+        (
+                'This is a heading ',
+                '#1234',
+                'obsidian',
+                "[This is a heading](#^1234)",
+        ),
+        (
+                'This is a heading ',
+                '1234_567',
+                'obsidian',
+                "[This is a heading](#^1234567)",
+        ),
+        (
+                'This is a heading ',
+                '1234_567',
+                'q_own_notes',
+                "[This is a heading](#1234567)",
+        ),
+        (
+                'This is a heading ',
+                '#1234_567',
+                'q_own_notes',
+                "[This is a heading](#1234567)",
+        ),
+    ],
+)
+def test_markdown_anchor_tag_link(heading, link_id, link_format, expected, processing_options):
+    contents = TextItem(processing_options, heading)
 
-    expected = "[This is a heading](#this-is-a-heading)"
-
-    result = markdown_string_builders.markdown_anchor_tag_link(contents)
+    result = markdown_string_builders.markdown_anchor_tag_link(contents, link_id, link_format)
 
     assert result == expected
-
 
 
 @pytest.mark.parametrize(
     'checked, indent, expected, ', [
         (True, 1,
-         "\t- [x] This is check one" ),
+         "\t- [x] This is check one"),
         (False, 2,
          "\t\t- [ ] This is check one"),
     ],
 )
 def test_checklist_item_item(checked, indent, expected, processing_options):
-    contents = [TextItem(processing_options, "This is "), TextItem(processing_options, "check"), TextItem(processing_options, " one")]
+    contents = [TextItem(processing_options, "This is "), TextItem(processing_options, "check"),
+                TextItem(processing_options, " one")]
 
     result = markdown_string_builders.checklist_item(contents, checked, indent)
 
@@ -372,3 +422,63 @@ def test_code_block():
     assert result == expected
 
 
+@pytest.mark.parametrize(
+    'heading, heading_id, id_format, expected', [
+        (
+                'This is a heading',
+                '1234',
+                'gfm',
+                "# This is a heading\n",
+        ),
+        (
+                'This is a heading',
+                '1234',
+                'obsidian',
+                "# This is a heading ^1234\n",
+        ),
+        (
+                'This is a heading',
+                '1234_567',
+                'obsidian',
+                "# This is a heading ^1234567\n",
+        ),
+        (
+                'This is a heading',
+                '1234_567',
+                'q_own_notes',
+                "# This is a heading (#1234567)\n",
+        ),
+        (
+                'This is a heading',
+                '#1234_567',
+                'pandoc_markdown_strict',
+                "# This is a heading (#1234567)\n",
+        ),
+        (
+                'This is a heading',
+                '#1234_567',
+                'commonmark',
+                "# This is a heading\n",
+        ),
+        (
+                'This is a heading',
+                '#1234_567',
+                'multimarkdown',
+                "# This is a heading [#1234567]\n",
+        ),
+    ],
+)
+def test_heading(heading, heading_id, id_format, expected, processing_options):
+    content_item = TextItem(processing_options, heading)
+    items = [content_item]
+
+    result = markdown_string_builders.heading(items, 1, heading_id, id_format)
+
+    assert result == expected
+
+
+def test_caption(processing_options):
+    contents = [TextItem(processing_options, '')]
+    result = markdown_string_builders.caption(contents)
+
+    assert result == ''

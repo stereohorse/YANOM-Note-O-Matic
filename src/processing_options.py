@@ -7,6 +7,6 @@ from embeded_file_types import EmbeddedFileTypes
 @dataclass
 class ProcessingOptions:
     embed_files: EmbeddedFileTypes
-    markdown_format: str
+    export_format: str
     unrecognised_tag_format: str
     filename_options: FileNameOptions

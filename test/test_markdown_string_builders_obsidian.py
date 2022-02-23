@@ -70,7 +70,7 @@ def processing_options() -> ProcessingOptions:
     ],
 )
 def test_image_embed_to_obsidian_markdown(html, target_path, expected_result_markdown, processing_options):
-    processing_options.markdown_format = 'obsidian'
+    processing_options.export_format = 'obsidian'
     soup = BeautifulSoup(html, 'html.parser')
     tag = soup.find('img')
     result = html_data_extractors.extract_from_tag(tag, processing_options)

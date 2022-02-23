@@ -13,7 +13,7 @@ from note_content_data import Caption, Checklist, ChecklistItem, CodeItem
 from note_content_data import Figure, FileAttachmentCleanHTML, FrontMatter
 from note_content_data import Head
 from note_content_data import ImageEmbed
-from note_content_data import Note, NotePaths, NumberedList, NumberedListItem
+from note_content_data import NimbusNote, NotePaths, NumberedList, NumberedListItem
 from note_content_data import Outline, OutlineItem
 from note_content_data import Paragraph
 from note_content_data import Table, TableHeader, TableItem, TableRow, TextFormatItem, TextItem
@@ -173,10 +173,62 @@ class TestTextFormatItem:
 
 
 class TestOutlineItem:
-    def test_markdown_deneration(self, processing_options):
-        item = OutlineItem(processing_options, TextItem(processing_options, 'some text'), 2, 'my-id')
+    @pytest.mark.parametrize(
+        'heading, link_id, link_format, expected', [
+            (
+                    'This is a heading ',
+                    '1234',
+                    'gfm',
+                    "[This is a heading](#this-is-a-heading)",
+            ),
+            (
+                    'This is a heaçding ',
+                    '1234',
+                    'gfm',
+                    "[This is a heaçding](#this-is-a-hea-ding)",
+            ),
+            (
+                    '1.2.3. This is a heading ',
+                    '1234',
+                    'gfm',
+                    "[1.2.3. This is a heading](#123-this-is-a-heading)",
+            ),
+            (
+                    'This is a heading ',
+                    '1234',
+                    'obsidian',
+                    "[This is a heading](#^1234)",
+            ),
+            (
+                    'This is a heading ',
+                    '#1234',
+                    'obsidian',
+                    "[This is a heading](#^1234)",
+            ),
+            (
+                    'This is a heading ',
+                    '1234_567',
+                    'obsidian',
+                    "[This is a heading](#^1234567)",
+            ),
+            (
+                    'This is a heading ',
+                    '1234_567',
+                    'q_own_notes',
+                    "[This is a heading](#1234567)",
+            ),
+            (
+                    'This is a heading ',
+                    '#1234_567',
+                    'q_own_notes',
+                    "[This is a heading](#1234567)",
+            ),
+        ],
+    )
+    def test_markdown_generation(self, heading, link_id, link_format, expected, processing_options):
+        processing_options.export_format = link_format
+        item = OutlineItem(processing_options, TextItem(processing_options, heading), 2, link_id)
 
-        expected = '[some text](#some-text)'
         result = item.markdown()
 
         assert result == expected
@@ -221,17 +273,17 @@ class TestNimbusOutline:
 	5. [Quoted text](#quoted-text)
 	6. [Hints](#hints)
 	7. [Toggle block](#toggle-block)
-	8. [Outline (effectively a linked TOC)](#outline-(effectively-a-linked-toc))
+	8. [Outline (effectively a linked TOC)](#outline--effectively-a-linked-toc-)
 	9. [Nimbus button](#nimbus-button)
 	10. [Text formatting](#text-formatting)
 	11. [Testing inserted mp3](#testing-inserted-mp3)
-	12. [Test block sections - may or may not export!](#test-block-sections---may-or-may-not-export!)
+	12. [Test block sections - may or may not export!](#test-block-sections---may-or-may-not-export-)
 	13. [Adventures in Exporting from Nimbus Notes...](#adventures-in-exporting-from-nimbus-notes...)
 4. [This is the end of the file](#this-is-the-end-of-the-file)
 
 
 """
-
+        processing_options.export_format = 'gfm'
         result = html_nimbus_extractors.extract_from_nimbus_outline(tag, processing_options)
 
         assert isinstance(result, Outline)
@@ -415,7 +467,7 @@ class TestTable:
 
         table = Table(processing_options, [header_row, row])
 
-        expected = '<table><tr><tr><th>Column 1</th><th>Column 2</th></tr><tr><tr><td>Row 1</td><td>Row 2</td></tr></table>'
+        expected = '<table border="1"><tr><tr><th>Column 1</th><th>Column 2</th></tr><tr><tr><td>Row 1</td><td>Row 2</td></tr></table>'
 
         result = table.html()
 
@@ -559,7 +611,7 @@ class TestNote:
             Paragraph(processing_options, [TextItem(processing_options, '#tag2')]),
             Paragraph(processing_options, [TextItem(processing_options, 'some text')]),
         ]
-        note = Note(processing_options, contents, conversion_settings, 'My Note')
+        note = NimbusNote(processing_options, contents, conversion_settings, 'My Note')
 
         expected = '<!doctype html><html lang="en"><p>#tag1</p><p>#tag2</p><p>some text</p></html>'
 
@@ -573,7 +625,7 @@ class TestNote:
             Paragraph(processing_options, [TextItem(processing_options, '#tag2')]),
             Paragraph(processing_options, [TextItem(processing_options, 'some text')]),
         ]
-        note = Note(processing_options, contents, conversion_settings, 'My Note')
+        note = NimbusNote(processing_options, contents, conversion_settings, 'My Note')
 
         expected = '#tag1\n#tag2\nsome text\n'
 
@@ -587,7 +639,7 @@ class TestNote:
             Paragraph(processing_options, [TextItem(processing_options, '#tag2')]),
             Paragraph(processing_options, [TextItem(processing_options, 'some text')]),
         ]
-        note = Note(processing_options, contents, conversion_settings, 'My Note')
+        note = NimbusNote(processing_options, contents, conversion_settings, 'My Note')
 
         expected = {'#tag1', '#tag2'}
 
@@ -601,7 +653,7 @@ class TestNote:
             Paragraph(processing_options, [TextItem(processing_options, 'some more text')]),
             Paragraph(processing_options, [TextItem(processing_options, 'even more text')]),
         ]
-        note = Note(processing_options, contents, conversion_settings, 'My Note')
+        note = NimbusNote(processing_options, contents, conversion_settings, 'My Note')
 
         expected = set()
 
@@ -621,7 +673,7 @@ class TestNote:
                  )
         ]
 
-        note = Note(processing_options, contents, conversion_settings, 'My Note')
+        note = NimbusNote(processing_options, contents, conversion_settings, 'My Note')
 
         note.find_tags()
 
@@ -639,7 +691,7 @@ class TestNote:
                  )
         ]
 
-        note = Note(processing_options, contents, conversion_settings, 'My Note')
+        note = NimbusNote(processing_options, contents, conversion_settings, 'My Note')
 
         note.find_tags()
 
@@ -661,7 +713,7 @@ class TestNote:
                  )
         ]
 
-        note = Note(processing_options, contents, conversion_settings, 'My Note')
+        note = NimbusNote(processing_options, contents, conversion_settings, 'My Note')
 
         note.find_tags()
 
@@ -682,7 +734,7 @@ class TestNote:
         ]
 
         conversion_settings.split_tags = False
-        note = Note(processing_options, contents, conversion_settings, 'My Note')
+        note = NimbusNote(processing_options, contents, conversion_settings, 'My Note')
 
         note.find_tags()
 
@@ -701,7 +753,7 @@ class TestNote:
         ]
 
         conversion_settings.split_tags = False
-        note = Note(processing_options, contents, conversion_settings, 'My Note')
+        note = NimbusNote(processing_options, contents, conversion_settings, 'My Note')
 
         note.find_tags()
 

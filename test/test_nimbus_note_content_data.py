@@ -9,11 +9,11 @@ from bs4 import BeautifulSoup
 import pytest
 
 import html_data_extractors
-from nimbus_note_content_data import FileEmbedNimbusHTML, MentionFolder, MentionNote, MentionUser, \
+from nimbus_note_content_data import EmbedNimbus, FileEmbedNimbusHTML, MentionFolder, MentionNote, MentionUser, \
     MentionWorkspace, \
-    NimbusDateItem, NimbusIDs, TableCheckItem, TableCollaborator
+    NimbusDateItem, NimbusIDs, NimbusToggle, TableCheckItem, TableCollaborator
 from note_content_data import BlockQuote, Body, BulletList, Head, HeadingItem, Hyperlink, ImageEmbed, \
-    Note, NotePaths, NumberedList, Paragraph, \
+    NimbusNote, NotePaths, NumberedList, Paragraph, \
     SectionContent, \
     TextColorItem, \
     TextFormatItem, TextItem, Title
@@ -366,7 +366,7 @@ class TestMentionNote:
         mention = MentionNote(processing_options, 'my-mention-note', 'ws-1234', 'note-5678')
 
         # Mention note is the note this link links to
-        mention_note = Note(processing_options, contents=[], conversion_settings=conversion_settings)
+        mention_note = NimbusNote(processing_options, contents=[], conversion_settings=conversion_settings)
         mention_note.title = 'my-mention-note'
 
         mention_note_paths = NotePaths()
@@ -398,7 +398,7 @@ class TestMentionNote:
         mention = MentionNote(processing_options, 'my-mention-note', 'ws-1234', 'note-5678')
 
         # Mention note is the note this link links to
-        mention_note = Note(processing_options, contents=[], conversion_settings=conversion_settings)
+        mention_note = NimbusNote(processing_options, contents=[], conversion_settings=conversion_settings)
         mention_note.title = 'my-mention-note'
 
         mention_note_paths = NotePaths()
@@ -430,7 +430,7 @@ class TestMentionNote:
         mention = MentionNote(processing_options, 'my-mention-note', 'ws-1234', 'note-5678')
 
         # Mention note is the note this link links to
-        mention_note = Note(processing_options, contents=[], conversion_settings=conversion_settings)
+        mention_note = NimbusNote(processing_options, contents=[], conversion_settings=conversion_settings)
         mention_note.title = 'my-mention-note'
 
         mention_note_paths = NotePaths()
@@ -563,32 +563,35 @@ class TestTableCollaborator:
         result = item.markdown()
         assert result == expected
 
-# class TestEmbed:
-#     @pytest.mark.parametrize(
-#         'contents, expected', [
-#             (
-#                     '<p>some html</p>',
-#                     '<p>some html</p>',
-#             ),
-#         ],
-#     )
-#     def test_table_check_item_html_output(self, contents, expected, processing_options):
-#         item = Embed(processing_options, contents)
-#         result = item.html()
-#         assert result == expected
-#
-#     @pytest.mark.parametrize(
-#         'contents, expected', [
-#             (
-#                     '<p>some html</p>',
-#                     '<p>some html</p>\n',
-#             ),
-#         ],
-#     )
-#     def test_date_item_markdown_output(self, contents, expected, processing_options):
-#         item = Embed(processing_options, contents)
-#         result = item.markdown()
-#         assert result == expected
+
+class TestEmbedNimbus:
+    def test_embed_nimbus_html_output(self, processing_options):
+        embed_caption = Paragraph(processing_options, [TextItem(processing_options, 'caption')])
+        contents = BlockQuote(processing_options, [TextItem(processing_options, 'some html')])
+        item = EmbedNimbus(processing_options, contents, embed_caption)
+        result = item.html()
+        assert result == '<p><blockquote>some html</blockquote>/p><p>caption</p>'
+
+    def test_embed_nimbus_markdown_output(self, processing_options):
+        embed_caption = Paragraph(processing_options, [TextItem(processing_options, 'caption')])
+        contents = BlockQuote(processing_options, [TextItem(processing_options, 'some html')])
+        item = EmbedNimbus(processing_options, contents, embed_caption)
+        result = item.markdown()
+        assert result == '> some html\n\ncaption\n\n'
+
+
+class TestNimbusToggle:
+    def test_embed_nimbus_html_output(self, processing_options):
+        contents = [TextItem(processing_options, 'some text')]
+        item = NimbusToggle(processing_options, contents)
+        result = item.html()
+        assert result == '<p>some text</p>'
+
+    def test_embed_nimbus_markdown_output(self, processing_options):
+        contents = [TextItem(processing_options, 'some text')]
+        item = NimbusToggle(processing_options, contents)
+        result = item.markdown()
+        assert result == 'some text\n'
 
 
 class TestExtractFromTag:
@@ -664,3 +667,5 @@ class TestGenerateHTMLList:
 
         assert isinstance(result, BulletList)
         assert result.html() == html
+
+

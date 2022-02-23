@@ -1,3 +1,10 @@
-from collections import namedtuple
+from dataclasses import dataclass
+from typing import List
 
-EmbeddedFileTypes = namedtuple('EmbeddedFileTypes', ['documents', 'images', 'audio', 'video'])
+
+@dataclass
+class EmbeddedFileTypes:
+    documents: List[str]
+    images: List[str]
+    audio: List[str]
+    video: List[str]

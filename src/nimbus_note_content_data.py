@@ -309,7 +309,7 @@ class MentionNote(MentionLink):
                     self.add_workspace_id_to_nimbus_ids(note_paths, nimbus_ids)
 
     def get_clean_file_name(self):
-        target_suffix = file_mover.get_file_suffix_for(self.processing_options.markdown_format)
+        target_suffix = file_mover.get_file_suffix_for(self.processing_options.export_format)
         dirty_name = f'{self.contents}{target_suffix}'
         clean_filename = helper_functions.generate_clean_filename(dirty_name,
                                                                   self.processing_options.filename_options)
@@ -374,7 +374,7 @@ class EmbedNimbus(NoteData):
     embed_caption: Optional[Paragraph]
 
     def html(self):
-        return f'<p>{self.contents.html()}/p><p>{self.embed_caption.html()}</p>'
+        return f'<p>{self.contents.html()}/p>{self.embed_caption.html()}'
 
     def markdown(self):
         return f"{self.contents.markdown()}\n{self.embed_caption.markdown()}\n"

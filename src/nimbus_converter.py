@@ -1,21 +1,21 @@
-from dataclasses import dataclass, field
+from copy import copy
 from pathlib import Path
 from typing import Set
 
 from bs4 import BeautifulSoup
+from conversion_settings import ConversionSettings
 
-from embeded_file_types import EmbeddedFileTypes
 import file_writer
 import helper_functions
 from html_data_extractors import process_child_items
 from html_nimbus_extractors import extract_from_nimbus_tag
 from nimbus_note_content_data import MentionLink
 from nimbus_note_content_data import NimbusIDs, NimbusProcessingOptions
-from note_content_data import Body
+from note_content_data import Body, Outline
 from note_content_data import FileAttachment, FileAttachmentCleanHTML
 from note_content_data import HeadingItem
 from note_content_data import ImageAttachment
-from note_content_data import Note, NoteData
+from note_content_data import NimbusNote, NoteData
 from processing_options import ProcessingOptions
 from note_content_data import TextItem
 import zip_file_reader
@@ -25,46 +25,6 @@ def get_file_suffix_for(export_format: str) -> str:
     if export_format == 'html':
         return '.html'
     return '.md'
-
-
-def generate_file_list(file_extension, path_to_files: Path):
-    if path_to_files.is_file():
-        return [path_to_files]
-
-    file_list_generator = path_to_files.rglob(f'*{file_extension}')
-    file_list = {item for item in file_list_generator}
-    return file_list
-
-
-@dataclass
-class ConversionSettings:  # simulating conversion settings object from YANOM
-    export_format: str = field(default='obsidian')
-    conversion_input: str = field(default='nimbus')
-    split_tags: bool = field(default=True)
-    source: Path = Path('/Users/kevindurston/nimbus/source')
-    target: Path = Path('/Users/kevindurston/nimbus/target')
-    attachment_folder_name: str = 'assets'
-    front_matter_format: str = 'yaml'  # options yaml, toml, json, none, text
-    # front_matter_format: str = 'toml'  # options yaml, toml, json, none, text
-    # front_matter_format: str = 'json'  # options yaml, toml, json, none, text
-    # front_matter_format: str = 'text'  # options yaml, toml, json, none, text
-    # front_matter_format: str = 'none'  # options yaml, toml, json, none, text
-    tag_prefix = '#'
-
-    keep_nimbus_row_and_column_headers = False
-    embed_these_document_types = ['md', 'pdf']
-    embed_these_image_types = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg']
-    embed_these_audio_types = ['mp3', 'webm', 'wav', 'm4a', 'ogg', '3gp', 'flac']
-    embed_these_video_types = ['mp4', 'webm', 'ogv']
-    embed_files = EmbeddedFileTypes(embed_these_document_types, embed_these_image_types,
-                                    embed_these_audio_types, embed_these_video_types)
-    unrecognised_tag_format = 'html'  # options html = as html tag, none = ignore, text = string content of tag
-    filename_options = helper_functions.FileNameOptions(max_length=255,
-                                                        allow_unicode=True,
-                                                        allow_uppercase=True,
-                                                        allow_non_alphanumeric=True,
-                                                        allow_spaces=False,
-                                                        space_replacement='-')
 
 
 def read_link_source_file(path_to_zip, path_in_zip_file):
@@ -111,11 +71,11 @@ def process_orphan_files(a_note, attachment_folder_name, orphans, processing_opt
     new_body_contents = get_copy_of_note_body_contents(a_note)
 
     new_body_contents.append(HeadingItem(processing_options,
-                                     [TextItem(processing_options, 'Note Attachments')],
-                                     level=3,
-                                     id=''
-                                     )
-                         )
+                                         [TextItem(processing_options, 'Note Attachments')],
+                                         level=3,
+                                         id=''
+                                         )
+                             )
     for file in orphans:
         # create a new link object for the orphan file
         contents = TextItem(processing_options, str(file))
@@ -169,7 +129,7 @@ def extract_and_write_assets(a_note, asset_links, attachment_folder_name, zip_fi
 def find_orphan_filenames_in_zipfile(filenames_known_about: Set, zip_file_path: str) -> Set[str]:
     """
     Find a set tof files that are in the zipfile that are not in the set of files already known about.  This set of
-    'orpahn' files is returned.  If there are no orphan files an empty set is returned
+    'orphan' files is returned.  If there are no orphan files an empty set is returned
 
     Parameters
     ----------
@@ -192,26 +152,27 @@ def find_orphan_filenames_in_zipfile(filenames_known_about: Set, zip_file_path: 
 
 
 def initialise_new_note(zip_file, conversion_settings, processing_options: NimbusProcessingOptions):
-    new_note = Note(processing_options, contents=[], conversion_settings=conversion_settings)
+    new_note = NimbusNote(processing_options, contents=[], conversion_settings=conversion_settings)
 
     new_note.title = zip_file.stem.replace('_', ' ')
 
     new_note.note_paths.path_to_note_source = Path(zip_file.parent)
 
-    new_note.note_paths.path_to_source_folder = conversion_settings.source
+    new_note.note_paths.path_to_source_folder = conversion_settings.source_absolute_root
 
-    dirty_workspace_folder_name = Path(zip_file.parent).relative_to(conversion_settings.source).parts[0]
+    dirty_workspace_folder_name = Path(zip_file.parent).relative_to(conversion_settings.source_absolute_root).parts[0]
 
-    new_note.note_paths.path_to_source_workspace = Path(conversion_settings.source, dirty_workspace_folder_name)
+    new_note.note_paths.path_to_source_workspace = Path(conversion_settings.source_absolute_root,
+                                                        dirty_workspace_folder_name)
 
-    new_note.note_paths.path_to_target_folder = conversion_settings.target
+    new_note.note_paths.path_to_target_folder = conversion_settings.export_folder_absolute
     new_note.note_paths.note_target_suffix = get_file_suffix_for(conversion_settings.export_format)
 
     new_note.note_paths.note_source_file_name = zip_file.name
     clean_file_name = helper_functions.generate_clean_filename(new_note.title, processing_options.filename_options)
 
     new_note.note_paths.note_target_file_name = Path(f'{clean_file_name}'
-                                                         f'{new_note.note_paths.note_target_suffix}')
+                                                     f'{new_note.note_paths.note_target_suffix}')
 
     new_note.note_paths.set_note_target_path(processing_options)
 
@@ -231,10 +192,11 @@ def extract_note_data_from_zip_file(zip_file, processing_options: ProcessingOpti
     return zip_file_data
 
 
-def match_up_file_links(dict_of_notes, documents, nimbus_ids):
+def match_up_file_links(dict_of_notes, notes):
+    nimbus_ids = NimbusIDs()
     for i in range(2):  # requires two passes of the matching routine to match renamed notes
-        for document in documents:
-            match_nimbus_mentions_to_files_or_folders(document, nimbus_ids, dict_of_notes)
+        for note in notes:
+            match_nimbus_mentions_to_files_or_folders(note, nimbus_ids, dict_of_notes)
 
 
 def write_note_to_file(document):
@@ -252,19 +214,8 @@ def write_note_to_file(document):
 
     file_writer.write_text(document_target, document.markdown())
 
-    # TODO below 3 lines fudge to also get html saved whilst testing
-    target_file_name = Path(document.note_paths.note_target_file_name).with_suffix('.html')
-    document_target = Path(target_folder, target_file_name)
-    # file_writer.write_text(document_target, helper_functions.make_soup_from_html(document.html()).prettify())
-    file_writer.write_text(document_target, document.html())
-    # TODO end of html extra save here
-    return
 
-
-def main():
-    conversion_settings = ConversionSettings()
-    notes = []
-
+def convert_nimbus_notes(conversion_settings: ConversionSettings, nimbus_zip_files: Set):
     processing_options = NimbusProcessingOptions(conversion_settings.embed_files,
                                                  conversion_settings.export_format,
                                                  conversion_settings.unrecognised_tag_format,
@@ -272,32 +223,117 @@ def main():
                                                  conversion_settings.keep_nimbus_row_and_column_headers,
                                                  )
 
-    nimbus_zip_files = generate_file_list('zip', conversion_settings.source)
+    notes = extract_note_content(conversion_settings, nimbus_zip_files, processing_options)
 
+    notes = process_metadata(notes)
+
+    # find outline if there then set id's if out put format not html
+    if not processing_options.export_format == 'html':
+        create_heading_ids_if_outline_in_note_data(notes, processing_options)
+
+    dict_of_notes = create_dictionary_of_notes(notes)
+
+    match_up_file_links(dict_of_notes, notes)
+
+    num_images = 0
+    num_attachments = 0
+    for note in notes:
+        process_note_assets(note, conversion_settings.attachment_folder_name, processing_options)
+        write_note_to_file(note)
+        images = note.find_items(class_=ImageAttachment)
+        attachments = note.find_items(class_=FileAttachment)
+        if images:
+            num_images += len(images)
+        if attachments:
+            num_attachments += len(attachments)
+
+    return num_images, num_attachments
+
+
+
+def extract_note_content(conversion_settings, nimbus_zip_files, processing_options):
+    notes = []
     for zip_file in nimbus_zip_files:
         note = initialise_new_note(zip_file, conversion_settings, processing_options)
         note.contents = extract_note_data_from_zip_file(zip_file, processing_options)
         notes.append(note)
 
+    return notes
+
+
+def process_metadata(notes):
+    notes_copy = copy(notes)
+    for note_to_process in notes_copy:
+        note_to_process.find_tags()
+        note_to_process.add_front_matter_to_content()
+
+    return notes_copy
+
+
+def create_dictionary_of_notes(notes):
     dict_of_notes = {}
     # key = title, value = list of links  This is used to look up notes when matching links using note titles
-
     for note in notes:
-        note.find_tags()
-        note.add_front_matter_to_content()
-
         if note.title not in dict_of_notes:
             dict_of_notes[note.title] = []
 
         dict_of_notes[note.title].append(note)
 
-    nimbus_ids = NimbusIDs()
-    match_up_file_links(dict_of_notes, notes, nimbus_ids)
+    return dict_of_notes
 
+
+def create_heading_ids_if_outline_in_note_data(notes, processing_options):
     for note in notes:
-        process_note_assets(note, conversion_settings.attachment_folder_name, processing_options)
+        outline = note.find_items(class_=Outline)
+        if not outline:
+            continue
 
-        write_note_to_file(note)
+        headings = note.find_items(class_=HeadingItem)
+        for heading in headings:
+            heading.include_id_format = processing_options.export_format
+
+
+def main():
+    def generate_file_list(file_extension, path_to_files: Path):
+        if path_to_files.is_file():
+            return [path_to_files]
+
+        file_list_generator = path_to_files.rglob(f'*{file_extension}')
+        file_list = {item for item in file_list_generator}
+        return file_list
+    # TODO getting spaces in the links to notes needs to be %20'.   also should the fils be being saved with clean names
+     # TODO need to include support for file name options... which are in the processing options.. just not cleaning names right
+
+    conversion_settings = ConversionSettings()
+    conversion_settings.quick_set_gfm_settings()
+    conversion_settings.working_directory = Path('/Users/kevindurston/nimbus')
+    conversion_settings.export_format = 'obsidian'
+    # conversion_settings.export_format = 'gfm'
+    # conversion_settings.export_format = 'multimarkdown'
+    conversion_settings.conversion_input = 'nimbus'
+    conversion_settings.split_tags = True
+    conversion_settings.source = 'source'
+    conversion_settings.export_folder = 'target'
+    conversion_settings.attachment_folder_name = 'assets'
+    conversion_settings.front_matter_format = 'yaml'
+    # conversion_settings.front_matter_format = 'toml'
+    # conversion_settings.front_matter_format = 'json'
+    # conversion_settings.front_matter_format = 'text'
+    # conversion_settings.front_matter_format = 'none'
+    conversion_settings.tag_prefix = '#'
+
+    conversion_settings.keep_nimbus_row_and_column_headers = False
+    conversion_settings.embed_these_document_types = ['md', 'pdf']
+    conversion_settings.embed_these_image_types = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg']
+    conversion_settings.embed_these_audio_types = ['mp3', 'webm', 'wav', 'm4a', 'ogg', '3gp', 'flac']
+    conversion_settings.embed_these_video_types = ['mp4', 'webm', 'ogv']
+
+    conversion_settings.unrecognised_tag_format = 'html'
+    # options html = as html tag, text or '' = string content of tag
+
+    nimbus_zip_files = generate_file_list('zip', conversion_settings.source_absolute_root)
+
+    convert_nimbus_notes(conversion_settings, nimbus_zip_files)
 
 
 # TODO write tests for any new code integrating with YANOM

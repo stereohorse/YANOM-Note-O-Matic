@@ -282,7 +282,7 @@ class TestMDToMDConverter(unittest.TestCase):
             self.assertEqual('# Header 1\n', read_text, 'Failed to write content')
 
     def test_post_process_content(self):
-        self.file_converter._pre_processed_content = 'Hello'
+        self.file_converter._converted_content = 'Hello'
         self.file_converter._metadata_processor._metadata = {'test': 'data'}
         self.file_converter._conversion_settings.markdown_conversion_input = 'gfm'
         self.file_converter.post_process_content()
@@ -331,7 +331,7 @@ class TestMDToMDConverter(unittest.TestCase):
             self.file_converter.convert_note(source_file)
 
             result = self.file_converter._post_processed_content
-            self.assertEqual('![|600](filepath/image.png)', result, 'failed to convert file')
+            self.assertEqual('![|600](filepath/image.png)\n', result, 'failed to convert file')
 
 
 def test_generate_set_of_attachment_paths_markdown_export_format(tmp_path):

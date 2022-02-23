@@ -162,15 +162,23 @@ class ConfigData(ConfigParser):
         self._conversion_settings.max_file_or_directory_name_length = self['file_options']['max_file_or_directory_name_length']
         self._conversion_settings.orphans = self['file_options']['orphans']
         self._conversion_settings.make_absolute = self.getboolean('file_options', 'make_absolute')
+        self._conversion_settings.embed_these_document_types = self['nimbus_options']['embed_these_document_types']
+        self._conversion_settings.embed_these_image_types = self['nimbus_options']['embed_these_image_types']
+        self._conversion_settings.embed_these_audio_types = self['nimbus_options']['embed_these_audio_types']
+        self._conversion_settings.embed_these_video_types = self['nimbus_options']['embed_these_video_types']
+        self._conversion_settings.keep_nimbus_row_and_column_headers = \
+            self.getboolean('nimbus_options', 'keep_nimbus_row_and_column_headers')
+        self._conversion_settings.unrecognised_tag_format = self['nimbus_options']['unrecognised_tag_format']
 
     def _write_config_file(self):
+        ini_path = Path(self.conversion_settings.working_directory, 'data', self._config_file)
         try:
-            with open(Path(self.conversion_settings.working_directory, self._config_file), 'w') as config_file:
+            with open(ini_path, 'w') as config_file:
                 self.write(config_file)
                 self.logger.info("Saving configuration file")
         except FileNotFoundError as e:
-            if not Path(self.conversion_settings.working_directory).is_dir():
-                message = f"Unable to save config.ini file '{self.conversion_settings.working_directory}' " \
+            if not Path(ini_path.parent).is_dir():
+                message = f"Unable to save config.ini file '{ini_path.parent}' " \
                           f"is not a directory. {e.strerror}"
                 self.logger.error(message)
                 self.logger.error(helper_functions.log_traceback(e))
@@ -178,14 +186,14 @@ class ConfigData(ConfigParser):
                     print(message)
             else:
                 message = f"Unable to save config.ini file " \
-                          f"- '{Path(self.conversion_settings.working_directory, self._config_file)}' " \
+                          f"- '{ini_path}' " \
                           f"- {e.strerror}"
                 self.logger.error(message)
                 self.logger.error(helper_functions.log_traceback(e))
                 if not config.yanom_globals.is_silent:
                     print(message)
         except IOError as e:
-            message = f"Unable to save config.ini file `{self.conversion_settings.working_directory}`.\n{e}"
+            message = f"Unable to save config.ini file `{ini_path.parent}`.\n{e}"
             self.logger.error(message)
             self.logger.error(helper_functions.log_traceback(e))
             if not config.yanom_globals.is_silent:
@@ -200,7 +208,7 @@ class ConfigData(ConfigParser):
 
         """
         self.logger.debug('reading config file')
-        path = Path(self.conversion_settings.working_directory, self._config_file)
+        path = Path(self.conversion_settings.working_directory, 'data', self._config_file)
 
         if path.is_file():
             self.read(path)
@@ -275,7 +283,7 @@ class ConfigData(ConfigParser):
             },
             'meta_data_options': {
                 '    # Note: front_matter_format sets the presence and type of the section with metadata ': None,
-                '    #retrieved from the source': None,
+                '    # retrieved from the source': None,
                 f'    # Valid entries are {", ".join(self._conversion_settings.valid_front_matter_formats)}': None,
                 '    # no entry will result in no front matter section': None,
                 'front_matter_format': self._conversion_settings.front_matter_format,
@@ -331,7 +339,20 @@ class ConfigData(ConfigParser):
                 '    # changed to absolute links if set to True.  For example "../../someplace/some_file.pdf"': None,
                 '    # becomes /root/path/to/someplace/some_file.pdf"': None,
                 '    # False will leave these links unchanged as relative links': None,
-            }
+            },
+            'nimbus_options': {
+                '    # The following options apply to nimbus notes conversions': None,
+                'embed_these_document_types': ",".join(self._conversion_settings.embed_these_document_types),
+                'embed_these_image_types': ",".join(self._conversion_settings.embed_these_image_types),
+                'embed_these_audio_types': ",".join(self._conversion_settings.embed_these_audio_types),
+                'embed_these_video_types': ",".join(self._conversion_settings.embed_these_video_types),
+                'keep_nimbus_row_and_column_headers': self._conversion_settings.keep_nimbus_row_and_column_headers,
+                '    # For unrecognised html tags use either html or plain text': None,
+                '    # html = inline html in markdown and html in html files': None,
+                '    # text = extract any text and display as plain text in markdown and html': None,
+                'unrecognised_tag_format': self._conversion_settings.unrecognised_tag_format,
+
+            },
         }
 
     @property

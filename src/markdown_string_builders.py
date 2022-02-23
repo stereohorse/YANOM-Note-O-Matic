@@ -1,6 +1,7 @@
 from __future__ import annotations
 import itertools
 from pathlib import Path
+import re
 from typing import List
 from typing import TYPE_CHECKING
 
@@ -66,13 +67,42 @@ def mail_to_link(email_address):
 
 def join_multiple_items(contents: List, join_character: str = ''):
     strings = [item.markdown() for item in contents]
-    return join_character.join(strings)
+    text = join_character.join(strings)
+    return text
 
+def heading(items: List, level: int, heading_id: str, include_id_format: str):
+    id_text = ''
 
-def heading(items: List, level: int):
-    heading_character = '#'
+    # underscore not allowed in obsidian anchor links and look ugly else where and may cause
+    # issues so removing them as not required
+    heading_id = heading_id.replace('_', '')
+
     heading_text = join_multiple_items(items)
-    return f"{heading_character * level} {heading_text}\n"
+
+    if include_id_format == 'gfm':
+        id_text = ''
+        # There is no id by each heading, outline list will have valid gfm link
+
+    if include_id_format == 'obsidian':
+        # decided not to use human readable id as will help if duplicated titles
+        id_text = heading_id.lstrip('#')
+        id_text = f" ^{heading_id}"
+
+    if include_id_format == 'commonmark':
+        # links not supported - common mark org says use gfm if want them
+        id_text = ''
+
+    if include_id_format == "pandoc_markdown_strict" or include_id_format == 'q_own_notes':
+        id_text = heading_id.lstrip('#')
+        id_text = f" (#{id_text})"
+
+    if include_id_format == 'multimarkdown':
+        id_text = heading_id.lstrip('#')
+        id_text = f" [{heading_id}]"
+
+    heading_character = '#'
+
+    return f"{heading_character * level} {heading_text}{id_text}\n"
 
 
 def escape_leading_number_if_required(item_text):
@@ -122,12 +152,39 @@ def numbered_list(contents):
     return text
 
 
-def markdown_anchor_tag_link(contents: TextItem):
+def markdown_anchor_tag_link(contents: TextItem, link_id, id_format):
     text = contents.markdown().strip()
 
-    link_text = text.replace(' ', '-')
-    link_text = f"(#{link_text.lower()})"
-    return f"[{text}]{link_text}"
+    # underscore not allowed in obsidian anchor links and look ugly else where and may cause
+    # issues so removing them as not required
+    link_id = link_id.replace('_', '')
+
+    id_text = ''
+
+    if id_format == 'gfm':
+        id_text = text
+        if id_text[0].isdigit():
+            # clean leading numbers of any dot  so 1.1 becomes 11,  1.2.3.4 becomes 1234
+            regex = r"^(?:(\d*)\.(\d*))+"
+            matches = re.search(regex, text)
+            if matches:
+                leading_numbers = matches.group()
+                numbers_only = leading_numbers.replace('.', '')
+                id_text = id_text.replace(leading_numbers, numbers_only)
+
+        # now replace characters that are not allowed in link
+        id_text = re.sub("[^a-zA-Z0-9.]", '-', id_text)
+        id_text = f"(#{id_text.lower()})"
+
+    if id_format == 'obsidian':
+        link_id = link_id.lstrip('#')  # strip in case already one there to avoid having 2
+        id_text = f'(#^{link_id})'
+
+    if id_format == "pandoc_markdown_strict" or id_format == 'q_own_notes' or id_format == 'multimarkdown':
+        link_id = link_id.lstrip('#')
+        id_text = f"(#{link_id})"
+
+    return f"[{text}]{id_text}"
 
 
 def checklist_item(contents: List, checked: bool, indent):
@@ -184,4 +241,8 @@ def formatted_text(contents, text_format):
 
 
 def caption(contents: list):
-    return f'*{join_multiple_items(contents)}*\n\n'
+    caption_text = join_multiple_items(contents)
+    if caption_text:
+        return f'*{caption_text}*\n\n'
+
+    return caption_text

@@ -98,7 +98,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             'nimbus': self._ask_nimbus_conversion_options,
         }
 
-        questions_to_ask = note_formats.get(self._default_settings.conversion_input, None)
+        questions_to_ask = note_formats.get(self._cli_conversion_settings.conversion_input, None)
         questions_to_ask()
 
         self.logger.info(f"Returning settings for {self._cli_conversion_settings}")
@@ -242,10 +242,12 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             self._ask_and_set_export_format()
             if self._cli_conversion_settings.export_format != 'html':
                 self._ask_markdown_metadata_questions()
-            self._ask_and_set_table_details()
             self._ask_and_set_file_name_options()
             self._ask_and_set_space_replacement_character()
             self._ask_and_set_maximum_filename_length()
+            self._ask_and_set_embed_file_types()
+            self._ask_and_set_keep_123_abc_headers()
+            self._ask_and_set_unrecognised_tag_format()
 
     def _ask_markdown_metadata_questions(self):
         self._ask_and_set_front_matter_format()
@@ -592,6 +594,76 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         _exit_if_keyboard_interrupt(answer)
         self._cli_conversion_settings.creation_time_in_exported_file_name = \
             answer['creation_time_in_exported_file_name']
+
+    def _ask_and_set_embed_file_types(self):
+        questions = [
+            {
+                'type': 'input',
+                'name': 'embed_these_document_types',
+                'message': 'Enter comma delimited list of document file types that can be embedded '
+                           'in markdown - ![]() links.',
+                'default': ", ".join(self._cli_conversion_settings.embed_these_document_types)
+            },
+            {
+                'type': 'input',
+                'name': 'embed_these_image_types',
+                'message': 'Enter comma delimited list of image file types that can be embedded '
+                           'in markdown - ![]() links.',
+                'default': ", ".join(self._cli_conversion_settings.embed_these_image_types)
+            },
+            {
+                'type': 'input',
+                'name': 'embed_these_audio_types',
+                'message': 'Enter comma delimited list of audio file types that can be embedded '
+                           'in markdown - ![]() links.',
+                'default': ", ".join(self._cli_conversion_settings.embed_these_audio_types)
+            },
+            {
+                'type': 'input',
+                'name': 'embed_these_video_types',
+                'message': 'Enter comma delimited list of video file types that can be embedded '
+                           'in markdown - ![]() links.',
+                'default': ", ".join(self._cli_conversion_settings.embed_these_video_types)
+            },
+        ]
+        answers = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answers)
+        self._cli_conversion_settings.embed_these_document_types = answers['embed_these_document_types']
+        self._cli_conversion_settings.embed_these_image_types = answers['embed_these_image_types']
+        self._cli_conversion_settings.embed_these_audio_types = answers['embed_these_audio_types']
+        self._cli_conversion_settings.embed_these_video_types = answers['embed_these_video_types']
+
+    def _ask_and_set_keep_123_abc_headers(self):
+        questions = [
+            {
+                'type': 'checkbox',
+                'message': 'Select file and directory naming options',
+                'name': 'keep_nimbus_row_and_column_headers',
+                'choices': [
+                    {
+                        'name': 'Keep nimbus 123 row and ABC column headers',
+                        'checked': self._default_settings.keep_nimbus_row_and_column_headers
+                    },
+                ],
+            },
+        ]
+
+        answer = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
+        self._cli_conversion_settings.keep_nimbus_row_and_column_headers = \
+            'Keep nimbus 123 row and ABC column headers' in answer['keep_nimbus_row_and_column_headers']
+
+    def _ask_and_set_unrecognised_tag_format(self):
+        front_matter_format = {
+            'type': 'list',
+            'name': 'unrecognised_tag_format',
+            'message': 'What is the format of meta data front matter do you wish to use?',
+            'choices': self._default_settings.valid_unrecognised_tag_format_values,
+            'default': self._default_settings.unrecognised_tag_format,
+        }
+        answer = prompt(front_matter_format, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
+        self._cli_conversion_settings.unrecognised_tag_format = answer['unrecognised_tag_format']
 
 
 class InvalidConfigFileCommandLineInterface(InquireCommandLineInterface):

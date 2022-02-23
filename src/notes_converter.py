@@ -4,6 +4,7 @@ import shutil
 import sys
 
 import file_mover
+import nimbus_converter
 from alive_progress import alive_bar
 
 import config
@@ -12,6 +13,7 @@ from file_converter_HTML_to_MD import HTMLToMDConverter
 from file_converter_MD_to_HTML import MDToHTMLConverter
 from file_converter_MD_to_MD import MDToMDConverter
 import interactive_cli
+from note_content_data import NimbusNote
 from nsx_file_converter import NSXFile
 from pandoc_converter import PandocConverter
 import report
@@ -119,7 +121,7 @@ class NotesConvertor:
 
     def generate_file_list(self, file_extension, path_to_files: Path):
         if self.conversion_settings.source.is_file():
-            return [self.conversion_settings.source]
+            return {self.conversion_settings.source}
 
         file_list_generator = path_to_files.rglob(f'*{file_extension}')
         file_list = {item for item in file_list_generator}
@@ -225,19 +227,15 @@ class NotesConvertor:
         self.check_nsx_attachment_links()
 
     def convert_nimbus(self):
-        file_extension = 'zip'
-        nimbus_files_to_convert = self.generate_file_list(file_extension, self.conversion_settings.source_absolute_root)
-        self.exit_if_no_files_found(nimbus_files_to_convert, file_extension)
-        self.pandoc_converter = PandocConverter(self.conversion_settings)
-        self._nimbus_notes = [NimbusNote(file, self.conversion_settings, self.pandoc_converter)
-                             for file in nimbus_files_to_convert]
-        # self.process_nsx_files()
-        # self.check_nsx_attachment_links()
+        with Timer(name="nsx_conversion", logger=self.logger.info, silent=bool(config.yanom_globals.is_silent)):
+            file_extension = 'zip'
+            nimbus_files_to_convert = self.generate_file_list(file_extension, self.conversion_settings.source_absolute_root)
+            self.exit_if_no_files_found(nimbus_files_to_convert, file_extension)
 
-    def process_nimbus_files(self):
-        raise NotImplementedError
-
-
+            num_images, num_attachments = nimbus_converter.convert_nimbus_notes(self.conversion_settings, nimbus_files_to_convert)
+            self._note_page_count = len(nimbus_files_to_convert)
+            self._image_count = num_images
+            self._attachment_count = num_attachments
 
     def process_nsx_files(self):
         with Timer(name="nsx_conversion", logger=self.logger.info, silent=bool(config.yanom_globals.is_silent)):

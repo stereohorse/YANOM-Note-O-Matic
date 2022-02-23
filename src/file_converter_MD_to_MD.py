@@ -20,7 +20,7 @@ class MDToMDConverter(FileConverter):
         self._pre_processed_content = self._metadata_processor.parse_md_metadata(self._pre_processed_content)
 
     def post_process_content(self):
-        self._post_processed_content = self._pre_processed_content
+        self._post_processed_content = self._converted_content
         self._post_processed_content = helper_functions.replace_markdown_pseudo_html_href_tag_with_markdown_links(
             self._post_processed_content)
         self.post_process_obsidian_image_links_if_required()

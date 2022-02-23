@@ -125,7 +125,7 @@ class NotePaths:
 
 
 @dataclass
-class Note(NoteDataWithMultipleContents):
+class NimbusNote(NoteDataWithMultipleContents):
     conversion_settings: None
     title: str = ''
     tags: List[str] = field(default_factory=list)
@@ -236,7 +236,8 @@ class Body(NoteDataWithMultipleContents):
         return html_string_builders.wrap_items_in_tag(self.contents, 'body')
 
     def markdown(self):
-        return markdown_string_builders.join_multiple_items(self.contents)
+        text = markdown_string_builders.join_multiple_items(self.contents)
+        return text
 
 
 @dataclass
@@ -280,12 +281,13 @@ class HeadingItem(NoteDataWithMultipleContents):
     contents: [NoteData]
     level: int
     id: str
+    include_id_format: str = field(default='')
 
     def html(self):
         return html_string_builders.heading(self.contents, self.id, self.level)
 
     def markdown(self):
-        return markdown_string_builders.heading(self.contents, self.level)
+        return markdown_string_builders.heading(self.contents, self.level, self.id, self.include_id_format)
 
 
 @dataclass
@@ -359,7 +361,8 @@ class OutlineItem(NoteData):
         return html_string_builders.wrap_string_in_tag(link, 'li')
 
     def markdown(self):
-        return markdown_string_builders.markdown_anchor_tag_link(self.contents)
+        return markdown_string_builders.markdown_anchor_tag_link(self.contents, self.link_id,
+                                                                 self.processing_options.export_format)
 
 
 @dataclass
@@ -432,7 +435,7 @@ class ImageEmbed(ImageAttachment):  # img tag
         return html_string_builders.image_tag(self.contents, self.width, self.height, self.target_path)
 
     def markdown(self):
-        if self.processing_options.markdown_format == 'obsidian':
+        if self.processing_options.export_format == 'obsidian':
             return markdown_string_builders_obsidian.embed_image(self.processing_options, self.contents,
                                                                  self.width, self.height, self.target_path)
 

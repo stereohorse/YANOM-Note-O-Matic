@@ -11,6 +11,7 @@ from typing import Literal
 import config
 from config import yanom_globals
 import helper_functions
+from embeded_file_types import EmbeddedFileTypes
 from helper_functions import generate_clean_directory_name, find_working_directory
 
 
@@ -145,6 +146,14 @@ class ConversionSettings:
             'max_file_or_directory_name_length': '',
             'orphans': ('ignore', 'copy', 'orphan'),
             'make_absolute': ('True', 'False'),
+        },
+        'nimbus_options':{
+            'embed_these_document_types': '',
+            'embed_these_image_types': '',
+            'embed_these_audio_types': '',
+            'embed_these_video_types': '',
+            'keep_nimbus_row_and_column_headers': ('True', 'False'),
+            'unrecognised_tag_format': ('html', 'text'),
         }
     }
 
@@ -164,6 +173,8 @@ class ConversionSettings:
         self._valid_front_matter_formats = list(
             self.validation_values['meta_data_options']['front_matter_format'])
         self._valid_orphan_values = list(self.validation_values['file_options']['orphans'])
+        self._valid_unrecognised_tag_format_values = \
+            list(self.validation_values['nimbus_options']['unrecognised_tag_format'])
         self._source = ''
         self._conversion_input = 'nsx'
         self._markdown_conversion_input = 'gfm'
@@ -194,6 +205,14 @@ class ConversionSettings:
         self._source_absolute_root = None
         self._orphans = 'orphan'
         self._make_absolute = False
+        self._embed_these_document_types = ['md', 'pdf']
+        self._embed_these_image_types = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg']
+        self._embed_these_audio_types = ['mp3', 'webm', 'wav', 'm4a', 'ogg', '3gp', 'flac']
+        self._embed_these_video_types = ['mp4', 'webm', 'ogv']
+        self._embed_files = EmbeddedFileTypes(self._embed_these_document_types, self._embed_these_image_types,
+                                              self._embed_these_audio_types, self._embed_these_video_types)
+        self._keep_nimbus_row_and_column_headers = False
+        self._unrecognised_tag_format = 'html'
 
     def __str__(self):
         return f"{self.__class__.__name__}(valid_conversion_inputs={self.valid_conversion_inputs}, " \
@@ -211,7 +230,16 @@ class ConversionSettings:
                f"export_folder='{self.export_folder}', " \
                f"attachment_folder_name='{self.attachment_folder_name}', " \
                f"creation_time_in_exported_file_name='{self._creation_time_in_exported_file_name}', " \
-               f"orphans='{self._orphans})"
+               f"orphans='{self._orphans}, " \
+               f"make file links absolute='{self._make_absolute}', " \
+               f"embed_these_document_types='{self._embed_these_document_types}', " \
+               f"embed_these_image_types='{self._embed_these_image_types}', " \
+               f"embed_these_audio_types='{self._embed_these_audio_types}', " \
+               f"embed_these_video_types='{self._embed_these_video_types}', " \
+               f"keep_nimbus_row_and_column_headers='{self._keep_nimbus_row_and_column_headers}', " \
+               f"unrecognised_tag_format='{self._unrecognised_tag_format}')" \
+
+
 
     def __repr__(self):
         return repr(self.__dict__)
@@ -257,7 +285,7 @@ class ConversionSettings:
             'obsidian': 'quick_set_obsidian_settings',
             'gfm': 'quick_set_gfm_settings',
             'q_own_notes': 'quick_set_qownnotes_settings',
-            'manual': 'quick_set_manual_settings'
+            'manual': 'quick_set_manual_settings',
         }
 
         if quick_setting in quick_settings:
@@ -388,6 +416,15 @@ class ConversionSettings:
         )
         self._orphans = 'copy'
         self._make_absolute = False
+        self._embed_these_document_types = ['md', 'pdf']
+        self._embed_these_image_types = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg']
+        self._embed_these_audio_types = ['mp3', 'webm', 'wav', 'm4a', 'ogg', '3gp', 'flac']
+        self._embed_these_video_types = ['mp4', 'webm', 'ogv']
+        self._embed_files = EmbeddedFileTypes(self._embed_these_document_types, self._embed_these_image_types,
+                                              self._embed_these_audio_types, self._embed_these_video_types)
+        self._keep_nimbus_row_and_column_headers = False
+        self._unrecognised_tag_format = 'html'
+
 
     @staticmethod
     def _get_folder_paths(provided_folder: Path, root_path: Path):
@@ -456,6 +493,10 @@ class ConversionSettings:
     @property
     def valid_orphan_values(self):
         return self._valid_orphan_values
+
+    @property
+    def valid_unrecognised_tag_format_values(self):
+        return self._valid_unrecognised_tag_format_values
 
     @property
     def source(self):
@@ -724,7 +765,7 @@ class ConversionSettings:
 
     @orphans.setter
     def orphans(self, value):
-        if value in self._valid_orphan_values:
+        if value in self.valid_orphan_values:
             self._orphans = value
             return
 
@@ -739,3 +780,125 @@ class ConversionSettings:
     @make_absolute.setter
     def make_absolute(self, value: bool):
         self._make_absolute = value
+
+    @property
+    def embed_these_document_types(self):
+        return self._embed_these_document_types
+
+    @embed_these_document_types.setter
+    def embed_these_document_types(self, value):
+        if isinstance(value, str):
+            values = value.split(",")
+            self._embed_these_document_types = [value.strip() for value in values]
+            self._embed_files.documents = self._embed_these_document_types
+            return
+
+        if isinstance(value, list):
+            if len(value) == 0:
+                self._embed_these_document_types = ['']
+                self._embed_files.documents = self._embed_these_document_types
+                return
+
+            self._embed_these_document_types = value
+            self._embed_files.documents = self._embed_these_document_types
+            return
+
+        self.logger.warning(f'Invalid embedded document list provided {value} of type {type(value)}')
+
+    @property
+    def embed_these_image_types(self):
+        return self._embed_these_image_types
+
+    @embed_these_image_types.setter
+    def embed_these_image_types(self, value):
+        if isinstance(value, str):
+            values = value.split(",")
+            self._embed_these_image_types = [value.strip() for value in values]
+            self._embed_files.images = self._embed_these_image_types
+            return
+
+        if isinstance(value, list):
+            if len(value) == 0:
+                self._embed_these_image_types = ['']
+                self._embed_files.images = self._embed_these_image_types
+                return
+
+            self._embed_these_image_types = value
+            self._embed_files.images = self._embed_these_image_types
+            return
+
+        self.logger.warning(f'Invalid embedded image list provided {value} of type {type(value)}')
+
+    @property
+    def embed_these_audio_types(self):
+        return self._embed_these_audio_types
+
+    @embed_these_audio_types.setter
+    def embed_these_audio_types(self, value):
+        if isinstance(value, str):
+            values = value.split(",")
+            self._embed_these_audio_types = [value.strip() for value in values]
+            self._embed_files.audio = self._embed_these_audio_types
+            return
+
+        if isinstance(value, list):
+            if len(value) == 0:
+                self._embed_these_audio_types = ['']
+                self._embed_files.audio = self._embed_these_audio_types
+                return
+
+            self._embed_these_audio_types = value
+            self._embed_files.audio = self._embed_these_audio_types
+            return
+
+        self.logger.warning(f'Invalid embedded audio list provided {value} of type {type(value)}')
+
+    @property
+    def embed_these_video_types(self):
+        return self._embed_these_video_types
+
+    @embed_these_video_types.setter
+    def embed_these_video_types(self, value):
+        if isinstance(value, str):
+            values = value.split(",")
+            self._embed_these_video_types = [value.strip() for value in values]
+            self._embed_files.video = self._embed_these_video_types
+            return
+
+        if isinstance(value, list):
+            if len(value) == 0:
+                self._embed_these_video_types = ['']
+                self._embed_files.video = self._embed_these_video_types
+                return
+
+            self._embed_these_video_types = value
+            self._embed_files.video = self._embed_these_video_types
+            return
+
+        self.logger.warning(f'Invalid embedded video list provided {value} of type {type(value)}')
+
+    @property
+    def embed_files(self):
+        return self._embed_files
+
+    @property
+    def keep_nimbus_row_and_column_headers(self):
+        return self._keep_nimbus_row_and_column_headers
+
+    @keep_nimbus_row_and_column_headers.setter
+    def keep_nimbus_row_and_column_headers(self, value: bool):
+        self._keep_nimbus_row_and_column_headers = value
+
+    @property
+    def unrecognised_tag_format(self):
+        return self._unrecognised_tag_format
+
+    @unrecognised_tag_format.setter
+    def unrecognised_tag_format(self, value):
+        if value in self.valid_unrecognised_tag_format_values:
+            self._unrecognised_tag_format = value
+            return
+
+        raise ValueError(f'Invalid value provided for for unrecognised tag format option. '
+                         f'Attempted to use invalid value - "{value}", '
+                         f'valid values are - "{self._valid_unrecognised_tag_format_values}')
