@@ -568,7 +568,10 @@ class BlockQuote(NoteDataWithMultipleContents):
         return html_string_builders.block_quote(self.contents, self.cite)
 
     def markdown(self):
-        return markdown_string_builders.block_quote(self.contents, self.cite)
+        quote_text = markdown_string_builders.block_quote(self.contents, self.cite)
+        quote_text = quote_text.replace('\n', '\n>')
+        quote_text = quote_text.rstrip('>')
+        return quote_text
 
 
 @dataclass

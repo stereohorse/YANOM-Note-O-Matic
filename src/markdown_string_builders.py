@@ -1,10 +1,15 @@
+from __future__ import annotations
 import itertools
 from pathlib import Path
 from typing import List
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:  # avoid circular import error for Typing  pragma: no cover
+    from note_content_data import TextItem  # pragma: no cover
 
 import helper_functions
 from markdown_format_styling import format_styling
-from note_content_data import TextItem
 from processing_options import ProcessingOptions
 
 

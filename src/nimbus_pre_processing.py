@@ -299,16 +299,7 @@ def main():
         write_note_to_file(note)
 
 
-
-# TODO getting 3 links to test note instead of 2
-#  an exmaple here of test 1 - it is in test folder but is also linked to my notes
-#  that does not have a file Test-1.md  |[Test 1](../My-Notes/Test-1.md) [Test 1](../test/Test-1.md)
-
-
-# TODO quoted tect - lines after shift return are nit indented no > symbol i think  <br> is replaced by \n
-
-# TODO write tests
-# TODO refactor anything?
+# TODO write tests for any new code integrating with YANOM
 # TODO docstrings
 # TODO logging - all logging but also add all unrecognised html objects to warning log
 
