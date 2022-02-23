@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 import logging
 from pathlib import Path
 import re
-from typing import Any, Dict, Iterable, List, Tuple, Type, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 import frontmatter
 
@@ -64,15 +64,6 @@ class NoteDataContentsString(NoteData, ABC):
 @dataclass
 class NoteDataWithMultipleContents(NoteData, ABC):
     contents: Iterable[NoteData]
-
-    #
-    # @abstractmethod
-    # def html(self):
-    #     pass
-    #
-    # @abstractmethod
-    # def markdown(self):
-    #     pass
 
     def find_items(self, class_: Union[Type[NoteData], Tuple[NoteData]]):
         """
@@ -701,7 +692,7 @@ class Caption(NoteDataWithMultipleContents):
 
 @dataclass
 class Figure(NoteDataWithMultipleContents):
-    contents: Tuple[ImageAttachment, Caption]
+    contents: Tuple[ImageAttachment, Optional[Caption]]
 
     def html(self):
         return html_string_builders.figure(self.contents)

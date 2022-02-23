@@ -1,4 +1,5 @@
 import logging
+from abc import ABC
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Union
@@ -73,7 +74,6 @@ def process_child_items(tag, processing_options: ProcessingOptions,
 def extract_from_tag(tag, processing_options: ProcessingOptions,
                      note_specific_tag_cleaning: Optional[Callable] = None,
                      ) -> Optional[Union[List[NoteData], NoteData]]:
-
     if not is_a_tag(tag):
         # is navigable string
         return
@@ -114,7 +114,7 @@ def extract_from_tag(tag, processing_options: ProcessingOptions,
         return extract_from_blockquote(tag, processing_options, note_specific_tag_cleaning)
 
     if tag.name == "iframe":
-        return extract_from_iframe(tag, processing_options,)
+        return extract_from_iframe(tag, processing_options, )
 
     if tag.name == 'section':
         return extract_from_section(tag, processing_options, note_specific_tag_cleaning)
@@ -169,7 +169,6 @@ def extract_from_head_tag(tag, processing_options: ProcessingOptions,
 
 def extract_from_body(tag, processing_options: ProcessingOptions,
                       note_specific_tag_cleaning: Optional[Callable] = None):
-
     if tag.name != 'body':
         return None
 
@@ -201,7 +200,6 @@ def extract_from_coloured_text_span(tag, processing_options: ProcessingOptions):
 
 def extract_text_formatting(tag, valid_formats: Dict, processing_options: ProcessingOptions,
                             note_specific_tag_cleaning: Optional[Callable] = None):
-
     if tag.name in valid_formats:
         items = process_child_items(tag, processing_options, note_specific_tag_cleaning)
         return TextFormatItem(processing_options, items, tag.name)
@@ -261,7 +259,7 @@ def extract_from_title(title_tag, processing_options: ProcessingOptions):
 
 
 def extract_from_p_or_i_tag(tag, processing_options: ProcessingOptions,
-                       note_specific_tag_cleaning: Optional[Callable] = None) -> List[NoteData]:
+                            note_specific_tag_cleaning: Optional[Callable] = None) -> List[NoteData]:
 
     if tag.name not in ['p', 'i']:
         return
@@ -299,7 +297,8 @@ def extract_from_iframe(tag, processing_options: ProcessingOptions):
     return TextItem(processing_options, str(tag))
 
 
-def extract_from_figure(tag, processing_options: ProcessingOptions, note_specific_tag_cleaning: Optional[Callable] = None):
+def extract_from_figure(tag, processing_options: ProcessingOptions,
+                        note_specific_tag_cleaning: Optional[Callable] = None):
     if tag.name != 'figure':
         return
     image_object = None
@@ -318,7 +317,6 @@ def extract_from_figure(tag, processing_options: ProcessingOptions, note_specifi
 
 def extract_from_figure_caption(tag, processing_options: ProcessingOptions,
                                 note_specific_tag_cleaning: Optional[Callable] = None):
-
     caption_text = process_child_items(tag, processing_options, note_specific_tag_cleaning)
 
     return Caption(processing_options, caption_text)
@@ -363,6 +361,9 @@ def extract_from_li_tag(li_tag, processing_options: ProcessingOptions, note_spec
 
 
 class HTMLListParser(HTMLParser):
+    def error(self, message):  # pragma: no cover
+        # This is a deprecated abstract method that is still lurking around in HTMLParser and needs to be implemented
+        pass  # pragma: no cover
 
     def __init__(self, processing_options, note_specific_tag_cleaning, list_item_type, ordered=False):
         super().__init__()
@@ -385,7 +386,7 @@ class HTMLListParser(HTMLParser):
         self.list_type_tag = 'ul'
 
     def handle_starttag(self, tag, attrs):
-        if tag == self.list_type_tag :
+        if tag == self.list_type_tag:
             self.indent += 1
             return
 
@@ -398,7 +399,7 @@ class HTMLListParser(HTMLParser):
             self.li_contents.append(f'<{tag}>')
 
     def handle_endtag(self, tag):
-        if tag == self.list_type_tag :
+        if tag == self.list_type_tag:
             self.indent -= 1
             return
 
@@ -419,5 +420,3 @@ class HTMLListParser(HTMLParser):
     def handle_data(self, data):
         if self.current_tag_is_li:
             self.li_contents.append(data)
-
-

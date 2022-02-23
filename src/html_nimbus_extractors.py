@@ -1,5 +1,6 @@
 import datetime
 from pathlib import Path
+from typing import Optional
 
 import helper_functions
 import html_data_extractors
@@ -254,7 +255,7 @@ def extract_from_nimbus_bookmark(tag, processing_options: NimbusProcessingOption
         # returns hyperlink wrapped in Paragraph as div bookmarks appear to be buttons alone on a line
 
 
-def extract_from_nimbus_toggle(tag, processing_options: NimbusProcessingOptions) -> NimbusToggle:
+def extract_from_nimbus_toggle(tag, processing_options: NimbusProcessingOptions) -> Optional[NimbusToggle]:
     if tag.name != 'div' or not tag.get('class') or 'nimbus-toggle' not in tag['class']:
         return
 

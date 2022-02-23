@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Set, Union
+from typing import Dict, Optional, Set, Union
 
 import file_mover
 import helper_functions
@@ -11,7 +11,6 @@ from note_content_data import FileAttachment
 from note_content_data import NoteData, NoteDataWithMultipleContents, NotePaths
 from note_content_data import Paragraph
 from processing_options import ProcessingOptions
-
 
 
 @dataclass
@@ -220,9 +219,6 @@ class MentionFolder(MentionLink):
 
             absolute_mention_path = Path(note_paths.path_to_target_folder, clean_matching_path_relative_to_source)
 
-            # if mention_path_relative_to_this_note_folder == absolute_mention_path:
-            #     mention_path_relative_to_this_note_folder = Path('.')
-
             self.target_path.add(mention_path_relative_to_this_note_folder)
 
             self.target_path_absolute.add(absolute_mention_path)
@@ -230,42 +226,6 @@ class MentionFolder(MentionLink):
         if self.target_path_absolute:
             for path in self.target_path_absolute:
                 nimbus_ids.add_folder(self.folder_id, path)
-
-    # def create_clean_mention_target_path(self, path_to_target_folder, path_to_source_folder, mention_path):
-    #     """
-    #     Create a cleaned path that will match the path in the target folder structure
-    #
-    #     The folders names  will be created, in the target folder once all files are written to disk, with cleaned
-    #     names.  The link paths must match these cleaned names so here we create a cleaned version that will match the
-    #     final folder structure
-    #
-    #     Parameters
-    #     ----------
-    #     path_to_target_folder : Path
-    #         Path to the target folder for this note conversion
-    #     path_to_source_folder : Path
-    #         Path to the source root folder
-    #     mention_path : Path
-    #         Path to the mention folder in the source folder.
-    #
-    #     Returns
-    #     -------
-    #     Path
-    #         Cleaned path to the mention folder in the conversion target path
-    #     """
-    #     # dirty_mention_path_relative_to_source = mention_path.relative_to(path_to_source_folder)
-    #     dirty_mention_path_relative_to_source = mention_path.relative_to(path_to_target_folder)
-    #
-    #     clean_relative_mention_path = Path(
-    #         helper_functions.generate_clean_directory_path(
-    #             str(dirty_mention_path_relative_to_source),
-    #             self.processing_options.filename_options
-    #         )
-    #     )
-    #
-    #     clean_absolute_mention_target_path = Path(path_to_target_folder, clean_relative_mention_path)
-    #
-    #     return clean_absolute_mention_target_path, clean_relative_mention_path
 
 
 @dataclass
@@ -366,7 +326,7 @@ class MentionNote(MentionLink):
             )
 
         workspace_path = Path(note_paths.path_to_target_folder,
-                              clean_note_path_relative_to_source.parts[0])  #  first part is always the workspace name
+                              clean_note_path_relative_to_source.parts[0])  # first part is always the workspace name
         nimbus_ids.add_workspace(self.workspace_id, workspace_path)
 
 
@@ -411,7 +371,7 @@ class TableCollaborator(NoteData):
 
 @dataclass
 class EmbedNimbus(NoteData):
-    embed_caption: Paragraph
+    embed_caption: Optional[Paragraph]
 
     def html(self):
         return f'<p>{self.contents.html()}/p><p>{self.embed_caption.html()}</p>'
@@ -432,5 +392,3 @@ class NimbusToggle(NoteDataWithMultipleContents):
             markdown_text = f"{markdown_text}{item.markdown()}"
 
         return f"{markdown_text}\n"
-
-

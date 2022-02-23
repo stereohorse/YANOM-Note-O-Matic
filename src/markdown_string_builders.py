@@ -33,13 +33,13 @@ def embed_image(processing_options: ProcessingOptions, alt_text, width, height, 
 def embed_file(processing_options: ProcessingOptions,
                alt_text: str,
                target_path: Path,
-               caption: str = ''
+               file_caption: str = ''
                ):
 
     md_embed_symbol = ''
     md_alt_text = alt_text.strip() if alt_text else ''
     md_target_path = str(target_path) if target_path else ''
-    md_caption = f"*{caption.strip()}*\n" if caption else ''
+    md_caption = f"*{file_caption.strip()}*\n" if file_caption else ''
 
     embed_types = [*processing_options.embed_files.documents,
                    *processing_options.embed_files.audio,
@@ -185,4 +185,3 @@ def formatted_text(contents, text_format):
 
 def caption(contents: list):
     return f'*{join_multiple_items(contents)}*\n\n'
-

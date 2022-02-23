@@ -50,6 +50,7 @@ class ConversionSettings:  # simulating conversion settings object from YANOM
     # front_matter_format: str = 'text'  # options yaml, toml, json, none, text
     # front_matter_format: str = 'none'  # options yaml, toml, json, none, text
     tag_prefix = '#'
+
     keep_nimbus_row_and_column_headers = False
     embed_these_document_types = ['md', 'pdf']
     embed_these_image_types = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg']
