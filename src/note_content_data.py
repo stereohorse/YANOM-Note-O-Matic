@@ -1,16 +1,22 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+import logging
 from pathlib import Path
 import re
 from typing import Any, Dict, Iterable, List, Tuple, Type, Union
 
 import frontmatter
 
+import config
 import helper_functions
 import html_string_builders
 import markdown_string_builders
 import markdown_string_builders_obsidian
 from processing_options import ProcessingOptions
+
+
+logger = logging.getLogger(f'{config.yanom_globals.app_name}.{__name__}')
+logger.setLevel(config.yanom_globals.logger_level)
 
 
 @dataclass
@@ -569,8 +575,8 @@ class BlockQuote(NoteDataWithMultipleContents):
 
     def markdown(self):
         quote_text = markdown_string_builders.block_quote(self.contents, self.cite)
-        quote_text = quote_text.replace('\n', '\n>')
-        quote_text = quote_text.rstrip('>')
+        quote_text = quote_text.replace('\n', '\n> ')
+        quote_text = quote_text.rstrip('> ')
         return quote_text
 
 
@@ -664,6 +670,9 @@ class TextFormatItem(NoteDataWithMultipleContents):
 class UnrecognisedTag(NoteDataContentsString):
     contents: str  # html version
     text: str  # plain text version
+
+    def __post_init__(self):
+        logger.warning(f"unrecognised HTML\n{self.contents}\n")
 
     def html(self):
         if self.processing_options.unrecognised_tag_format == 'html':

@@ -1,12 +1,11 @@
 from pathlib import Path
-# from unittest.mock import MagicMock, patch
-import markdown_format_styling
-import markdown_string_builders
+
 import pytest
 from bs4 import BeautifulSoup
 
 import helper_functions
 import html_data_extractors
+import markdown_format_styling
 from note_content_data import BlockQuote, Body, Break, BulletList, Caption, NumberedList
 from note_content_data import Head, HeadingItem, Hyperlink, ImageEmbed
 from embeded_file_types import EmbeddedFileTypes
@@ -243,7 +242,7 @@ class TestExtractFromTag:
         assert isinstance(result, list)
         assert result[0].contents == 'This is coloured.'
 
-    def test_extract_from_tag_unrecognised_tag(self, processing_options):
+    def test_extract_from_tag_unrecognised_tag(self, processing_options, caplog):
         html = '<jdsflksjdhf><title>My Title</title></jdsflksjdhf>'
         soup = BeautifulSoup(html, 'html.parser')
         tag = soup.find('jdsflksjdhf')
@@ -258,6 +257,7 @@ class TestExtractFromTag:
         result.processing_options.unrecognised_tag_format = 'text'
         assert result.html() == '<p>My Title</p>'
         assert result.markdown() == '\n My Title\n'
+        assert len(caplog.records) == 1
 
 
 

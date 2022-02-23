@@ -165,7 +165,7 @@ def code_block(contents, language):
 
 
 def block_quote(contents, citation):
-    cite_text = f'\n> [source]({citation})' if citation else ''
+    cite_text = f'\n[source]({citation})' if citation else ''
     item_text = join_multiple_items(contents)
 
     return f"> {item_text}{cite_text}\n"
