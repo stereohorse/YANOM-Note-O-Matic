@@ -518,7 +518,10 @@ class Table(NoteDataWithMultipleContents):
     contents: List[Union[TableHeader, TableRow]]
 
     def html(self):
-        return html_string_builders.wrap_items_in_tag(self.contents, 'table')
+        html_text = html_string_builders.wrap_items_in_tag(self.contents, 'table')
+        html_text = html_text.replace('<table>', '<table border="1">')
+        # add order="1" because if html is later converted in pandoc the table will be kept, else it is lost
+        return html_text
 
     def markdown(self):
         markdown_text = markdown_string_builders.join_multiple_items(self.contents)
