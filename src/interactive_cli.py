@@ -43,8 +43,8 @@ class InquireCommandLineInterface(ABC):
         This abstract method should be the only public method in child classes and will execute methods required to
         ask for input, process responses as required and return required values.
     """
-    def __init__(self):
 
+    def __init__(self):
         self.style = Style.from_dict({
             'separator': '#cc5454',
             'questionmark': '#673ab7 bold noreverse',
@@ -74,6 +74,7 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         A ConversionSettings object with default values to be used to display defaults in questions.
 
     """
+
     def __init__(self, default_conversion_settings: ConversionSettings):
         super(StartUpCommandLineInterface, self).__init__()
         self.logger = logging.getLogger(f'{config.yanom_globals.app_name}.'
@@ -258,11 +259,17 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             self._ask_and_set_metadata_schema()
 
     def _ask_and_set_conversion_quick_setting(self):
+        default_values = self._default_settings.valid_quick_settings
+        if self._cli_conversion_settings.conversion_input == 'nimbus':
+            if self._default_settings.quick_setting == 'pandoc_markdown':
+                self._default_settings.quick_setting = 'gfm'
+            default_values = [value for value in default_values if not value == 'pandoc_markdown']
+
         quick_setting_prompt = {
             'type': 'list',
             'name': 'quick_setting',
             'message': 'Choose a quick setting or manual mode',
-            'choices': self._default_settings.valid_quick_settings,
+            'choices': default_values,
             'default': self._default_settings.quick_setting,
         }
         answer = prompt(quick_setting_prompt, style=self.style)
@@ -271,11 +278,17 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         self._cli_conversion_settings.conversion_input = self._cli_conversion_settings.conversion_input
 
     def _ask_and_set_export_format(self):
+        default_values = self._default_settings.valid_export_formats
+        if self._cli_conversion_settings.conversion_input == 'nimbus':
+            if self._default_settings.export_format == 'pandoc_markdown':
+                self._default_settings.quick_setting = 'gfm'
+            default_values = [value for value in default_values if not value == 'pandoc_markdown']
+
         export_format_prompt = {
             'type': 'list',
             'name': 'export_format',
             'message': 'Choose an export format',
-            'choices': self._default_settings.valid_export_formats,
+            'choices': default_values,
             'default': self._default_settings.export_format,
         }
         answer = prompt(export_format_prompt, style=self.style)
@@ -578,7 +591,8 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
         answer = prompt(questions, style=self.style)
         _exit_if_keyboard_interrupt(answer)
         if 'max_file_or_directory_name_length' in answer:
-            self._cli_conversion_settings.max_file_or_directory_name_length = answer['max_file_or_directory_name_length']
+            self._cli_conversion_settings.max_file_or_directory_name_length = answer[
+                'max_file_or_directory_name_length']
 
     def _ask_and_set_creation_time_in_file_name(self):
         questions = [
