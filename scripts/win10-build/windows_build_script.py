@@ -14,7 +14,7 @@ import subprocess
 import PyInstaller.__main__
 
 
-VERSION = '1.6.1'
+VERSION = '1.7.0-beta1'
 TEST_DIR = 'D:\\yanom-versions'
 ZIP_FILENAME = f'yanom-v{VERSION}-win10-64'
 

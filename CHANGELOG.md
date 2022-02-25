@@ -8,6 +8,18 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Increment the minor version number when adding a new feature or set of features and any current bug fixes not yet released
 - Increment the major version when significantly overhaul the user interface, or rewrite all internals.
 
+## [1.7.0-beta1] 2022-02-25
+### Added
+- Support for nimbus notes conversion.  Conversion does not include converting to pandoc-markdown.
+  - The conversion process uses a different approach from previous conversions and does not use pandoc.  Conversion is completely made using YANOM's own code
+  - see the end of this change log for table of nimbus features supported in conversion.
+  - The new methodology can be partially reused to reduce the time to convert another html based note format.
+- yanom version on start up screen
+- yanom version in conversion reports
+- Some use of dictionaries to select functions to run in command line interface instead of if statements
+- Use of Dict to select conversion process to be used in notes_converter.py
+
+
 ## [1.6.1] 2022-01-10
 ### Fixed
 - NSX file - if a note has an image file as an attachment and not as a displayed image, the image is now treated as an attachment.  YANOM will no longer crash whilst attempting to read missing json data that was expected when it assumed all images would be displayed.

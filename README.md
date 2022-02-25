@@ -54,14 +54,15 @@ Future versions will support conversion from additional proprietary file formats
 ### Current functionality
 
 - Convert Note-Station `.nsx` export files to Markdown or HTML
+- Convert Nimbus Notes `.zip` export files to Markdown or HTML
 - Convert HTML to Markdown
 - Convert Markdown to HTML
 - Convert Markdown to a different format of Markdown 
 - Report details of and issues identified during conversion
-  - Detials such as 
+  - Details such as 
     - number of notes converted
     - attachment files and images processed, 
-    - links between note recreated
+    - links between notes recreated
   - Issues identified such as
     - Links between note station notes that could not be recreated
     - Links in notes that are for files that can not be located
@@ -72,7 +73,7 @@ Future versions will support conversion from additional proprietary file formats
   - GFM - Git Flavoured Markdown  (Typora, Git Hub, Haroopad) 
   - Obsidian formatted markdown 
   - MultiMarkdown (MultiMarkdown Composer) 
-  - Pandoc markdown 
+  - Pandoc markdown (not for nimbus notes)
   - Pandoc markdown-strict 
   - QOwnNotes optimised markdown-strict
 - Note content that will be converted successfully
@@ -106,6 +107,13 @@ Future versions will support conversion from additional proprietary file formats
     - File name lengths - User can set a maximum file name length. Long note titles can cause issues on Windows where long paths are not enabled, on these systems YANOM restricts file names to 64 characters.
     - Retrieve meta data
     - Some ability to handle nsx files from systems with synchronisation issues, such as attachments with no names or extensions, missing data fields describing the data, however final exported content will be variable quality depending on the synchronisation issue.
+  - Note-Station specific features
+    - Links between note pages.
+      - For nimbus most of the time this will be successful if the linked to note is in the export set.  A wiki entry will be created for the issues.  They are very similar to those in Note-Station
+      - File name cleaning options - in manual mode user can choose to keep/remove spaces, unicode characters, uppercase characters, choose what character to replace spaces with.
+        - File name lengths - User can set a maximum file name length. Long note titles can cause issues on Windows where long paths are not enabled, on these systems YANOM restricts file names to 64 characters.
+      - Retrieve meta data
+        - Nimbus does not store tag data in the notes.  If the tags are copied from the top of the nimbus note web page or app and pasted at the top of the note itself they will be identified and added as meta tags to html or a front matter section in markdown
 
 
 The formatting for QOwnNotes and Obsidian are variations on common Markdown formats optimised for those note systems.
