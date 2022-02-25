@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Tuple, Union
 from typing import Dict, List
+import urllib.parse
 
 
 if TYPE_CHECKING:  # avoid circular import error for Typing pragma: no cover
@@ -68,7 +69,8 @@ def anchor_link(contents: NoteData, link_id: str):
 
 def hyperlink(contents: Union[str, NoteData], target_path):
     display_text = contents if isinstance(contents, str) else contents.html()
-    path = str(target_path) if target_path else ''
+    path = target_path if target_path else ''
+
     return f'<a href="{path}">{display_text}</a>'
 
 
@@ -81,6 +83,9 @@ def checklist_item(contents: List[NoteData], checked: bool, indent: int):
 
 
 def image_tag(contents: str, width, height, target_path):
+    if target_path:
+        target_path = urllib.parse.quote(str(target_path.as_posix()))
+
     tag_width = f' width="{width}"' if width else ''
     tag_height = f' height="{height}"' if height else ''
     tag_alt = f' alt="{contents}"' if contents else ''

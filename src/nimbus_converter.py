@@ -28,7 +28,7 @@ def get_file_suffix_for(export_format: str) -> str:
 
 
 def read_link_source_file(path_to_zip, path_in_zip_file):
-    return zip_file_reader.read_binary_file(path_to_zip, path_in_zip_file, message=str(path_to_zip))
+    return zip_file_reader.read_binary_file(path_to_zip, Path(path_in_zip_file), message=str(path_to_zip))
 
 
 def write_asset_to_target(asset_content, asset_link, path_to_note_folder):
@@ -182,7 +182,7 @@ def initialise_new_note(zip_file, conversion_settings, processing_options: Nimbu
 
 
 def extract_note_data_from_zip_file(zip_file, processing_options: ProcessingOptions):
-    html_content = zip_file_reader.read_text(zip_file, 'note.html', '')
+    html_content = zip_file_reader.read_text(zip_file, Path('note.html'), '')
     soup = BeautifulSoup(html_content, 'html.parser')
     zip_file_data = process_child_items(soup.find("html"),
                                         processing_options,

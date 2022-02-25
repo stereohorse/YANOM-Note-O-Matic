@@ -64,7 +64,7 @@ class Notebook:
             return {'title': 'recycle-bin'}
 
         self.logger.info(f"Fetching json data file {notebook_id} from {self.nsx_file.nsx_file_name}")
-        note_book_json = zip_file_reader.read_json_data(self.nsx_file.nsx_file_name, notebook_id)
+        note_book_json = zip_file_reader.read_json_data(self.nsx_file.nsx_file_name, Path(notebook_id))
 
         if note_book_json is None:
             self.logger.warning("Unable to read notebook json data from nsx file. using 'title': 'Unknown Notebook'")

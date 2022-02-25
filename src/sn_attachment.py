@@ -126,7 +126,7 @@ class FileNSAttachment(NSAttachment):
 
     def add_suffix_if_possible(self):
         suffix = helper_functions.file_extension_from_bytes(
-            zip_file_reader.read_binary_file(self._nsx_file.nsx_file_name, self.filename_inside_nsx, self._note_title))
+            zip_file_reader.read_binary_file(self._nsx_file.nsx_file_name, Path(self.filename_inside_nsx), self._note_title))
         if suffix:
             self._file_name = self._file_name.with_suffix(suffix)
 

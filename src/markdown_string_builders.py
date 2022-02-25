@@ -4,6 +4,7 @@ from pathlib import Path
 import re
 from typing import List
 from typing import TYPE_CHECKING
+import urllib.parse
 
 
 if TYPE_CHECKING:  # avoid circular import error for Typing  pragma: no cover
@@ -20,8 +21,11 @@ def embed_image(processing_options: ProcessingOptions, alt_text, width, height, 
     md_width = f' width="{width}"' if width else ''
     md_height = f' height="{height}"' if height else ''
 
+    if target_path:
+        target_path = urllib.parse.quote(str(target_path.as_posix()))
+
     if md_height or md_width:
-        md_target_path = f'<img src="{str(target_path)}"' if target_path else f'<img src=""'
+        md_target_path = f'<img src="{target_path}"' if target_path else f'<img src=""'
         return f'{md_target_path}{md_alt_text}{md_width}{md_height}>\n'
 
     if target_path and target_path.suffix.lstrip('.') in processing_options.embed_files.images:
@@ -39,7 +43,11 @@ def embed_file(processing_options: ProcessingOptions,
 
     md_embed_symbol = ''
     md_alt_text = alt_text.strip() if alt_text else ''
-    md_target_path = str(target_path) if target_path else ''
+    md_target_path = str(target_path.as_posix()) if target_path else ''
+
+    if md_target_path:
+        md_target_path = urllib.parse.quote(md_target_path)
+
     md_caption = f"*{file_caption.strip()}*\n" if file_caption else ''
 
     embed_types = [*processing_options.embed_files.documents,
@@ -55,6 +63,7 @@ def embed_file(processing_options: ProcessingOptions,
 def link(contents, target_path):
     display_text = contents if isinstance(contents, str) else contents.markdown()
     md_target_path = str(target_path) if target_path else ''
+
     return f"[{display_text.strip()}]({md_target_path})"
 
 
@@ -98,7 +107,7 @@ def heading(items: List, level: int, heading_id: str, include_id_format: str):
 
     if include_id_format == 'multimarkdown':
         id_text = heading_id.lstrip('#')
-        id_text = f" [{heading_id}]"
+        id_text = f" [#{id_text}]"
 
     heading_character = '#'
 

@@ -1,3 +1,4 @@
+import urllib.parse
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -55,7 +56,9 @@ class FileEmbedNimbusHTML(FileAttachment):
             self.target_filename = self.source_path.name
 
     def html(self):
-        target_path_text = str(self.target_path) if self.target_path else ''
+        target_path_text = str(self.target_path.as_posix()) if self.target_path else ''
+        if target_path_text:
+            target_path_text = urllib.parse.quote(target_path_text)
 
         display_text = self.contents.html()
         if display_text:
@@ -101,7 +104,8 @@ class MentionLink(Mention, ABC):
 class MentionWorkspace(MentionLink):
     def html(self):
         path = self.target_path if self.target_path else ''
-        return f'<a href="{path}">{self.contents}</a>'
+
+        return html_string_builders.hyperlink(f"{self.contents} ", path)
 
     def markdown(self):
         path = self.target_path.as_uri() if self.target_path else ''
@@ -238,8 +242,12 @@ class MentionNote(MentionLink):
         link_text = ''
         if self.target_path:
             for path in sorted(list(self.target_path)):
-                path = path if path else ''
-                hyper_link = html_string_builders.hyperlink(f"{self.contents} ", path)
+                in_note_folder = ''
+                if len(self.target_path) > 1:
+                    if path.parent.name:
+                        in_note_folder = f' in {path.parent.name}'
+                path = urllib.parse.quote(str(path.as_posix())) if path else ''
+                hyper_link = html_string_builders.hyperlink(f"{self.contents}{in_note_folder}, ", path)
                 link_text = f'{link_text}{hyper_link}'
 
             return f"{link_text} "
@@ -250,8 +258,14 @@ class MentionNote(MentionLink):
         link_text = ''
         if self.target_path:
             for path in sorted(list(self.target_path)):
-                path_link = markdown_string_builders.link(self.contents, path)
-                link_text = f"{link_text}{path_link} "
+                in_note_folder = ''
+                if len(self.target_path) > 1:
+                    if path.parent.name:
+                        in_note_folder = f' in {path.parent.name}'
+
+                path = urllib.parse.quote(str(path.as_posix()))
+                path_link = markdown_string_builders.link(f"{self.contents}{in_note_folder}", path)
+                link_text = f"{link_text}{path_link}, "
 
             return f"{link_text}"
 
@@ -294,10 +308,6 @@ class MentionNote(MentionLink):
 
                 clean_filename = self.get_clean_file_name()
 
-                # if relative_path_to_mention == path_to_mention_note:
-                #     self.target_path.add(Path(clean_filename))
-                # else:
-                #     self.target_path.add(Path(relative_path_to_mention, clean_filename))
                 self.target_path.add(Path(relative_path_to_mention, clean_filename))
 
                 # Now add the note id to nimbus_ids to allow matching of renamed notes

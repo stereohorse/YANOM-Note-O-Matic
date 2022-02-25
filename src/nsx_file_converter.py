@@ -112,11 +112,11 @@ class NSXFile:
 
     def fetch_json_data(self, data_id):
         self.logger.info(f"Fetching json data file {data_id} from {self._nsx_file_name}")
-        return zip_file_reader.read_json_data(self._nsx_file_name, data_id)
+        return zip_file_reader.read_json_data(self._nsx_file_name, Path(data_id))
 
     def fetch_attachment_file(self, file_name, note_title):
         self.logger.info(f"Fetching binary attachment data from {self._nsx_file_name}")
-        return zip_file_reader.read_binary_file(self._nsx_file_name, file_name, note_title)
+        return zip_file_reader.read_binary_file(self._nsx_file_name, Path(file_name), note_title)
 
     def add_notebooks(self):
         self.logger.info(f"Creating Notebooks")

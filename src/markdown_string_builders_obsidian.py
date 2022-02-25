@@ -15,7 +15,7 @@ def embed_image(processing_options: ProcessingOptions,
     md_width = ''
     md_x_height = ''
     md_height = ''
-    md_target_path = str(target_path) if target_path else ''
+    md_target_path = str(target_path.as_posix()) if target_path else ''
     md_alt_pipe = ''
     md_caption = f"{caption}\n" if caption else ''
 

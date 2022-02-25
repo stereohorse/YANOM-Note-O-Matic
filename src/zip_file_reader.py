@@ -34,7 +34,8 @@ def list_files_in_zip_file_from_a_directory(zip_file_path: str,
         Path to a zip file.
     path_inside_of_zipfile : str
         default is empty string which returns files in the root of the zip file.  if a non-empty string representing
-        a path in the zip file is provided files in a directory matching that string will be returned.
+        a path in the zip file is provided files in a directory matching that string will be returned.  String must be
+        posix format.
     filenames_to_ignore : Optional list[str]
         Optional list of stings of file names that can be ignored.
 
@@ -90,7 +91,9 @@ def read_text(zip_filename, target_filename, message=''):
     """
     try:
         with zipfile.ZipFile(str(zip_filename), 'r') as zip_file:
-            return zip_file.read(target_filename).decode('utf-8')
+            # str(WindowsPath) gives a folder\\filename but zip files must have a posix formatted string
+            # do use Path.as_posix to get correct format for accessing zip file
+            return zip_file.read(target_filename.as_posix()).decode('utf-8')
     except Exception as e:
         _error_handling(e, target_filename, zip_filename, message)
 
@@ -105,8 +108,8 @@ def read_json_data(zip_filename, target_filename, message=''):
     ----------
     zip_filename : Path
         Path object to the zipfile
-    target_filename : str
-        name of the file in the zip archive to be read from
+    target_filename : Path
+        path inside the zipfile and name of the file in the zip archive to be read from
     message : str
         Optional string to include in error messages, default is empty string
 
@@ -130,7 +133,7 @@ def read_binary_file(zip_filename, target_filename, message=''):
     ----------
     zip_filename : Path
         Path object to the zipfile
-    target_filename : str
+    target_filename : Path
         name of the file in the zip archive to be read from
     message : str
         Optional string to include in error messages, default is empty string
@@ -142,7 +145,9 @@ def read_binary_file(zip_filename, target_filename, message=''):
     """
     try:
         with zipfile.ZipFile(str(zip_filename), 'r') as zip_file:
-            return zip_file.read(target_filename)
+            # str(WindowsPath) gives a folder\\filename but zip files must have a posix formatted string
+            # do use Path.as_posix to get correct format for accessing zip file
+            return zip_file.read(target_filename.as_posix())
 
     except Exception as e:
         _error_handling(e, target_filename, zip_filename, message)
