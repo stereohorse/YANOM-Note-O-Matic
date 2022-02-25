@@ -182,7 +182,9 @@ def set_of_html_href_file_paths_from(content):
 
     url_paths = set()
     for a_tag in soup.findAll(href=True):
-        if (urlparse(a_tag['href']).scheme == "" or urlparse(a_tag['href']).scheme == "file") and len(urlparse(a_tag['href']).path):
+        if (urlparse(a_tag['href']).scheme == "" or urlparse(a_tag['href']).scheme == "file") \
+                and len(urlparse(a_tag['href']).path):
+
             path_to_add = unquote(a_tag['href'])
             path_to_add = helper_functions.unescape(path_to_add)
             url_paths.add(path_to_add)

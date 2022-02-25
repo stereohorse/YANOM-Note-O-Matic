@@ -949,8 +949,8 @@ def merge_iterable_or_item_to_list(target_list: List[Any], new_content) -> List[
     target_list : list
         list to which items will be added
     new_content :  object
-        The new content can be an iterable or not, if iterable all items are added, and if a single item it will be added
-        to the list
+        The new content can be an iterable or not, if iterable all items are added, and if a single item it will be
+        added to the list
 
     Returns
     -------
@@ -962,7 +962,7 @@ def merge_iterable_or_item_to_list(target_list: List[Any], new_content) -> List[
     if new_content:
         try:
             new_list.extend(new_content)
-        except TypeError as e:
+        except TypeError:
             new_list.append(new_content)
 
     return new_list
@@ -991,4 +991,3 @@ def bounded_number(number, min_value, max_value):
         raise ValueError(f'Minimum limit "{min_value}" is greater than the maximum limit "{max_value}"')
 
     return max(min(max_value, number), min_value)
-

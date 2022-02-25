@@ -250,7 +250,6 @@ def convert_nimbus_notes(conversion_settings: ConversionSettings, nimbus_zip_fil
     return num_images, num_attachments
 
 
-
 def extract_note_content(conversion_settings, nimbus_zip_files, processing_options):
     notes = []
     for zip_file in nimbus_zip_files:
@@ -301,12 +300,10 @@ def main():
         file_list_generator = path_to_files.rglob(f'*{file_extension}')
         file_list = {item for item in file_list_generator}
         return file_list
-    # TODO getting spaces in the links to notes needs to be %20'.   also should the fils be being saved with clean names
-     # TODO need to include support for file name options... which are in the processing options.. just not cleaning names right
 
     conversion_settings = ConversionSettings()
     conversion_settings.quick_set_gfm_settings()
-    conversion_settings.working_directory = Path('/Users/kevindurston/nimbus')
+    conversion_settings.working_directory = Path('/Users/nimbus')
     conversion_settings.export_format = 'obsidian'
     # conversion_settings.export_format = 'gfm'
     # conversion_settings.export_format = 'multimarkdown'
@@ -335,10 +332,9 @@ def main():
 
     convert_nimbus_notes(conversion_settings, nimbus_zip_files)
 
-
-# TODO write tests for any new code integrating with YANOM
 # TODO docstrings
 # TODO logging - all logging but also add all unrecognised html objects to warning log
+
 
 if __name__ == '__main__':
     main()

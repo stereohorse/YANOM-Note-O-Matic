@@ -13,7 +13,6 @@ from file_converter_HTML_to_MD import HTMLToMDConverter
 from file_converter_MD_to_HTML import MDToHTMLConverter
 from file_converter_MD_to_MD import MDToMDConverter
 import interactive_cli
-from note_content_data import NimbusNote
 from nsx_file_converter import NSXFile
 from pandoc_converter import PandocConverter
 import report
@@ -229,10 +228,14 @@ class NotesConvertor:
     def convert_nimbus(self):
         with Timer(name="nsx_conversion", logger=self.logger.info, silent=bool(config.yanom_globals.is_silent)):
             file_extension = 'zip'
-            nimbus_files_to_convert = self.generate_file_list(file_extension, self.conversion_settings.source_absolute_root)
+            nimbus_files_to_convert = self.generate_file_list(file_extension,
+                                                              self.conversion_settings.source_absolute_root)
+
             self.exit_if_no_files_found(nimbus_files_to_convert, file_extension)
 
-            num_images, num_attachments = nimbus_converter.convert_nimbus_notes(self.conversion_settings, nimbus_files_to_convert)
+            num_images, num_attachments = nimbus_converter.convert_nimbus_notes(self.conversion_settings,
+                                                                                nimbus_files_to_convert)
+
             self._note_page_count = len(nimbus_files_to_convert)
             self._image_count = num_images
             self._attachment_count = num_attachments
@@ -262,28 +265,30 @@ class NotesConvertor:
             self._nsx_attachment_checks(note, notes_to_check)
 
     def _nsx_attachment_checks(self, note, notes_to_check, bar=None):
-                content = note.read_text(encoding='utf-8')
-                all_attachments_paths = find_local_file_links_in_content(self.conversion_settings.export_format, content)
-                attachment_links = process_attachments(note,
-                                                       all_attachments_paths,
-                                                       notes_to_check,
-                                                       self.conversion_settings.export_folder_absolute
-                                                       )
+        content = note.read_text(encoding='utf-8')
+        all_attachments_paths = find_local_file_links_in_content(self.conversion_settings.export_format,
+                                                                 content)
 
-                self._attachment_details[note] = {
-                    'all': attachment_links.all,
-                    'valid': attachment_links.valid,
-                    'invalid': attachment_links.invalid,
-                    'existing': attachment_links.existing,
-                    'non_existing': attachment_links.non_existing,
-                    'copyable': attachment_links.copyable,
-                    'copyable_absolute': attachment_links.copyable_absolute,
-                    'non_copyable_relative': attachment_links.non_copyable_relative,
-                    'non_copyable_absolute': attachment_links.non_copyable_absolute,
-                }
+        attachment_links = process_attachments(note,
+                                               all_attachments_paths,
+                                               notes_to_check,
+                                               self.conversion_settings.export_folder_absolute
+                                               )
 
-                if bar:
-                    bar()
+        self._attachment_details[note] = {
+            'all': attachment_links.all,
+            'valid': attachment_links.valid,
+            'invalid': attachment_links.invalid,
+            'existing': attachment_links.existing,
+            'non_existing': attachment_links.non_existing,
+            'copyable': attachment_links.copyable,
+            'copyable_absolute': attachment_links.copyable_absolute,
+            'non_copyable_relative': attachment_links.non_copyable_relative,
+            'non_copyable_absolute': attachment_links.non_copyable_absolute,
+        }
+
+        if bar:
+            bar()
 
     def update_processing_stats(self, nsx_file):
         self._note_page_count += nsx_file.note_page_count

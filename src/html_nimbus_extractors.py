@@ -98,6 +98,7 @@ def extract_from_hint_block(tag, processing_options: NimbusProcessingOptions):
 
     text_items = process_child_items(tag, processing_options)
 
+
     return BlockQuote(processing_options, text_items, '')
 
 
@@ -549,7 +550,6 @@ def extract_from_123abc_table_header_row(cells, processing_options):
 
         header_div = cell.find('div', class_="item-title")
         cell_text = process_child_items(header_div, processing_options)
-
         data.append(TableItem(processing_options, cell_text))
 
     return data

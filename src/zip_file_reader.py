@@ -3,7 +3,7 @@ import logging
 import sys
 import zipfile
 from pathlib import Path
-from typing import List, Optional, Set, Tuple
+from typing import List, Optional, Set
 
 import config
 import helper_functions
@@ -78,7 +78,7 @@ def read_text(zip_filename, target_filename, message=''):
     ----------
     zip_filename : Path
         Path object to the zipfile
-    target_filename : str
+    target_filename : Path
         name of the file in the zip archive to be read from
     message : str
         Optional string to include in error messages, default is empty string

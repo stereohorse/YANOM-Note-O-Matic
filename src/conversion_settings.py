@@ -147,7 +147,7 @@ class ConversionSettings:
             'orphans': ('ignore', 'copy', 'orphan'),
             'make_absolute': ('True', 'False'),
         },
-        'nimbus_options':{
+        'nimbus_options': {
             'embed_these_document_types': '',
             'embed_these_image_types': '',
             'embed_these_audio_types': '',
@@ -238,7 +238,6 @@ class ConversionSettings:
                f"embed_these_video_types='{self._embed_these_video_types}', " \
                f"keep_nimbus_row_and_column_headers='{self._keep_nimbus_row_and_column_headers}', " \
                f"unrecognised_tag_format='{self._unrecognised_tag_format}')" \
-
 
 
     def __repr__(self):
@@ -424,7 +423,6 @@ class ConversionSettings:
                                               self._embed_these_audio_types, self._embed_these_video_types)
         self._keep_nimbus_row_and_column_headers = False
         self._unrecognised_tag_format = 'html'
-
 
     @staticmethod
     def _get_folder_paths(provided_folder: Path, root_path: Path):

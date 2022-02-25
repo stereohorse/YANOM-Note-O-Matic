@@ -103,7 +103,7 @@ class ChecklistProcessor(ABC):
             item.generate_markdown_item_text()
 
     @abstractmethod
-    def _checklist_pre_processing(self, content):  # pragma: no cover
+    def _checklist_pre_processing(self):  # pragma: no cover
         pass
 
     @abstractmethod
@@ -158,7 +158,6 @@ class HTMLInputMDOutputChecklistProcessor(ChecklistProcessor):
         self._processed_html = str(self._soup)
 
     def _pre_process_html_tags(self, checklists):
-        # TODO add support for checklists in ol and ul lists?
         extra_indents = {}  # key is checklist tag index, value is amount of indent to add in markdown
         for i in range(len(checklists)):
             this_checklist_item = ChecklistItem()
@@ -351,5 +350,3 @@ class NSXInputHTMLOutputChecklistProcessor(ChecklistProcessor):
             this_checklist_item.checked = self.find_checked_status(tag)
             self.update_tags(tag, this_checklist_item)
             self._list_of_checklist_items.append(this_checklist_item)
-
-

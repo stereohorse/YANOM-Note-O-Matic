@@ -1,5 +1,4 @@
 import logging
-from abc import ABC
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Union
@@ -66,7 +65,8 @@ def process_child_items(tag, processing_options: ProcessingOptions,
             continue
 
         found_items_this_tag = extract_from_tag(child, processing_options, note_specific_tag_cleaning)
-        items = helper_functions.merge_iterable_or_item_to_list(items, found_items_this_tag)
+        if found_items_this_tag:
+            items = helper_functions.merge_iterable_or_item_to_list(items, found_items_this_tag)
 
     return items
 
@@ -409,10 +409,11 @@ class HTMLListParser(HTMLParser):
             soup = BeautifulSoup(li_tag_html, 'html.parser')
             tag = soup.find()
             contents = extract_from_tag(tag, self.processing_options, self.note_specific_tag_cleaning)
-            list_item = self.list_item_type(self.processing_options, contents, self.indent)
-            self.list_of_list_items.append(list_item)
-            self.current_tag_is_li = False
-            return
+            if contents:
+                list_item = self.list_item_type(self.processing_options, contents, self.indent)
+                self.list_of_list_items.append(list_item)
+                self.current_tag_is_li = False
+                return
 
         if self.current_tag_is_li:
             self.li_contents.append(f'</{tag}>')

@@ -65,4 +65,3 @@ class YanomGlobals:
 
 
 yanom_globals = YanomGlobals()
-
