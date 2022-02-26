@@ -365,7 +365,7 @@ class TableCheckItem(NoteData):
     def markdown(self):
         # note return inline HTML because markdown does not support block level items in tables
         inline_html = self.html()
-        return f"{inline_html}|"
+        return f"{inline_html}"
 
 
 @dataclass
