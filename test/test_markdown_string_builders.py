@@ -271,12 +271,12 @@ def test_numbered_list(processing_options):
     soup = BeautifulSoup(html, 'html.parser')
     tag = soup.find('ol')
 
-    expected = """1. Number 1\n\t1. sub **Number** 1-2, below is an empty number\n\t2. \n2. Number 2\n"""
+    expected = """1. Number 1\n\t1. sub **Number** 1-2, below is an empty number\n2. Number 2\n"""
 
     result = html_data_extractors.extract_numbered_list_from_ol_tag(tag, processing_options,
                                                                     html_nimbus_extractors.extract_from_nimbus_tag)
-
-    assert result.markdown() == expected
+    result_markdown = result.markdown()
+    assert result_markdown == expected
 
 
 def test_numbered_list_item(processing_options):

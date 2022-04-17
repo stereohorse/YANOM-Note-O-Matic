@@ -223,13 +223,13 @@ class TestMentionWorkspace:
 
     def test_mention_workspace_html_output_target_not_set(self, processing_options):
         mention = MentionWorkspace(processing_options, 'my_contents', '1234')
-        expected = '<a href="">my_contents</a>'
+        expected = '<a href="">my_contents </a>'
         assert mention.html() == expected
 
     def test_mention_workspace_html_output_target_set(self, processing_options):
         mention = MentionWorkspace(processing_options, 'my_contents', '1234')
         mention.target_path = Path('/my target')
-        expected = '<a href="/my target">my_contents</a>'
+        expected = '<a href="/my target">my_contents </a>'
         assert mention.html() == expected
 
 
@@ -331,8 +331,9 @@ class TestMentionNote:
     def test_mention_workspace_markdown_output_target_set(self, processing_options):
         mention = MentionNote(processing_options, 'my_contents', 'ws-1234', 'note-5678')
         mention.target_path = {Path('folder1/note.md'), Path('folder2/note.md')}
-        expected = '[my_contents](folder1/note.md) [my_contents](folder2/note.md) '
-        assert mention.markdown() == expected
+        expected = '[my_contents in folder1](folder1/note.md), [my_contents in folder2](folder2/note.md), '
+        mention_markdown = mention.markdown()
+        assert mention_markdown == expected
 
     def test_set_target_paths_by_matching_ids_target_note_in_same_folder_as_this_note(self, processing_options):
         mention = MentionNote(processing_options, 'my_contents', 'ws-1234', 'note-5678')
@@ -482,7 +483,7 @@ class TestMentionNote:
     def test_mention_workspace_html_output_target_set(self, processing_options):
         mention = MentionNote(processing_options, 'my_contents', '1234', '5678')
         mention.target_path = {Path('folder1/note.md'), Path('folder2/note.md')}
-        expected = '<a href="folder1/note.md">my_contents </a><a href="folder2/note.md">my_contents </a> '
+        expected = '<a href="folder1/note.md">my_contents in folder1, </a><a href="folder2/note.md">my_contents in folder2, </a> '
         assert mention.html() == expected
 
 
@@ -522,11 +523,11 @@ class TestTableCheckItem:
         'contents, expected', [
             (
                     True,
-                    '<input type="checkbox" checked>|',
+                    '<input type="checkbox" checked>',
             ),
             (
                     False,
-                    '<input type="checkbox">|',
+                    '<input type="checkbox">',
             ),
         ],
     )
@@ -621,8 +622,8 @@ class TestExtractFromTag:
              '<blockquote cite="my-citation">My Quote</blockquote>'
              ),
             ('<title>My Title</title>', 'title', Title, '<title>My Title</title>'),
-            # ('<p>Some Text</p>', 'p', list, '<p>Some Text</p>'),
-            # ('<i>Some Text</i>', 'i', list),
+    #         ('<p>Some Text</p>', 'p', list, '<p>Some Text</p>'),
+    #         ('<i>Some Text</i>', 'i', list, '<i>Some Text</i>'),
             ('<img src="image.png" alt="alt text" width="100" height="200">',
              'img',
              ImageEmbed,
@@ -631,7 +632,7 @@ class TestExtractFromTag:
              ),
             ('<a href="image.png">link display text</a>', 'a', Hyperlink, '<a href="image.png">link display text</a>'),
             ('<iframe>My iframe</iframe>', 'iframe', TextItem, '<iframe>My iframe</iframe>'),
-            # ('<span>a span</span>', 'span', list),
+            # ('<span>a span</span>', 'span', list, ''),
         ],
     )
     def test_property_test_html_input_to_output(self, html, tag_name, expected_type,
@@ -642,7 +643,26 @@ class TestExtractFromTag:
         result = html_data_extractors.extract_from_tag(tag, processing_options)
 
         assert isinstance(result, expected_type)
-        assert result.html() == expected_result_html
+        result_html = result.html()
+        assert result_html == expected_result_html
+
+    @pytest.mark.parametrize(
+        'html, tag_name, expected_type, expected_result_html', [
+            ('<p>Some Text</p>', 'p', list, 'Some Text'),
+            ('<i>Some Text</i>', 'i', list, 'Some Text'),
+            ('<span>a span</span>', 'span', list, 'a span'),
+        ],
+    )
+    def test_property_test_html_input_to_output_where_result_is_list(self, html, tag_name, expected_type,
+                                                expected_result_html, processing_options):
+
+        soup = BeautifulSoup(html, 'html.parser')
+        tag = soup.find(tag_name)
+        result = html_data_extractors.extract_from_tag(tag, processing_options)
+
+        assert isinstance(result, expected_type)
+        result_html = result[0].html()
+        assert result_html == expected_result_html
 
 
 class TestGenerateHTMLList:

@@ -21,6 +21,9 @@ def embed_image(processing_options: ProcessingOptions, alt_text, width, height, 
     md_width = f' width="{width}"' if width else ''
     md_height = f' height="{height}"' if height else ''
 
+    if target_path and target_path.suffix.lstrip('.') in processing_options.embed_files.images:
+        md_embed_symbol = '!'
+
     if target_path:
         target_path = urllib.parse.quote(str(target_path.as_posix()))
 
@@ -28,8 +31,6 @@ def embed_image(processing_options: ProcessingOptions, alt_text, width, height, 
         md_target_path = f'<img src="{target_path}"' if target_path else f'<img src=""'
         return f'{md_target_path}{md_alt_text}{md_width}{md_height}>\n'
 
-    if target_path and target_path.suffix.lstrip('.') in processing_options.embed_files.images:
-        md_embed_symbol = '!'
 
     md_target_path = str(target_path) if target_path else ''
     return f"{md_embed_symbol}[{alt_text.strip()}]({md_target_path})\n"
