@@ -8,6 +8,15 @@ and this project follows something close to [Semantic Versioning](https://semver
 - Increment the minor version number when adding a new feature or set of features and any current bug fixes not yet released
 - Increment the major version when significantly overhaul the user interface, or rewrite all internals.
 
+## [1.7.0] 2022-04-17
+### Added
+- For NSX files
+  - Format of the created time and modified time for nsx notes is now formatted as y-m-d h:m:sTimezone by default.  User can select a different format or enter their own using config.ini or interactive command line
+  - The metadata key values for creation time (ctime) and modified time (mtime) now default to 'created' and 'updated'.  User can enter their own names for these two fields using the config.ini or interactive command line.
+
+### Fixed
+- For nimbus conversion a potential error could occur where a path object was converted to a string and then required to behave as a path object when building markdown strings.
+
 ## [1.7.0-beta1] 2022-02-25
 ### Added
 - Support for nimbus notes conversion.  Conversion does not include converting to pandoc-markdown.

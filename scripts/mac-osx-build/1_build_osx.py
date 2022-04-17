@@ -6,7 +6,7 @@ import sys
 
 import PyInstaller.__main__
 
-VERSION = '1.7.0-beta1'
+VERSION = '1.7.0'
 NOTARISE_ZIP_FILENAME = f'yanom-v{VERSION}'
 
 

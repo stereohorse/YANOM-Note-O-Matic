@@ -1,4 +1,4 @@
-![coverage 91%](https://img.shields.io/badge/coverage-91%25-orange)  ![open issues](https://img.shields.io/github/issues/kevindurston21/YANOM-Note-O-Matic)  ![License](https://img.shields.io/github/license/kevindurston21/YANOM-Note-O-Matic)  ![version tag](https://img.shields.io/github/v/tag/kevindurston21/YANOM-Note-O-Matic)
+![coverage 91%](https://img.shields.io/badge/coverage-90%25-green)  ![open issues](https://img.shields.io/github/issues/kevindurston21/YANOM-Note-O-Matic)  ![License](https://img.shields.io/github/license/kevindurston21/YANOM-Note-O-Matic)  ![version tag](https://img.shields.io/github/v/tag/kevindurston21/YANOM-Note-O-Matic)
 
 # YANOM - Yet Another Note-O-Matic
 YANOM - stands for Yet Another Note-O-Matic. 
@@ -102,12 +102,15 @@ Future versions will support conversion from additional proprietary file formats
       - For Note-Station most of the time this will be successful.  However, there are some limitations and the [Synology Note-Station Links to Other Note Pages](https://github.com/kevindurston21/YANOM-Note-O-Matic/wiki/Synology-Note-Station-Links-to-Other-Note-Pages) wiki page has examples of the possible issues and solutions for them.
     - Note-Station audio notes - are attached as an attachment
     - Option to include creation time in file name
+    - Allow user to select the format for creation and modified time, and the name used for these metadata fields.
     - Add file extension for filenames, for common file types, where extension is missing. This may occur when there are sync issues between desktop and server note station versions.
     - File name cleaning options - in manual mode user can choose to keep/remove spaces, unicode characters, uppercase characters, choose what character to replace spaces with.
     - File name lengths - User can set a maximum file name length. Long note titles can cause issues on Windows where long paths are not enabled, on these systems YANOM restricts file names to 64 characters.
     - Retrieve meta data
     - Some ability to handle nsx files from systems with synchronisation issues, such as attachments with no names or extensions, missing data fields describing the data, however final exported content will be variable quality depending on the synchronisation issue.
-  - Note-Station specific features
+  - Nimbus Note specific features
+    - Missing data in converted notes may be caused by Nimbus failing to export the notes correctly.  Multiple intermittent failures to export a complete note have been seen.  Unzip the nimbus export file and open the html in a browser, typically the note will be blank.
+    - The Nimbus conversion does not use pandoc.
     - Links between note pages.
       - For nimbus most of the time this will be successful if the linked to note is in the export set.  A wiki entry will be created for the issues.  They are very similar to those in Note-Station
       - File name cleaning options - in manual mode user can choose to keep/remove spaces, unicode characters, uppercase characters, choose what character to replace spaces with.
@@ -186,7 +189,7 @@ You can run all tests and create html coverage report if you use this command in
 
 `pytest --cov-report html:cov_html test/ --cov=src`
 
-Current coverage is currently 91%
+Current coverage is currently 90%
 
 ### End-to-end tests
 
