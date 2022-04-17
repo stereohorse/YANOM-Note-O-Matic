@@ -16,7 +16,7 @@ def test_read_text(tmp_path):
     with zipfile.ZipFile(str(zip_filename), 'w') as zip_file:
         zip_file.writestr(target_filename, expected)
 
-    result = zip_file_reader.read_text(zip_filename, target_filename)
+    result = zip_file_reader.read_text(zip_filename, Path(target_filename))
 
     assert result == expected
 
@@ -29,7 +29,7 @@ def test_read_json_data(tmp_path):
     with zipfile.ZipFile(str(zip_filename), 'w') as zip_file:
         zip_file.writestr(target_filename, json.dumps(expected))
 
-    result = zip_file_reader.read_json_data(zip_filename, target_filename)
+    result = zip_file_reader.read_json_data(zip_filename, Path(target_filename))
 
     assert result == expected
 
@@ -45,7 +45,7 @@ def test_read_binary_file(tmp_path):
     with zipfile.ZipFile(str(zip_filename), 'w') as zip_file:
         zip_file.write(Path(tmp_path, target_filename), target_filename)
 
-    result = zip_file_reader.read_binary_file(zip_filename, target_filename)
+    result = zip_file_reader.read_binary_file(zip_filename, Path(target_filename))
 
     assert result == expected
 
@@ -61,7 +61,7 @@ def test_read_binary_file_bad_file_name(tmp_path, caplog, capfd):
     with zipfile.ZipFile(str(zip_filename), 'w') as zip_file:
         zip_file.write(Path(tmp_path, target_filename), target_filename)
 
-    _ = zip_file_reader.read_binary_file(zip_filename, 'bad_file_name', 'note title')
+    _ = zip_file_reader.read_binary_file(zip_filename, Path('bad_file_name'), 'note title')
 
     assert f'Warning - For the note "note title" - unable to find the file "bad_file_name" in the zip file "{zip_filename}"' in caplog.messages
 
@@ -118,7 +118,7 @@ def test_read_json_data_bad_file_name(tmp_path, caplog, capfd):
         zip_file.writestr(target_filename, json.dumps(expected))
 
 
-    _ = zip_file_reader.read_json_data(zip_filename, 'bad_file_name', 'note title')
+    _ = zip_file_reader.read_json_data(zip_filename, Path('bad_file_name'), 'note title')
 
     assert f'Warning - For the note "note title" - unable to find the file "bad_file_name" in the zip file "{zip_filename}"' in caplog.messages
 
@@ -155,7 +155,7 @@ def test_read_json_data_bad_file_name_in_silent_mode(tmp_path, caplog, capfd):
     with zipfile.ZipFile(str(zip_filename), 'w') as zip_file:
         zip_file.writestr(target_filename, json.dumps(expected))
 
-    _ = zip_file_reader.read_json_data(zip_filename, 'bad_file_name', 'note title')
+    _ = zip_file_reader.read_json_data(zip_filename, Path('bad_file_name'), 'note title')
 
     assert f'Warning - For the note "note title" - unable to find the file "bad_file_name" in the zip file "{zip_filename}"' in caplog.messages
 
