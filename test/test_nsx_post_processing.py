@@ -83,8 +83,8 @@ def test_post_process_note_page_gfm(note_1, attachments):
     note_1.post_process_content()
 
     expected = """---
-ctime: '202104242208'
-mtime: '202104242209'
+ctime: 2021-04-24 22:08:59BST
+mtime: 2021-04-24 22:09:19BST
 tag:
 - a_tag
 title: Page 1 title
@@ -195,8 +195,8 @@ def test_post_process_note_page_obsidian(note_1, attachments):
     note_1.post_process_content()
 
     expected = """---
-ctime: '202104242208'
-mtime: '202104242209'
+ctime: 2021-04-24 22:08:59BST
+mtime: 2021-04-24 22:09:19BST
 tag:
 - a_tag
 title: Page 1 title

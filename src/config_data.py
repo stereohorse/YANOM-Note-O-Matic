@@ -136,6 +136,9 @@ class ConfigData(ConfigParser):
         self._conversion_settings.tag_prefix = self['meta_data_options']['tag_prefix']
         self._conversion_settings.spaces_in_tags = self.getboolean('meta_data_options', 'spaces_in_tags')
         self._conversion_settings.split_tags = self.getboolean('meta_data_options', 'split_tags')
+        self._conversion_settings.tag_prefix = self['meta_data_options']['tag_prefix']
+        if self['meta_data_options']['metadata_time_format'] != '':
+            self._conversion_settings.metadata_time_format = self['meta_data_options']['metadata_time_format']
         self._conversion_settings.first_row_as_header = self.getboolean('table_options', 'first_row_as_header')
         self._conversion_settings.first_column_as_header = self.getboolean('table_options', 'first_column_as_header')
         self._conversion_settings.chart_image = self.getboolean('chart_options', 'chart_image')
@@ -302,7 +305,15 @@ class ConfigData(ConfigParser):
                 '    # split tags will split grouped tags into individual tags if True': None,
                 '    # "Tag1", "Tag1/Sub Tag2"  will become "Tag1", "Sub Tag2"': None,
                 '    # grouped tags are only split where a "/" character is found': None,
-                'split_tags': self._conversion_settings.split_tags
+                'split_tags': self._conversion_settings.split_tags,
+                '    # Meta data time format USED FOR NSX ONLY - enter a valid strftime date and time format with ': None,
+                '    # additional % signs to escape the first % sign': None,
+                '    # 3 examples are %%Y-%%m-%%d %%H:%%M:%%S%%Z    %%Y-%%m-%%d %%H:%%M:%%S   %%Y%%m%%d%%H%%M': None,
+                '    # for formats see https://strftime.org/': None,
+                '    # If left blank will default to %%Y-%%m-%%d %%H:%%M:%%S%%Z': None,
+                'metadata_time_format': self._conversion_settings.metadata_time_format.replace('%', '%%'),
+                # have to escape % signs for configparser as single % tells it to treat as string formatting
+                # is written to file as %% and when read config parser will strip the extra % so what is used is correct
             },
             'table_options': {
                 '  #  These two table options apply to NSX files ONLY': None,

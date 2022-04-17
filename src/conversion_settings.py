@@ -87,6 +87,8 @@ class ConversionSettings:
     _make_absolute : bool
         Boolean for making non-copyable attachment links absolute if they are relative links.  True for absolute,
         False leave as relative
+    __metadata_time_format : str
+        strftime formatted string to format a date and time
 
     Methods
     -------
@@ -122,7 +124,8 @@ class ConversionSettings:
             'metadata_schema': '',
             'tag_prefix': '',
             'spaces_in_tags': ('True', 'False'),
-            'split_tags': ('True', 'False')
+            'split_tags': ('True', 'False'),
+            'metadata_time_format': '',
         },
         'table_options': {
             'first_row_as_header': ('True', 'False'),
@@ -185,6 +188,7 @@ class ConversionSettings:
         self._tag_prefix = '#'
         self.spaces_in_tags = False
         self.split_tags = False
+        self._metadata_time_format = '%Y-%m-%d %H:%M:%S%Z'
         self.first_row_as_header = True
         self.first_column_as_header = True
         self.chart_image = True
@@ -215,30 +219,7 @@ class ConversionSettings:
         self._unrecognised_tag_format = 'html'
 
     def __str__(self):
-        return f"{self.__class__.__name__}(valid_conversion_inputs={self.valid_conversion_inputs}, " \
-               f"valid_markdown_conversion_inputs='{self.valid_markdown_conversion_inputs}', " \
-               f"valid_quick_settings='{self.valid_quick_settings}', " \
-               f"valid_export_formats='{self.valid_export_formats}', " \
-               f"valid_front_matter_formats]'{self.valid_front_matter_formats}', " \
-               f"markdown_conversion_input='{self._markdown_conversion_input}, quick_setting='{self.quick_setting}', " \
-               f"export_format='{self.export_format}', " \
-               f"yaml_front_matter={self.front_matter_format}, metadata_schema='{self.metadata_schema}', " \
-               f"tag_prefix='{self.tag_prefix}', " \
-               f"first_row_as_header={self.first_row_as_header}, " \
-               f"first_column_as_header={self.first_column_as_header}, " \
-               f"spaces_in_tags={self.spaces_in_tags}, split_tags={self.split_tags}, " \
-               f"export_folder='{self.export_folder}', " \
-               f"attachment_folder_name='{self.attachment_folder_name}', " \
-               f"creation_time_in_exported_file_name='{self._creation_time_in_exported_file_name}', " \
-               f"orphans='{self._orphans}, " \
-               f"make file links absolute='{self._make_absolute}', " \
-               f"embed_these_document_types='{self._embed_these_document_types}', " \
-               f"embed_these_image_types='{self._embed_these_image_types}', " \
-               f"embed_these_audio_types='{self._embed_these_audio_types}', " \
-               f"embed_these_video_types='{self._embed_these_video_types}', " \
-               f"keep_nimbus_row_and_column_headers='{self._keep_nimbus_row_and_column_headers}', " \
-               f"unrecognised_tag_format='{self._unrecognised_tag_format}')" \
-
+        return repr(self.__dict__)
 
     def __repr__(self):
         return repr(self.__dict__)
@@ -423,6 +404,7 @@ class ConversionSettings:
                                               self._embed_these_audio_types, self._embed_these_video_types)
         self._keep_nimbus_row_and_column_headers = False
         self._unrecognised_tag_format = 'html'
+        self._metadata_time_format = '%Y-%m-%d %H:%M:%S%Z'
 
     @staticmethod
     def _get_folder_paths(provided_folder: Path, root_path: Path):
@@ -900,3 +882,14 @@ class ConversionSettings:
         raise ValueError(f'Invalid value provided for for unrecognised tag format option. '
                          f'Attempted to use invalid value - "{value}", '
                          f'valid values are - "{self._valid_unrecognised_tag_format_values}')
+
+    @property
+    def metadata_time_format(self):
+        return self._metadata_time_format
+
+    @metadata_time_format.setter
+    def metadata_time_format(self, value):
+        self._metadata_time_format = value
+
+
+

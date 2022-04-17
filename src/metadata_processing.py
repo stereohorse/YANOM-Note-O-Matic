@@ -1,4 +1,5 @@
 import logging
+import time
 
 from bs4 import BeautifulSoup
 import frontmatter
@@ -53,6 +54,7 @@ class MetaDataProcessor:
 
         self.format_tag_metadata_if_required()
 
+
     def _is_meta_data_key_valid(self, key):
         return key not in self._keys_that_can_not_be_used \
                and (self._metadata_schema == [''] or key in self._metadata_schema)
@@ -73,6 +75,7 @@ class MetaDataProcessor:
             self.convert_tag_sting_to_tag_list()
             self.split_tags_if_required()
             self.remove_tag_spaces_if_required()
+
 
     def convert_tag_sting_to_tag_list(self):
         if 'tags' in self._metadata and len(self._metadata['tags']) > 0:
@@ -139,6 +142,8 @@ class MetaDataProcessor:
         # iterate metadata items rather than using "frontmatter.Post(content, **self._metadata)"
         # because POST init can not accept a meta data field that has a key of 'content' which is common in html
         # and likely in other files as well
+        self.format_ctime_and_mtime_if_required()
+
         for key, value in self._metadata.items():
             merged_content[key] = value
 
@@ -152,6 +157,16 @@ class MetaDataProcessor:
             content = frontmatter.dumps(merged_content, handler=frontmatter.JSONHandler())
 
         return content
+
+    def format_ctime_and_mtime_if_required(self):
+        if self._conversion_settings.front_matter_format != 'none' \
+                or self._conversion_settings.creation_time_in_exported_file_name is True:
+            if 'ctime' in self._metadata:
+                self._metadata['ctime'] = time.strftime(self._conversion_settings.metadata_time_format,
+                                                        time.localtime(int(self._metadata['ctime'])))
+            if 'mtime' in self._metadata:
+                self._metadata['mtime'] = time.strftime(self._conversion_settings.metadata_time_format,
+                                                        time.localtime(int(self._metadata['mtime'])))
 
     def _force_pandoc_markdown_to_yaml_front_matter(self):
         if self._conversion_settings.export_format == 'pandoc_markdown':

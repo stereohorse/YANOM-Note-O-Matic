@@ -611,14 +611,6 @@ def test_keep_nimbus_row_and_column_headers_setter():
     assert not cs.keep_nimbus_row_and_column_headers
 
 
-def test_str():
-    cs = conversion_settings.ConversionSettings()
-    expected = """ConversionSettings(valid_conversion_inputs=['html', 'markdown', 'nimbus', 'nsx'], valid_markdown_conversion_inputs='['obsidian', 'gfm', 'commonmark', 'q_own_notes', 'pandoc_markdown_strict', 'pandoc_markdown', 'multimarkdown']', valid_quick_settings='['manual', 'q_own_notes', 'obsidian', 'gfm', 'commonmark', 'pandoc_markdown', 'pandoc_markdown_strict', 'multimarkdown', 'html']', valid_export_formats='['q_own_notes', 'obsidian', 'gfm', 'pandoc_markdown', 'commonmark', 'pandoc_markdown_strict', 'multimarkdown', 'html']', valid_front_matter_formats]'['yaml', 'toml', 'json', 'text', 'none']', markdown_conversion_input='gfm, quick_setting='gfm', export_format='gfm', yaml_front_matter=yaml, metadata_schema='['']', tag_prefix='#', first_row_as_header=True, first_column_as_header=True, spaces_in_tags=False, split_tags=False, export_folder='notes', attachment_folder_name='attachments', creation_time_in_exported_file_name='False', orphans='orphan, make file links absolute='False', embed_these_document_types='['md', 'pdf']', embed_these_image_types='['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg']', embed_these_audio_types='['mp3', 'webm', 'wav', 'm4a', 'ogg', '3gp', 'flac']', embed_these_video_types='['mp4', 'webm', 'ogv']', keep_nimbus_row_and_column_headers='False', unrecognised_tag_format='html')"""
-    result = str(cs)
-
-    assert result == expected
-
-
 @pytest.mark.parametrize(
     'value', ['text', 'html']
 )
@@ -638,3 +630,9 @@ def test_unrecognised_tag_format_setter_invalid_value():
     assert 'Invalid value provided for for unrecognised tag format option. Attempted to use invalid value -' in exc.value.args[0]
 
     assert cs.unrecognised_tag_format == 'html'
+
+
+def test_metadata_time_format():
+    cs = conversion_settings.ConversionSettings()
+    cs.metadata_time_format = '%Y-%m-%d'
+    assert cs.metadata_time_format == '%Y-%m-%d'

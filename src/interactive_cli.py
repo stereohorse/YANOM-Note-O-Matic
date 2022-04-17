@@ -257,6 +257,38 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             if self._cli_conversion_settings.front_matter_format == 'text':
                 self._ask_and_set_tag_prefix()
             self._ask_and_set_metadata_schema()
+            if 'ctime' in self._cli_conversion_settings.metadata_schema or 'mtime' in self._cli_conversion_settings.metadata_schema:
+                self._ask_and_set_metadata_time_format()
+
+    def _ask_and_set_metadata_time_format(self):
+        default_values = ['%Y-%m-%d %H:%M:%S%Z', '%Y-%m-%d %H:%M:%S', '%Y%m%d%H%M%S', 'enter a value']
+        quick_setting_prompt = {
+            'type': 'list',
+            'name': 'metadata_time_format',
+            'message': 'Choose a time and date format or choose enter a value',
+            'choices': default_values,
+            'default': self._default_settings.metadata_time_format,
+        }
+        answer = prompt(quick_setting_prompt, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
+        date_time_format = answer['metadata_time_format']
+        if answer['metadata_time_format'] == 'enter a value':
+            date_time_format = self._ask_and_set_date_time_format()
+        self._cli_conversion_settings.metadata_time_format = date_time_format
+
+    def _ask_and_set_date_time_format(self):
+        questions = [
+            {
+                'type': 'input',
+                'name': 'date_time_format',
+                'message': 'Enter a strftime fromated string e.g.  %Y-%m-%d %H:%M:%S%Z ',
+                'default': self._default_settings.metadata_time_format
+            }
+        ]
+
+        answer = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
+        return answer['date_time_format']
 
     def _ask_and_set_conversion_quick_setting(self):
         default_values = self._default_settings.valid_quick_settings

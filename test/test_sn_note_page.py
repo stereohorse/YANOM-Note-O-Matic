@@ -102,24 +102,11 @@ def note_page_1(nsx, notebook):
     return note_page_1
 
 
-@pytest.mark.parametrize(
-    'front_matter_format, creation_time_in_exported_file_name, expected_ctime, expected_mtime', [
-        ('none', False, 1619298559, 1619298640),
-        ('none', True, '202104242209', '202104242210'),
-        ('yaml', True, '202104242209', '202104242210'),
-        ('yaml', False, '202104242209', '202104242210'),
-    ]
-)
-def test_init_note_page(nsx, front_matter_format, creation_time_in_exported_file_name, expected_ctime, expected_mtime):
-    nsx.conversion_settings.front_matter_format = front_matter_format
-    nsx.conversion_settings._creation_time_in_exported_file_name = creation_time_in_exported_file_name
+def test_init_note_page(nsx):
     note_jason = {'parent_id': 'note_book2', 'title': 'Page 8 title',
                   'mtime': 1619298640, 'ctime': 1619298559, 'attachment': {'test': 'test_value'}, 'content': 'content',
                   'tag': [9]}
     note_page = sn_note_page.NotePage(nsx, '1234', note_jason)
-
-    assert note_page.note_json['ctime'] == expected_ctime
-    assert note_page.note_json['mtime'] == expected_mtime
 
     assert note_page.title == 'Page 8 title'
     assert note_page.original_title == 'Page 8 title'
@@ -129,21 +116,23 @@ def test_init_note_page(nsx, front_matter_format, creation_time_in_exported_file
 
 
 @pytest.mark.parametrize(
-    'export_format, extension, time, optional_dash,  ctime', [
-        ('html', 'html', '20210815', '-', True),
-        ('html', 'html', '', '', False),
-        ('gfm', 'md', '', '', False),
+    'export_format, extension, ctime, optional_dash,  include_time_in_filename, expected_filename_time', [
+        ('html', 'html', 1619298559, '-', True, 202104242209),
+        ('html', 'html', '', '', False, ''),
+        ('gfm', 'md', '', '', False, ''),
     ]
 )
-def test_generate_filenames_and_paths(export_format, extension, time, optional_dash,  ctime, note_page):
+def test_generate_filenames_and_paths(export_format, extension, ctime, optional_dash,
+                                      include_time_in_filename, expected_filename_time,
+                                      note_page):
     note_page.conversion_settings.export_format = export_format
     note_page.notebook_folder_name = 'note_book2'
-    note_page._note_json['ctime'] = time
-    note_page.conversion_settings.creation_time_in_exported_file_name = ctime
+    note_page._note_json['ctime'] = ctime
+    note_page.conversion_settings.creation_time_in_exported_file_name = include_time_in_filename
 
     note_page.generate_filenames_and_paths([''])
 
-    assert note_page.file_name == Path(f"{time}{optional_dash}{note_page.title}.{extension}")
+    assert note_page.file_name == Path(f"{expected_filename_time}{optional_dash}{note_page.title}.{extension}")
     assert note_page.full_path == Path(note_page.conversion_settings.working_directory, config.yanom_globals.data_dir,
                                        note_page.conversion_settings.export_folder, note_page.notebook_folder_name,
                                        note_page.file_name)
@@ -346,33 +335,33 @@ def test_get_json_attachment_data_key_is_null(note_page_1, caplog):
     assert expected_caplog_msg1 in caplog.messages
 
 
-@pytest.mark.parametrize(
-    'ctime, mtime, expected_ctime, expected_mtime, format_time', [
-        (1594591675, 1594591737, 1594591675, 1594591737, False),
-        (1594591675, 1594591737, '202007122307', '202007122308', True),
-    ]
-)
-def test_format_ctime_and_mtime_if_required(note_page_1, ctime, mtime, expected_ctime, expected_mtime, format_time):
-    note_page_1._note_json['ctime'] = ctime
-    note_page_1._note_json['mtime'] = mtime
-    note_page_1.conversion_settings.creation_time_in_exported_file_name = format_time
-    note_page_1.conversion_settings.front_matter_format = 'none'
-    note_page_1.format_ctime_and_mtime_if_required()
+# @pytest.mark.parametrize(
+#     'ctime, mtime, expected_ctime, expected_mtime, format_time', [
+#         (1594591675, 1594591737, 1594591675, 1594591737, False),
+#         (1594591675, 1594591737, '202007122307', '202007122308', True),
+#     ]
+# )
+# def test_format_ctime_and_mtime_if_required(note_page_1, ctime, mtime, expected_ctime, expected_mtime, format_time):
+#     note_page_1._note_json['ctime'] = ctime
+#     note_page_1._note_json['mtime'] = mtime
+#     note_page_1.conversion_settings.creation_time_in_exported_file_name = format_time
+#     note_page_1.conversion_settings.front_matter_format = 'none'
+#     note_page_1.format_ctime_and_mtime_if_required()
+#
+#     assert note_page_1._note_json['ctime'] == expected_ctime
+#     assert note_page_1._note_json['mtime'] == expected_mtime
 
-    assert note_page_1._note_json['ctime'] == expected_ctime
-    assert note_page_1._note_json['mtime'] == expected_mtime
 
-
-@pytest.mark.parametrize(
-    'ctime, mtime, expected_ctime, expected_mtime, format_time', [
-        (1594591675, 1594591737, 1594591675, 1594591737, False),
-        (1594591675, 1594591737, '202007122307', '202007122308', True),
-    ]
-)
-def test_format_ctime_and_mtime_if_required_no_time_data_in_note_json(note_page_1, ctime, mtime, expected_ctime, expected_mtime, format_time):
-    note_page_1._note_json = {}
-    note_page_1.conversion_settings.creation_time_in_exported_file_name = format_time
-    note_page_1.conversion_settings.front_matter_format = 'none'
-    note_page_1.format_ctime_and_mtime_if_required()
-
-    assert note_page_1._note_json == {}
+# @pytest.mark.parametrize(
+#     'ctime, mtime, expected_ctime, expected_mtime, format_time', [
+#         (1594591675, 1594591737, 1594591675, 1594591737, False),
+#         (1594591675, 1594591737, '202007122307', '202007122308', True),
+#     ]
+# )
+# def test_format_ctime_and_mtime_if_required_no_time_data_in_note_json(note_page_1, ctime, mtime, expected_ctime, expected_mtime, format_time):
+#     note_page_1._note_json = {}
+#     note_page_1.conversion_settings.creation_time_in_exported_file_name = format_time
+#     note_page_1.conversion_settings.front_matter_format = 'none'
+#     note_page_1.format_ctime_and_mtime_if_required()
+#
+#     assert note_page_1._note_json == {}

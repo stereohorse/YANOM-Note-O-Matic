@@ -32,7 +32,7 @@ class NotePage:
         self._note_json = note_json
         self.get_json_note_title()
         self._original_title = self._title
-        self.format_ctime_and_mtime_if_required()
+        # self.format_ctime_and_mtime_if_required()
         self.get_json_note_content()
         self.get_json_parent_notebook()
         self.get_json_attachment_data()
@@ -84,13 +84,10 @@ class NotePage:
                 print(f"No parent notebook ID was found in '{self._note_id}'.  "
                       f"Note will be in the Recycle Bin notebook")
 
-    def format_ctime_and_mtime_if_required(self):
-        if self._conversion_settings.front_matter_format != 'none' \
-                or self._conversion_settings.creation_time_in_exported_file_name is True:
-            if 'ctime' in self._note_json:
-                self._note_json['ctime'] = time.strftime('%Y%m%d%H%M', time.localtime(self._note_json['ctime']))
-            if 'mtime' in self._note_json:
-                self._note_json['mtime'] = time.strftime('%Y%m%d%H%M', time.localtime(self._note_json['mtime']))
+    def format_ctime_for_file_name(self):
+        if 'ctime' in self._note_json:
+            formatted_ctime = time.strftime('%Y%m%d%H%M', time.localtime(self._note_json['ctime']))
+        return formatted_ctime
 
     def process_note(self):
         self.logger.info(f"Processing note page '{self._title}' - {self._note_id}")
@@ -105,7 +102,8 @@ class NotePage:
     def _create_file_name(self, used_filenames):
         dirty_filename = self._title
         if self.conversion_settings.creation_time_in_exported_file_name:
-            dirty_filename = f"{self._note_json['ctime']}-{self._title}"
+            formatted_ctime = self.format_ctime_for_file_name()
+            dirty_filename = f"{formatted_ctime}-{self._title}"
 
         dirty_filename = self._append_file_extension(dirty_filename)
         cleaned_filename = Path(helper_functions.generate_clean_filename(dirty_filename,
