@@ -259,6 +259,38 @@ class StartUpCommandLineInterface(InquireCommandLineInterface):
             self._ask_and_set_metadata_schema()
             if 'ctime' in self._cli_conversion_settings.metadata_schema or 'mtime' in self._cli_conversion_settings.metadata_schema:
                 self._ask_and_set_metadata_time_format()
+            if 'ctime' in self._cli_conversion_settings.metadata_schema:
+                self._ask_and_set_file_created_text()
+            if 'mtime' in self._cli_conversion_settings.metadata_schema:
+                self._ask_and_set_file_modified_text()
+
+    def _ask_and_set_file_modified_text(self):
+        questions = [
+            {
+                'type': 'input',
+                'name': 'file_modified_text',
+                'message': 'Enter a name for file modified time e.g. updated ',
+                'default': self._default_settings.file_modified_text
+            }
+        ]
+
+        answer = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
+        self._cli_conversion_settings.file_modified_text = answer['file_modified_text']
+
+    def _ask_and_set_file_created_text(self):
+        questions = [
+            {
+                'type': 'input',
+                'name': 'file_created_text',
+                'message': 'Enter a name for file creation time e.g. created ',
+                'default': self._default_settings.file_created_text
+            }
+        ]
+
+        answer = prompt(questions, style=self.style)
+        _exit_if_keyboard_interrupt(answer)
+        self._cli_conversion_settings.file_created_text = answer['file_created_text']
 
     def _ask_and_set_metadata_time_format(self):
         default_values = ['%Y-%m-%d %H:%M:%S%Z', '%Y-%m-%d %H:%M:%S', '%Y%m%d%H%M%S', 'enter a value']

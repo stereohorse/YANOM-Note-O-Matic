@@ -143,6 +143,8 @@ class MetaDataProcessor:
         # because POST init can not accept a meta data field that has a key of 'content' which is common in html
         # and likely in other files as well
         self.format_ctime_and_mtime_if_required()
+        self.change_displayed_created_time_if_required()
+        self.change_displayed_modified_time_if_required()
 
         for key, value in self._metadata.items():
             merged_content[key] = value
@@ -167,6 +169,14 @@ class MetaDataProcessor:
             if 'mtime' in self._metadata:
                 self._metadata['mtime'] = time.strftime(self._conversion_settings.metadata_time_format,
                                                         time.localtime(int(self._metadata['mtime'])))
+
+    def change_displayed_created_time_if_required(self):
+        if 'ctime' in self._metadata:
+            self._metadata[self._conversion_settings.file_created_text] = self._metadata.pop('ctime')
+
+    def change_displayed_modified_time_if_required(self):
+        if 'mtime' in self._metadata:
+            self._metadata[self._conversion_settings.file_modified_text] = self._metadata.pop('mtime')
 
     def _force_pandoc_markdown_to_yaml_front_matter(self):
         if self._conversion_settings.export_format == 'pandoc_markdown':

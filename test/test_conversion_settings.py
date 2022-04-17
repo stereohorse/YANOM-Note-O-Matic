@@ -636,3 +636,15 @@ def test_metadata_time_format():
     cs = conversion_settings.ConversionSettings()
     cs.metadata_time_format = '%Y-%m-%d'
     assert cs.metadata_time_format == '%Y-%m-%d'
+
+
+def test_file_created_text():
+    cs = conversion_settings.ConversionSettings()
+    cs.file_created_text = 'hello'
+    assert cs.file_created_text == 'hello'
+
+
+def test_file_modified_text():
+    cs = conversion_settings.ConversionSettings()
+    cs.file_modified_text = 'hello'
+    assert cs.file_modified_text == 'hello'

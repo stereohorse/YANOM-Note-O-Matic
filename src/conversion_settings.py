@@ -126,6 +126,8 @@ class ConversionSettings:
             'spaces_in_tags': ('True', 'False'),
             'split_tags': ('True', 'False'),
             'metadata_time_format': '',
+            'file_created_text': '',
+            'file_modified_text': '',
         },
         'table_options': {
             'first_row_as_header': ('True', 'False'),
@@ -189,6 +191,8 @@ class ConversionSettings:
         self.spaces_in_tags = False
         self.split_tags = False
         self._metadata_time_format = '%Y-%m-%d %H:%M:%S%Z'
+        self._file_created_text = 'created'
+        self._file_modified_text = 'updated'
         self.first_row_as_header = True
         self.first_column_as_header = True
         self.chart_image = True
@@ -405,6 +409,8 @@ class ConversionSettings:
         self._keep_nimbus_row_and_column_headers = False
         self._unrecognised_tag_format = 'html'
         self._metadata_time_format = '%Y-%m-%d %H:%M:%S%Z'
+        self._file_created_text = 'created'
+        self._file_modified_text = 'updated'
 
     @staticmethod
     def _get_folder_paths(provided_folder: Path, root_path: Path):
@@ -888,8 +894,21 @@ class ConversionSettings:
         return self._metadata_time_format
 
     @metadata_time_format.setter
-    def metadata_time_format(self, value):
+    def metadata_time_format(self, value: str):
         self._metadata_time_format = value
 
+    @property
+    def file_created_text(self):
+        return self._file_created_text
 
+    @file_created_text.setter
+    def file_created_text(self, value: str):
+        self._file_created_text = value
 
+    @property
+    def file_modified_text(self):
+        return self._file_modified_text
+
+    @file_modified_text.setter
+    def file_modified_text(self, value: str):
+        self._file_modified_text = value

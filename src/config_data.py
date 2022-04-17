@@ -139,6 +139,10 @@ class ConfigData(ConfigParser):
         self._conversion_settings.tag_prefix = self['meta_data_options']['tag_prefix']
         if self['meta_data_options']['metadata_time_format'] != '':
             self._conversion_settings.metadata_time_format = self['meta_data_options']['metadata_time_format']
+        if self['meta_data_options']['file_created_text'] != '':
+            self._conversion_settings.file_created_text = self['meta_data_options']['file_created_text']
+        if self['meta_data_options']['file_modified_text'] != '':
+            self._conversion_settings.file_modified_text = self['meta_data_options']['file_modified_text']
         self._conversion_settings.first_row_as_header = self.getboolean('table_options', 'first_row_as_header')
         self._conversion_settings.first_column_as_header = self.getboolean('table_options', 'first_column_as_header')
         self._conversion_settings.chart_image = self.getboolean('chart_options', 'chart_image')
@@ -314,6 +318,10 @@ class ConfigData(ConfigParser):
                 'metadata_time_format': self._conversion_settings.metadata_time_format.replace('%', '%%'),
                 # have to escape % signs for configparser as single % tells it to treat as string formatting
                 # is written to file as %% and when read config parser will strip the extra % so what is used is correct
+                '    # Replacement names for nsx creation time (ctime) and modified date (mtime) ': None,
+                '    # If left blank will default to created and updated': None,
+                'file_created_text': self._conversion_settings.file_created_text,
+                'file_modified_text': self._conversion_settings.file_modified_text,
             },
             'table_options': {
                 '  #  These two table options apply to NSX files ONLY': None,

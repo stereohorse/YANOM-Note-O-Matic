@@ -65,6 +65,10 @@ split_tags = False
     # for formats see https://strftime.org/
     # if left blank will default to %%y-%%m-%%d %%h:%%m:%%s%%z
 metadata_time_format = %%Y-%%m-%%d %%H:%%M:%%S%%Z
+    # replacement names for nsx creation time (ctime) and modified date (mtime) 
+    # if left blank will default to created and updated
+file_created_text = created
+file_modified_text = updated
 
 [table_options]
   #  these two table options apply to nsx files only
@@ -172,6 +176,10 @@ split_tags = False
     # for formats see https://strftime.org/
     # if left blank will default to %%y-%%m-%%d %%h:%%m:%%s%%z
 metadata_time_format = %%Y-%%m-%%d %%H:%%M:%%S%%Z
+    # replacement names for nsx creation time (ctime) and modified date (mtime) 
+    # if left blank will default to created and updated
+file_created_text = created
+file_modified_text = updated
 
 [table_options]
   #  these two table options apply to nsx files only
@@ -564,7 +572,7 @@ def test_str(good_config_ini, tmp_path):
     cd.parse_config_file()
 
     result = str(cd)
-    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False', 'metadata_time_format': '%Y-%m-%d %H:%M:%S%Z'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes-15', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'True', 'max_file_or_directory_name_length': '255', 'orphans': 'copy', 'make_absolute': 'False'}, 'nimbus_options': {'embed_these_document_types': 'md,pdf', 'embed_these_image_types': 'png,jpg,jpeg,gif,bmp,svg', 'embed_these_audio_types': 'mp3,webm,wav,m4a,ogg,3gp,flac', 'embed_these_video_types': 'mp4,webm,ogv', 'keep_nimbus_row_and_column_headers': 'False', 'unrecognised_tag_format': 'html'}}"
+    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False', 'metadata_time_format': '%Y-%m-%d %H:%M:%S%Z', 'file_created_text': 'created', 'file_modified_text': 'updated'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes-15', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'True', 'max_file_or_directory_name_length': '255', 'orphans': 'copy', 'make_absolute': 'False'}, 'nimbus_options': {'embed_these_document_types': 'md,pdf', 'embed_these_image_types': 'png,jpg,jpeg,gif,bmp,svg', 'embed_these_audio_types': 'mp3,webm,wav,m4a,ogg,3gp,flac', 'embed_these_video_types': 'mp4,webm,ogv', 'keep_nimbus_row_and_column_headers': 'False', 'unrecognised_tag_format': 'html'}}"
 
 
 def test_repr(good_config_ini, tmp_path):
@@ -574,7 +582,7 @@ def test_repr(good_config_ini, tmp_path):
     cd.parse_config_file()
 
     result = repr(cd)
-    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False', 'metadata_time_format': '%Y-%m-%d %H:%M:%S%Z'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes-15', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'True', 'max_file_or_directory_name_length': '255', 'orphans': 'copy', 'make_absolute': 'False'}, 'nimbus_options': {'embed_these_document_types': 'md,pdf', 'embed_these_image_types': 'png,jpg,jpeg,gif,bmp,svg', 'embed_these_audio_types': 'mp3,webm,wav,m4a,ogg,3gp,flac', 'embed_these_video_types': 'mp4,webm,ogv', 'keep_nimbus_row_and_column_headers': 'False', 'unrecognised_tag_format': 'html'}}"
+    assert result == "ConfigData{'conversion_inputs': {'conversion_input': 'nsx'}, 'markdown_conversion_inputs': {'markdown_conversion_input': 'gfm'}, 'quick_settings': {'quick_setting': 'obsidian'}, 'export_formats': {'export_format': 'obsidian'}, 'meta_data_options': {'front_matter_format': 'yaml', 'metadata_schema': 'title,ctime,mtime,tag', 'tag_prefix': '#', 'spaces_in_tags': 'False', 'split_tags': 'False', 'metadata_time_format': '%Y-%m-%d %H:%M:%S%Z', 'file_created_text': 'created', 'file_modified_text': 'updated'}, 'table_options': {'first_row_as_header': 'True', 'first_column_as_header': 'True'}, 'chart_options': {'chart_image': 'True', 'chart_csv': 'True', 'chart_data_table': 'True'}, 'file_options': {'source': '', 'export_folder': 'notes-15', 'attachment_folder_name': 'attachments', 'allow_spaces_in_filenames': 'True', 'filename_spaces_replaced_by': '-', 'allow_unicode_in_filenames': 'True', 'allow_uppercase_in_filenames': 'True', 'allow_non_alphanumeric_in_filenames': 'True', 'creation_time_in_exported_file_name': 'True', 'max_file_or_directory_name_length': '255', 'orphans': 'copy', 'make_absolute': 'False'}, 'nimbus_options': {'embed_these_document_types': 'md,pdf', 'embed_these_image_types': 'png,jpg,jpeg,gif,bmp,svg', 'embed_these_audio_types': 'mp3,webm,wav,m4a,ogg,3gp,flac', 'embed_these_video_types': 'mp4,webm,ogv', 'keep_nimbus_row_and_column_headers': 'False', 'unrecognised_tag_format': 'html'}}"
 
 
 def test_generate_conversion_settings_using_quick_settings_string(good_config_ini, tmp_path):
@@ -691,3 +699,52 @@ def test_set_time_format(good_config_ini, tmp_path):
 
     assert cd['meta_data_options']['metadata_time_format'] == '%Y'
     assert cd.conversion_settings.metadata_time_format == '%Y'
+
+
+def test_set_default_file_created_text(good_config_ini, tmp_path):
+    good_config_ini = good_config_ini.replace('file_created_text = created', 'file_created_text = ')
+
+    Path(f'{str(tmp_path)}/config.ini').write_text(good_config_ini, encoding="utf-8")
+
+    cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'gfm', allow_no_value=True)
+    cd.parse_config_file()
+
+    assert cd['meta_data_options']['file_created_text'] == ''
+    assert cd.conversion_settings.file_created_text == 'created'
+
+
+def test_set_file_created_text(good_config_ini, tmp_path):
+    good_config_ini = good_config_ini.replace('file_created_text = created', 'file_created_text = hello_world')
+
+    Path(f'{str(tmp_path)}/config.ini').write_text(good_config_ini, encoding="utf-8")
+
+    cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'gfm', allow_no_value=True)
+    cd.parse_config_file()
+
+    assert cd['meta_data_options']['file_created_text'] == 'hello_world'
+    assert cd.conversion_settings.file_created_text == 'hello_world'
+
+
+def test_set_default_file_modified_text(good_config_ini, tmp_path):
+    good_config_ini = good_config_ini.replace('file_modified_text = updated', 'file_modified_text = ')
+
+    Path(f'{str(tmp_path)}/config.ini').write_text(good_config_ini, encoding="utf-8")
+
+    cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'gfm', allow_no_value=True)
+    cd.parse_config_file()
+
+    assert cd['meta_data_options']['file_modified_text'] == ''
+    assert cd.conversion_settings.file_modified_text == 'updated'
+
+
+def test_set_file_modified_text(good_config_ini, tmp_path):
+    good_config_ini = good_config_ini.replace('file_modified_text = updated', 'file_modified_text = hello_world')
+
+    Path(f'{str(tmp_path)}/config.ini').write_text(good_config_ini, encoding="utf-8")
+
+    cd = config_data.ConfigData(f"{str(tmp_path)}/config.ini", 'gfm', allow_no_value=True)
+    cd.parse_config_file()
+
+    assert cd['meta_data_options']['file_modified_text'] == 'hello_world'
+    assert cd.conversion_settings.file_modified_text == 'hello_world'
+
