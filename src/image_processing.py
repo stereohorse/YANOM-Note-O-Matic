@@ -1,11 +1,17 @@
+import base64
 import logging
+import os
+import pathlib
 import re
-from typing import Optional
+import subprocess
+import tempfile
+import uuid
+from typing import Optional, Union
 
 from bs4 import BeautifulSoup
 
-import helper_functions
 import config
+import helper_functions
 
 
 def what_module_is_this():
@@ -245,3 +251,46 @@ def create_image_autolink(alt_text='', img_width='', img_height='', path=''):
         height = f'height="{img_height}" '
 
     return f'<img {alt}{src}{width}{height}/>'
+
+
+base64_href_pattern = re.compile(r"data:image/(png|jpeg|jpg);base64,")
+
+
+def has_base64_image_embedded(href: str) -> bool:
+    return href and (base64_href_pattern.match(href) is not None)
+
+
+def read_base64_image(href: str) -> bytes:
+    data_start = href.find(",") + 1
+    return base64.b64decode(href[data_start:])
+
+
+def is_svg(contents: str) -> bool:
+    return contents and contents.startswith("<svg ")
+
+
+def read_svg(contents: str) -> Union[bytes, None]:
+    inkscape_path = os.environ.get('INKSCAPE_PATH')
+    if not inkscape_path:
+        return None
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        svg_path = pathlib.Path(tmpdir, str(uuid.uuid4()) + '.svg')
+        with open(svg_path, 'w') as svg_file:
+            svg_file.write(contents)
+
+        png_path = pathlib.Path(tmpdir, str(uuid.uuid4()) + '.png')
+
+        cmd_list = [inkscape_path,
+                    svg_path,
+                    '-o', png_path,
+                    ]
+
+        p = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = p.communicate()
+
+        if p.returncode:
+            raise Exception('Inkscape error: ' + (err.decode("utf-8") or 'unknown'))
+
+        with open(png_path, 'rb') as png_file:
+            return png_file.read()

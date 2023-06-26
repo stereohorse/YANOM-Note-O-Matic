@@ -1,24 +1,26 @@
 from copy import copy
 from pathlib import Path
 from typing import Set
+from uuid import uuid4
 
 from bs4 import BeautifulSoup
-from conversion_settings import ConversionSettings
 
 import file_writer
 import helper_functions
+import zip_file_reader
+from conversion_settings import ConversionSettings
 from html_data_extractors import process_child_items
 from html_nimbus_extractors import extract_from_nimbus_tag
+from image_processing import read_base64_image, has_base64_image_embedded, is_svg, read_svg
 from nimbus_note_content_data import MentionLink
 from nimbus_note_content_data import NimbusIDs, NimbusProcessingOptions
-from note_content_data import Body, Outline
+from note_content_data import Body, Outline, ImageEmbed
 from note_content_data import FileAttachment, FileAttachmentCleanHTML
 from note_content_data import HeadingItem
 from note_content_data import ImageAttachment
 from note_content_data import NimbusNote, NoteData
-from processing_options import ProcessingOptions
 from note_content_data import TextItem
-import zip_file_reader
+from processing_options import ProcessingOptions
 
 
 def get_file_suffix_for(export_format: str) -> str:
@@ -111,8 +113,21 @@ def extract_and_write_assets(a_note, asset_links, attachment_folder_name, zip_fi
     filenames_processed = set()
     for link in asset_links:
         link.set_target_path(attachment_folder_name)
+        asset = None
 
-        asset = read_link_source_file(zip_file_path, str(link.source_path))
+        if isinstance(link, ImageEmbed):
+            if is_svg(link.contents):
+                asset = read_svg(link.contents)
+                correct_image_name(asset, attachment_folder_name, link)
+            elif not link.href:
+                # ignore absent source paths
+                continue
+            elif has_base64_image_embedded(link.href):
+                asset = read_base64_image(link.href)
+                correct_image_name(asset, attachment_folder_name, link)
+
+        if not asset:
+            asset = read_link_source_file(zip_file_path, str(link.source_path))
 
         # in nimbus all audio files are exported as .mpga irrespective of what the file actually is
         # so use header bytes form the asset to identify the correct extension
@@ -124,6 +139,12 @@ def extract_and_write_assets(a_note, asset_links, attachment_folder_name, zip_fi
         filenames_processed.add(str(link.source_path.name))
 
     return filenames_processed
+
+
+def correct_image_name(asset, attachment_folder_name, link):
+    link.filename = str(uuid4())
+    link.set_target_path(attachment_folder_name)
+    link.target_path = helper_functions.correct_file_extension(asset, link.target_path)
 
 
 def find_orphan_filenames_in_zipfile(filenames_known_about: Set, zip_file_path: str) -> Set[str]:
@@ -331,6 +352,7 @@ def main():
     nimbus_zip_files = generate_file_list('zip', conversion_settings.source_absolute_root)
 
     convert_nimbus_notes(conversion_settings, nimbus_zip_files)
+
 
 # TODO docstrings
 # TODO logging - all logging but also add all unrecognised html objects to warning log

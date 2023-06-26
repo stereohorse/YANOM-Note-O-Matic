@@ -71,6 +71,13 @@ def process_child_items(tag, processing_options: ProcessingOptions,
     return items
 
 
+IGNORED_TAGS = ['link', 'meta', 'hr', 'br', 'placeholder']
+P_LIKE_TAGS = ['pre', 'center', 'font', 'code', 'cite', 'article']
+SPAN_LIKE_TAGS = ['small', 'strong', 'ins', 'dl', 'dt', 'dd', 'abbr', 's', 'mention', 'kbd', 'sup', 'host', 'port',
+                  'api-access-token', 'bot-username']
+TABLE_TAGS = ['table', 'thead', 'tbody', 'td', 'tr', 'th', 'colgroup', 'col', 'caption']
+
+
 def extract_from_tag(tag, processing_options: ProcessingOptions,
                      note_specific_tag_cleaning: Optional[Callable] = None,
                      ) -> Optional[Union[List[NoteData], NoteData]]:
@@ -83,6 +90,9 @@ def extract_from_tag(tag, processing_options: ProcessingOptions,
         if data:
             return data
 
+    if tag.name in IGNORED_TAGS:
+        return
+
     if tag.name == 'head':
         return extract_from_head_tag(tag, processing_options, note_specific_tag_cleaning)
 
@@ -91,12 +101,6 @@ def extract_from_tag(tag, processing_options: ProcessingOptions,
 
     if tag.name == 'div':
         return extract_from_div(tag, processing_options, note_specific_tag_cleaning)
-
-    if tag.name == "link":  # ignoring <head> link tags
-        return
-
-    if tag.name == "meta":  # ignoring <head> meta tags
-        return
 
     if len(tag.name) == 2 and tag.name[:1] == 'h' and tag.name[-1].isdigit():
         return extract_from_heading(tag, processing_options, note_specific_tag_cleaning)
@@ -125,8 +129,14 @@ def extract_from_tag(tag, processing_options: ProcessingOptions,
     if tag.name == 'i':
         return extract_from_p_or_i_tag(tag, processing_options, note_specific_tag_cleaning)
 
+    if tag.name in P_LIKE_TAGS:
+        return extract_from_p_like(tag, processing_options, note_specific_tag_cleaning)
+
     if tag.name == 'img':
         return extract_from_img_tag(tag, processing_options)
+
+    if tag.name == 'svg':
+        return extract_from_svg_tag(tag, processing_options)
 
     if tag.name == 'figure':
         return extract_from_figure(tag, processing_options)
@@ -153,6 +163,12 @@ def extract_from_tag(tag, processing_options: ProcessingOptions,
                 return extract_from_coloured_text_span(tag, processing_options)
 
         return extract_from_unknown_span(tag, processing_options, note_specific_tag_cleaning)
+
+    if tag.name in SPAN_LIKE_TAGS:
+        return extract_from_span_like(tag, processing_options, note_specific_tag_cleaning)
+
+    if tag.name in TABLE_TAGS:
+        return extract_from_table(tag, processing_options, note_specific_tag_cleaning)
 
     return UnrecognisedTag(processing_options, str(tag), tag.text)
 
@@ -260,8 +276,15 @@ def extract_from_title(title_tag, processing_options: ProcessingOptions):
 
 def extract_from_p_or_i_tag(tag, processing_options: ProcessingOptions,
                             note_specific_tag_cleaning: Optional[Callable] = None) -> List[NoteData]:
-
     if tag.name not in ['p', 'i']:
+        return
+
+    return process_child_items(tag, processing_options, note_specific_tag_cleaning)
+
+
+def extract_from_p_like(tag, processing_options: ProcessingOptions,
+                        note_specific_tag_cleaning: Optional[Callable] = None) -> List[NoteData]:
+    if tag.name not in P_LIKE_TAGS:
         return
 
     return process_child_items(tag, processing_options, note_specific_tag_cleaning)
@@ -278,6 +301,20 @@ def extract_from_img_tag(img_tag, processing_options: ProcessingOptions):
     image_path = Path(href)
 
     return ImageEmbed(processing_options, alt, href, image_path, width, height)
+
+
+def extract_from_svg_tag(img_tag, processing_options: ProcessingOptions):
+    if img_tag.name != 'svg':
+        return
+
+    href = ''
+    width = img_tag.get('width', '')
+    height = img_tag.get('height', '')
+    contents = str(img_tag)
+    image_path = Path(href)
+
+    return ImageEmbed(processing_options=processing_options, contents=contents, href=href, width=width, height=height,
+                      source_path=image_path)
 
 
 def extract_from_hyperlink(tag, processing_options: ProcessingOptions):
@@ -324,6 +361,20 @@ def extract_from_figure_caption(tag, processing_options: ProcessingOptions,
 
 def extract_from_unknown_span(tag, processing_options: ProcessingOptions, note_specific_tag_cleaning):
     if tag.name != 'span':
+        return
+
+    return process_child_items(tag, processing_options, note_specific_tag_cleaning)
+
+
+def extract_from_span_like(tag, processing_options: ProcessingOptions, note_specific_tag_cleaning):
+    if tag.name not in SPAN_LIKE_TAGS:
+        return
+
+    return process_child_items(tag, processing_options, note_specific_tag_cleaning)
+
+
+def extract_from_table(tag, processing_options: ProcessingOptions, note_specific_tag_cleaning):
+    if tag.name not in TABLE_TAGS:
         return
 
     return process_child_items(tag, processing_options, note_specific_tag_cleaning)

@@ -156,25 +156,30 @@ def read_binary_file(zip_filename, target_filename, message=''):
 def _error_handling(e, target_filename, zip_filename, message=''):
     """Error handling for errors encountered reading form zip files"""
 
-    traceback_text = helper_functions.log_traceback(e)
     msg = f'Error - {e}'
+    show_traceback = True
 
     if isinstance(e, FileNotFoundError):
         msg = f'Error - unable to read zip file "{zip_filename}"'
         logger.error(msg)
-        logger.error(traceback_text)
+        logger.error(helper_functions.log_traceback(e))
         if not config.yanom_globals.is_silent:
             print(msg)
         sys.exit(1)  # TODO need a more graceful handling than this
 
     if isinstance(e, KeyError):
+        show_traceback = False
         msg = f'Warning - For the note "{message}" ' \
               f'- unable to find the file "{target_filename}" in the zip file "{zip_filename}"'
 
     if isinstance(e, ValueError):
+        show_traceback = False
         msg = "Warning Value Error accessing zip file contents, possibly treating file as directory or vice versa."
 
     logger.warning(msg)
-    logger.warning(traceback_text)
+
+    if show_traceback:
+        logger.warning(helper_functions.log_traceback(e))
+
     if not config.yanom_globals.is_silent:
         print(msg)

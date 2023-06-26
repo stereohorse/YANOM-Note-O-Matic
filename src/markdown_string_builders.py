@@ -118,6 +118,9 @@ def heading(items: List, level: int, heading_id: str, include_id_format: str):
 def escape_leading_number_if_required(item_text):
     int_part = "".join(itertools.takewhile(str.isdigit, item_text))
 
+    if len(item_text) == len(int_part):
+        return item_text
+
     if int_part and item_text[len(int_part)] == '.':
         escaped_number = f"{int_part}\\."
         rest_of_text = item_text.lstrip(f"{int_part}.")
