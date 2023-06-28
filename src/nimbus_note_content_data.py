@@ -68,8 +68,10 @@ class FileEmbedNimbusHTML(FileAttachment):
 
     def markdown(self):
         caption = self.contents.markdown().strip()
+        if not caption:
+            caption = self.target_filename
 
-        return markdown_string_builders.embed_file(self.processing_options, caption, self.target_path, caption)
+        return markdown_string_builders.embed_file(self.processing_options, caption, self.target_path)
 
 
 @dataclass

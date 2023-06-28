@@ -214,7 +214,7 @@ class ConversionSettings:
         self._orphans = 'orphan'
         self._make_absolute = False
         self._embed_these_document_types = ['md', 'pdf']
-        self._embed_these_image_types = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg']
+        self._embed_these_image_types = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp']
         self._embed_these_audio_types = ['mp3', 'webm', 'wav', 'm4a', 'ogg', '3gp', 'flac']
         self._embed_these_video_types = ['mp4', 'webm', 'ogv']
         self._embed_files = EmbeddedFileTypes(self._embed_these_document_types, self._embed_these_image_types,
@@ -401,7 +401,7 @@ class ConversionSettings:
         self._orphans = 'copy'
         self._make_absolute = False
         self._embed_these_document_types = ['md', 'pdf']
-        self._embed_these_image_types = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg']
+        self._embed_these_image_types = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp']
         self._embed_these_audio_types = ['mp3', 'webm', 'wav', 'm4a', 'ogg', '3gp', 'flac']
         self._embed_these_video_types = ['mp4', 'webm', 'ogv']
         self._embed_files = EmbeddedFileTypes(self._embed_these_document_types, self._embed_these_image_types,

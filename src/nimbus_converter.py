@@ -1,6 +1,6 @@
 from copy import copy
 from pathlib import Path
-from typing import Set
+from typing import Set, Optional, Tuple
 from uuid import uuid4
 
 from bs4 import BeautifulSoup
@@ -29,7 +29,7 @@ def get_file_suffix_for(export_format: str) -> str:
     return '.md'
 
 
-def read_link_source_file(path_to_zip, path_in_zip_file):
+def read_link_source_file(path_to_zip, path_in_zip_file) -> Optional[Tuple[bytes, Path]]:
     return zip_file_reader.read_binary_file(path_to_zip, Path(path_in_zip_file), message=str(path_to_zip))
 
 
@@ -62,7 +62,7 @@ def process_note_assets(a_note, attachment_folder_name, processing_options):
     if not orphans:
         return
 
-    # now process the orphan files and add links for these files to to body content
+    # now process the orphan files and add links for these files to body content
     process_orphan_files(a_note, attachment_folder_name, orphans, processing_options, zip_file_path)
 
 
@@ -115,6 +115,10 @@ def extract_and_write_assets(a_note, asset_links, attachment_folder_name, zip_fi
         link.set_target_path(attachment_folder_name)
         asset = None
 
+        if link.href.startswith("http://") or link.href.startswith("https://"):
+            # ignore external resources
+            continue
+
         if isinstance(link, ImageEmbed):
             if is_svg(link.contents):
                 asset = read_svg(link.contents)
@@ -127,16 +131,20 @@ def extract_and_write_assets(a_note, asset_links, attachment_folder_name, zip_fi
                 correct_image_name(asset, attachment_folder_name, link)
 
         if not asset:
-            asset = read_link_source_file(zip_file_path, str(link.source_path))
+            read_result = read_link_source_file(zip_file_path, str(link.source_path))
+            if read_result:
+                asset, fixed_source_path = read_result
+                link.source_path = fixed_source_path
 
-        # in nimbus all audio files are exported as .mpga irrespective of what the file actually is
-        # so use header bytes form the asset to identify the correct extension
-        if link.source_path.suffix == '.mpga':
-            link.target_path = helper_functions.correct_file_extension(asset[:261], link.target_path)
+        if asset:
+            # in nimbus all audio files are exported as .mpga irrespective of what the file actually is
+            # so use header bytes form the asset to identify the correct extension
+            if link.source_path.suffix == '.mpga':
+                link.target_path = helper_functions.correct_file_extension(asset[:261], link.target_path)
 
-        write_asset_to_target(asset, link, a_note.note_paths.path_to_note_target)
+            write_asset_to_target(asset, link, a_note.note_paths.path_to_note_target)
 
-        filenames_processed.add(str(link.source_path.name))
+            filenames_processed.add(str(link.source_path.name))
 
     return filenames_processed
 
@@ -342,7 +350,7 @@ def main():
 
     conversion_settings.keep_nimbus_row_and_column_headers = False
     conversion_settings.embed_these_document_types = ['md', 'pdf']
-    conversion_settings.embed_these_image_types = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg']
+    conversion_settings.embed_these_image_types = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp']
     conversion_settings.embed_these_audio_types = ['mp3', 'webm', 'wav', 'm4a', 'ogg', '3gp', 'flac']
     conversion_settings.embed_these_video_types = ['mp4', 'webm', 'ogv']
 

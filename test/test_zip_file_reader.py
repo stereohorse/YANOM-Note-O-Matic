@@ -45,7 +45,7 @@ def test_read_binary_file(tmp_path):
     with zipfile.ZipFile(str(zip_filename), 'w') as zip_file:
         zip_file.write(Path(tmp_path, target_filename), target_filename)
 
-    result = zip_file_reader.read_binary_file(zip_filename, Path(target_filename))
+    result = zip_file_reader.read_binary_file(zip_filename, Path(target_filename))[0]
 
     assert result == expected
 

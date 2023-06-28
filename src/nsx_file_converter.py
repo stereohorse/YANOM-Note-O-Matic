@@ -116,7 +116,8 @@ class NSXFile:
 
     def fetch_attachment_file(self, file_name, note_title):
         self.logger.info(f"Fetching binary attachment data from {self._nsx_file_name}")
-        return zip_file_reader.read_binary_file(self._nsx_file_name, Path(file_name), note_title)
+        read_result = zip_file_reader.read_binary_file(self._nsx_file_name, Path(file_name), note_title)
+        return None if not read_result else read_result[0]
 
     def add_notebooks(self):
         self.logger.info(f"Creating Notebooks")

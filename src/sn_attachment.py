@@ -1,10 +1,11 @@
-from abc import ABC, abstractmethod
 import logging
+from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Optional
 
 import config
-import helper_functions
 import file_writer
+import helper_functions
 import zip_file_reader
 
 
@@ -125,8 +126,11 @@ class FileNSAttachment(NSAttachment):
                 f'Original attachment name was "{self._name}" the cleaned name used is "{self._file_name}"')
 
     def add_suffix_if_possible(self):
-        suffix = helper_functions.file_extension_from_bytes(
-            zip_file_reader.read_binary_file(self._nsx_file.nsx_file_name, Path(self.filename_inside_nsx), self._note_title))
+        read_result = zip_file_reader.read_binary_file(self._nsx_file.nsx_file_name, Path(self.filename_inside_nsx),
+                                                       self._note_title)
+        file: Optional[bytes] = None if not read_result else read_result[0]
+
+        suffix = helper_functions.file_extension_from_bytes(file)
         if suffix:
             self._file_name = self._file_name.with_suffix(suffix)
 

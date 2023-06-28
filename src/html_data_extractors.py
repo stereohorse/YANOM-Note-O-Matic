@@ -295,6 +295,10 @@ def extract_from_img_tag(img_tag, processing_options: ProcessingOptions):
         return
 
     href = img_tag.get('src', '')
+    query_param_index = href.find("?")
+    if query_param_index != -1:
+        href = href[:query_param_index]
+
     alt = img_tag.get('alt', '')
     width = img_tag.get('width', '')
     height = img_tag.get('height', '')

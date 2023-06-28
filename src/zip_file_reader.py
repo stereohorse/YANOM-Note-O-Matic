@@ -3,13 +3,12 @@ import logging
 import sys
 import zipfile
 from pathlib import Path
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Tuple
 
 import config
 import helper_functions
 
 logger = logging.getLogger(f'{config.yanom_globals.app_name}.{__name__}')
-logger.setLevel(config.yanom_globals.logger_level)
 
 
 def list_files_in_zip_file_from_a_directory(zip_file_path: str,
@@ -125,7 +124,7 @@ def read_json_data(zip_filename, target_filename, message=''):
         _error_handling(e, target_filename, zip_filename, message)
 
 
-def read_binary_file(zip_filename, target_filename, message=''):
+def read_binary_file(zip_filename, target_filename, message='') -> Optional[Tuple[bytes, Path]]:
     """
     Read and return binary content from a file stored in a zip archive.
 
@@ -143,14 +142,35 @@ def read_binary_file(zip_filename, target_filename, message=''):
     bytes
 
     """
+    filenames = [
+        target_filename,
+        target_filename.with_suffix(target_filename.suffix.lower()),
+        Path(target_filename.parent, target_filename.stem),
+    ]
+
+    first_error = None
+
     try:
-        with zipfile.ZipFile(str(zip_filename), 'r') as zip_file:
-            # str(WindowsPath) gives a folder\\filename but zip files must have a posix formatted string
-            # do use Path.as_posix to get correct format for accessing zip file
-            return zip_file.read(target_filename.as_posix())
+        for i, filename in enumerate(filenames):
+            try:
+                return _read_archived_file(filename, zip_filename), filename
+            except KeyError as e:
+                if i == 0:
+                    first_error = e
+                elif i == len(filenames) - 1:
+                    raise first_error
+
+                continue
 
     except Exception as e:
         _error_handling(e, target_filename, zip_filename, message)
+
+
+def _read_archived_file(target_filename, zip_filename):
+    with zipfile.ZipFile(str(zip_filename), 'r') as zip_file:
+        # str(WindowsPath) gives a folder\\filename but zip files must have a posix formatted string
+        # do use Path.as_posix to get correct format for accessing zip file
+        return zip_file.read(target_filename.as_posix())
 
 
 def _error_handling(e, target_filename, zip_filename, message=''):
