@@ -1,4 +1,7 @@
 #! /bin/bash
+
+set -x
+
 # USAGE
 # Run this script from the root of YANOM project `bash scripts/docker-images/build-docker-image.sh test 2`
 # The script takes two arguments -
@@ -12,9 +15,9 @@
 # to the version image tag e.g. `1.2.0-2`.  If the second argument is zero or missing push will push latest and
 # an image tag image e.g. `1.2.0`
 APP_NAME="yanom"
-VERSION="1.6.1"
+VERSION="1.7.1"
 APP_TAR="yanom-$VERSION-debian10-slim-buster.tar.gz"
-DOCKER_REPO="thehistorianandthegeek"
+DOCKER_REPO="0x06065a"
 DEV_IMAGE="yanom-dev-deb10"
 DEV_DOCKERFILE_PATH="dockerfiles/yanom-dev-deb10-slim-buster"
 PROD_DOCKERFILE_PATH="dockerfiles/yanom-prod-deb10-slim-buster"
@@ -31,7 +34,8 @@ cp $DEV_DOCKERFILE_PATH/.dockerignore .dockerignore
 docker ps -aq --filter "name=$DEV_IMAGE" | grep -q . && docker stop $DEV_IMAGE && docker rm -fv $DEV_IMAGE
 docker build --build-arg APP_TAR=$APP_TAR -t $DEV_IMAGE:latest -f $DEV_DOCKERFILE_PATH/Dockerfile .
 docker container create --name $DEV_IMAGE $DEV_IMAGE:latest
-docker cp $DEV_IMAGE:/app/$APP_TAR $PROD_DIST_PATH
+mkdir -p $PROD_DIST_PATH
+docker cp $DEV_IMAGE:/app/$APP_TAR $PROD_DIST_PATH/$APP_TAR
 if [ "$1" ] && [ "$1" == "push" ]
 then
   docker rm -f $DEV_IMAGE

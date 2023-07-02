@@ -1,13 +1,9 @@
 import base64
 import logging
-import os
-import pathlib
 import re
-import subprocess
-import tempfile
-import uuid
-from typing import Optional, Union
+from typing import Optional
 
+import cairosvg
 from bs4 import BeautifulSoup
 
 import config
@@ -269,28 +265,5 @@ def is_svg(contents: str) -> bool:
     return contents and contents.startswith("<svg ")
 
 
-def read_svg(contents: str) -> Union[bytes, None]:
-    inkscape_path = os.environ.get('INKSCAPE_PATH')
-    if not inkscape_path:
-        return None
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        svg_path = pathlib.Path(tmpdir, str(uuid.uuid4()) + '.svg')
-        with open(svg_path, 'w') as svg_file:
-            svg_file.write(contents)
-
-        png_path = pathlib.Path(tmpdir, str(uuid.uuid4()) + '.png')
-
-        cmd_list = [inkscape_path,
-                    svg_path,
-                    '-o', png_path,
-                    ]
-
-        p = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
-
-        if p.returncode:
-            raise Exception('Inkscape error: ' + (err.decode("utf-8") or 'unknown'))
-
-        with open(png_path, 'rb') as png_file:
-            return png_file.read()
+def read_svg(contents: str) -> bytes:
+    return cairosvg.svg2png(contents)

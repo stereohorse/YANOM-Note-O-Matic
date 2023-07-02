@@ -3,7 +3,7 @@ ARG APP_TAR
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 RUN apt-get update --yes && \
-    apt-get install --yes curl=7.64.0-4+deb10u2  && \
+    apt-get install --yes curl=7.64.0-4+deb10u6 libcairo2 && \
     curl -OL https://github.com/jgm/pandoc/releases/download/2.13/pandoc-2.13-1-amd64.deb && \
     dpkg -i \pandoc-2.13-1-amd64.deb  && \
     rm -f pandoc-2.13-1-amd64.deb && \
@@ -23,5 +23,6 @@ RUN adduser --disabled-password --gecos '' app
 WORKDIR /app/yanom
 ENV PATH="/app/yanom:${PATH}"
 COPY --from=intermediate /app/yanom /app/yanom
+RUN mkdir logs && chown app logs
 USER app
-CMD ["bash"]
+ENTRYPOINT ["yanom", "--source", "/app/yanom/data", "--export", "/app/yanom/output"]

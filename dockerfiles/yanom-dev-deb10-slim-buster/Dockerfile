@@ -1,4 +1,4 @@
-FROM python:3.9.4-slim-buster
+FROM python:3.9.16-slim-buster
 ARG APP_TAR
 RUN adduser --disabled-password --gecos '' app
 RUN apt-get update --yes && apt-get install --yes --no-install-recommends binutils=2.31.1-16 && \
